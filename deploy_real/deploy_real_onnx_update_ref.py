@@ -251,9 +251,9 @@ class Controller:
         dof_vel = dqj * self.config.dof_vel_scale
         base_ang_vel = ang_vel* self.config.ang_vel_scale
         
-        self.ref_motion_phase += self.config.ref_motion_phase
-        # motion_time = self.counter * self.control_dt
-        # self.ref_motion_phase = motion_time / self.motion_len
+        # self.ref_motion_phase += self.config.ref_motion_phase
+        motion_time = self.counter * self.control_dt
+        self.ref_motion_phase = motion_time / self.motion_len
         print(f"[DEBUG] ref_motion phase: {self.ref_motion_phase}, timesteps: {self.counter}" )
         # self.ref_motion_phase = self.ref_motion_phase % 1 # Prevention
         num_actions = self.config.num_actions
@@ -311,7 +311,7 @@ class Controller:
             print(f"[WARNING] Action exceeds warning threshold: {self.action}")
 
         # action clipping
-        self.action = np.clip(self.action, -self.config.action_clip, self.config.action_clip)
+        # self.action = np.clip(self.action, -self.config.action_clip, self.config.action_clip)
         
         # self.action = self.policy(obs_tensor).detach().numpy().squeeze()
         
@@ -358,7 +358,7 @@ class Controller:
                 # return True
             
         # send the command
-        # self.send_cmd(self.low_cmd)
+        self.send_cmd(self.low_cmd)
 
         time.sleep(self.config.control_dt)
 

@@ -6,7 +6,7 @@
 # Learnd onnx policy 
 policy_paths:
   -  "/home/meetup/g1_deploy/pretrain/stance_3_model_6000.onnx" 
-  -  "/home/meetup/g1_deploy/pretrain/model_72000.onnx"
+  -  "/home/meetup/g1_deploy/pretrain/wait_test/model_3000.onnx"
   # -  "/home/meetup/g1_deploy/pretrain/dance_model_170000.onnx"
   # -  "/home/meetup/g1_deploy/pretrain/Horsestance_model_119000.onnx"
 
@@ -18,7 +18,7 @@ xml_path: "/home/meetup/g1_deploy/g1_29dof.xml"
 control_dt: 0.02
 motion_lens: 
   - 9999.0 # Stand
-  - 22 # dance 
+  - 50 # dance 
   # - 12.0 # Horse stance
   # - 24 # wait1
   # - 16.2 # wait2

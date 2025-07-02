@@ -10,7 +10,7 @@ lowstate_topic: "rt/lowstate"
 #policy_path: "{LEGGED_GYM_ROOT_DIR}/deploy/pre_train/g1/motion.pt"
 
 #policy_path: "/home/zy/unitree_rl_gym/deploy/guangming/model_2000.pt"
-policy_path: "/home/zy/unitree_rl_gym/deploy/pre_train/g1/policy_lstm_1.pt"
+policy_path: "/home/meetup/g1_deploy/pretrain/motion.pt"
 leg_joint2motor_idx: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 kps: [100, 100, 100, 150, 40, 40, 100, 100, 100, 150, 40, 40]
 kds: [2, 2, 2, 4, 2, 2, 2, 2, 2, 4, 2, 2]

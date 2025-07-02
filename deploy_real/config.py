@@ -9,7 +9,14 @@ class Config:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
             self.control_dt = config["control_dt"]
+            if "motion_lens" in config:
+                self.motion_lens = config["motion_lens"]
+            if "policy_names" in config:
+                self.policy_names = config["policy_names"]
 
+            if "motion_path" in config:
+                self.policy_path = config["motion_path"]    
+                
             self.msg_type = config["msg_type"]
             self.imu_type = config["imu_type"]
 
@@ -19,8 +26,23 @@ class Config:
 
             self.lowcmd_topic = config["lowcmd_topic"]
             self.lowstate_topic = config["lowstate_topic"]
-
-            self.policy_path = config["policy_path"].replace("{LEGGED_GYM_ROOT_DIR}", LEGGED_GYM_ROOT_DIR)
+            
+            # --------- 1. 支持多 / 单 policy 两种写法 ----------
+            if "policy_paths" in config:                  # 多策略
+                raw_paths = config["policy_paths"]
+                # 把 {LEGGED_GYM_ROOT_DIR} 展开，保持老逻辑
+                self.policy_paths = [
+                    p.replace("{LEGGED_GYM_ROOT_DIR}", LEGGED_GYM_ROOT_DIR)
+                    for p in raw_paths
+                ]
+                assert isinstance(raw_paths, list) and len(raw_paths) > 0, \
+                    "policy_paths 必须是非空列表"
+            elif "policy_path" in config:                                         # 兼容旧写法
+                raw_paths = [config["policy_path"]]
+                self.policy_path = config["policy_path"].replace("{LEGGED_GYM_ROOT_DIR}", LEGGED_GYM_ROOT_DIR)
+            
+            if "motion_path" in config:
+                self.motion_path = config["motion_path"]
 
             self.action_joint2motor_idx = config["action_joint2motor_idx"]
             self.kps = config["kps"]
@@ -45,3 +67,16 @@ class Config:
 
             self.history_length = config["history_length"]
             self.ref_motion_phase = config["ref_motion_phase"]
+
+            # safty check part
+            self.action_clip = config["action_clip"]
+            self.action_scale = config["action_scale"]
+            self.debut = config["debug"]
+            self.action_clip_warn_threshold = config["action_clip_warn_threshold"]
+
+            self.dof_pos_lower_limit = config["dof_pos_lower_limit"]
+            self.dof_pos_upper_limit = config["dof_pos_upper_limit"]
+            self.dof_vel_limit = config["dof_vel_limit"]
+            self.dof_effort_limit = config["dof_effort_limit"]
+
+            

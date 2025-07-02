@@ -1,0 +1,1244 @@
+[INFO] Logging to deploy_log_20250701_211427.txt
+[DEBUG]: Start to initialize the controller!
+[DEBUG]: Waiting for the lower state info...
+Successfully connected to the robot.
+[DEBUG]: Lower state get!
+[DEBUG]: Controller initialized.
+Enter zero torque state.
+Waiting for the start signal...
+Moving to default pos.
+[DEBUG] Motor 00: target=-0.100, actual=-0.063, err=+0.037
+[DEBUG] Motor 01: target=+0.000, actual=-0.004, err=-0.004
+[DEBUG] Motor 02: target=+0.000, actual=+0.012, err=+0.012
+[DEBUG] Motor 03: target=+0.300, actual=+0.302, err=+0.002
+[DEBUG] Motor 04: target=-0.200, actual=-0.441, err=-0.241
+[DEBUG] Motor 05: target=+0.000, actual=-0.069, err=-0.069
+[DEBUG] Motor 06: target=-0.100, actual=-0.002, err=+0.098
+[DEBUG] Motor 07: target=+0.000, actual=-0.007, err=-0.007
+[DEBUG] Motor 08: target=+0.000, actual=+0.015, err=+0.015
+[DEBUG] Motor 09: target=+0.300, actual=+0.319, err=+0.019
+[DEBUG] Motor 10: target=-0.200, actual=-0.491, err=-0.291
+[DEBUG] Motor 11: target=+0.000, actual=-0.007, err=-0.007
+[DEBUG] Motor 12: target=+0.000, actual=-0.001, err=-0.001
+[DEBUG] Motor 13: target=+0.000, actual=+0.000, err=+0.000
+[DEBUG] Motor 14: target=+0.000, actual=+0.000, err=+0.000
+[DEBUG] Motor 15: target=+0.200, actual=+0.192, err=-0.008
+[DEBUG] Motor 16: target=+0.200, actual=+0.177, err=-0.023
+[DEBUG] Motor 17: target=+0.000, actual=-0.003, err=-0.003
+[DEBUG] Motor 18: target=+0.900, actual=+0.904, err=+0.004
+[DEBUG] Motor 22: target=+0.200, actual=+0.193, err=-0.007
+[DEBUG] Motor 23: target=-0.200, actual=-0.178, err=+0.022
+[DEBUG] Motor 24: target=+0.000, actual=+0.004, err=+0.004
+[DEBUG] Motor 25: target=+0.900, actual=+0.911, err=+0.011
+[DEBUG] Motor 19: target=-0.050, actual=-0.049, err=+0.001
+[DEBUG] Motor 20: target=+0.120, actual=+0.125, err=+0.005
+[DEBUG] Motor 21: target=-0.030, actual=-0.029, err=+0.001
+[DEBUG] Motor 26: target=-0.160, actual=-0.160, err=+0.000
+[DEBUG] Motor 27: target=+0.120, actual=+0.120, err=-0.000
+[DEBUG] Motor 28: target=-0.020, actual=-0.015, err=+0.005
+Successfully moved to default pos!
+Enter default pos state.
+Waiting for the Button A signal...
+Ready to run the movements
+[WARNING] Action exceeds warning threshold: [-2.9188979   0.19647732  0.4099366   0.15994793  1.3064082   0.24675633
+ -0.4838525  -0.438896    0.7053114   0.5496693   5.6758275  -0.7477433
+  0.3206059  -0.47038874  0.43920085 -0.40167546 -0.46341044  0.09804227
+  0.02145936  0.47114965 -0.0661888  -0.90850824  0.5320313 ]
+[DEBUG]: Motor 0 position: -0.8297244906425476
+[DEBUG]: Motor 1 position: 0.04911933094263077
+[DEBUG]: Motor 2 position: 0.10248415172100067
+[DEBUG]: Motor 3 position: 0.33998697996139526
+[DEBUG]: Motor 4 position: 0.12660203874111176
+[DEBUG]: Motor 5 position: 0.06168908253312111
+[DEBUG]: Motor 6 position: -0.22096312046051025
+[DEBUG]: Motor 7 position: -0.1097240000963211
+[DEBUG]: Motor 8 position: 0.17632785439491272
+[DEBUG]: Motor 9 position: 0.43741732835769653
+[DEBUG]: Motor 10 position: 1.2189568281173706
+[DEBUG]: Motor 11 position: -0.18693582713603973
+[DEBUG]: Motor 12 position: 0.08015147596597672
+[DEBUG]: Motor 13 position: -0.11759718507528305
+[DEBUG]: Motor 14 position: 0.10980021208524704
+[DEBUG]: Motor 15 position: 0.09958113729953766
+[DEBUG]: Motor 16 position: 0.0841473937034607
+[DEBUG]: Motor 17 position: 0.024510568007826805
+[DEBUG]: Motor 18 position: 0.9053648114204407
+[DEBUG]: Motor 22 position: 0.31778740882873535
+[DEBUG]: Motor 23 position: -0.21654720604419708
+[DEBUG]: Motor 24 position: -0.2271270602941513
+[DEBUG]: Motor 25 position: 1.0330078601837158
+[WARNING] Action exceeds warning threshold: [-5.523899    0.4165142  -0.05850436  0.40406194 -2.9346557   2.498036
+  0.73870873 -0.8245751   1.3491628   1.6284554   6.882407   -0.91751915
+  0.28707576 -0.83323336  0.01132432 -1.3177097  -0.32805324  0.26950467
+  2.2934496   0.6611318   0.14920573 -1.8599076   2.3893812 ]
+[DEBUG]: Motor 0 position: -1.480974793434143
+[DEBUG]: Motor 1 position: 0.10412854701280594
+[DEBUG]: Motor 2 position: -0.014626089483499527
+[DEBUG]: Motor 3 position: 0.4010154902935028
+[DEBUG]: Motor 4 position: -0.9336639046669006
+[DEBUG]: Motor 5 position: 0.6245089769363403
+[DEBUG]: Motor 6 position: 0.08467718213796616
+[DEBUG]: Motor 7 position: -0.20614378154277802
+[DEBUG]: Motor 8 position: 0.3372907042503357
+[DEBUG]: Motor 9 position: 0.7071138620376587
+[DEBUG]: Motor 10 position: 1.520601749420166
+[DEBUG]: Motor 11 position: -0.2293797880411148
+[DEBUG]: Motor 12 position: 0.07176893949508667
+[DEBUG]: Motor 13 position: -0.20830833911895752
+[DEBUG]: Motor 14 position: 0.0028310809284448624
+[DEBUG]: Motor 15 position: -0.12942741811275482
+[DEBUG]: Motor 16 position: 0.11798669397830963
+[DEBUG]: Motor 17 position: 0.06737616658210754
+[DEBUG]: Motor 18 position: 1.4733624458312988
+[DEBUG]: Motor 22 position: 0.36528295278549194
+[DEBUG]: Motor 23 position: -0.16269856691360474
+[DEBUG]: Motor 24 position: -0.4649769067764282
+[DEBUG]: Motor 25 position: 1.497345209121704
+[WARNING] Action exceeds warning threshold: [-5.4146600e+00  5.2237058e-01 -1.2204220e+00  1.2167360e+00
+ -4.6325531e+00  4.9430189e+00  4.0160346e-01 -3.7308365e-01
+  7.3850340e-01  2.4740889e+00  7.9068713e+00 -3.1389135e-01
+ -7.1966447e-02 -4.9006727e-01 -4.6400102e-03 -2.2143371e+00
+ -1.8071316e-01  3.8932085e-01  3.9315593e+00  3.2690522e-01
+  9.9436891e-01 -3.0773726e+00  3.2960603e+00]
+[DEBUG]: Motor 0 position: -1.453665018081665
+[DEBUG]: Motor 1 position: 0.13059264421463013
+[DEBUG]: Motor 2 position: -0.3051055073738098
+[DEBUG]: Motor 3 position: 0.6041840314865112
+[DEBUG]: Motor 4 position: -1.3581383228302002
+[DEBUG]: Motor 5 position: 1.2357547283172607
+[DEBUG]: Motor 6 position: 0.0004008635878562927
+[DEBUG]: Motor 7 position: -0.0932709127664566
+[DEBUG]: Motor 8 position: 0.18462584912776947
+[DEBUG]: Motor 9 position: 0.9185222387313843
+[DEBUG]: Motor 10 position: 1.7767177820205688
+[DEBUG]: Motor 11 position: -0.07847283780574799
+[DEBUG]: Motor 12 position: -0.01799161173403263
+[DEBUG]: Motor 13 position: -0.12251681834459305
+[DEBUG]: Motor 14 position: -0.0011600025463849306
+[DEBUG]: Motor 15 position: -0.35358428955078125
+[DEBUG]: Motor 16 position: 0.1548217087984085
+[DEBUG]: Motor 17 position: 0.09733021259307861
+[DEBUG]: Motor 18 position: 1.882889747619629
+[DEBUG]: Motor 22 position: 0.28172630071640015
+[DEBUG]: Motor 23 position: 0.0485922247171402
+[DEBUG]: Motor 24 position: -0.7693431377410889
+[DEBUG]: Motor 25 position: 1.7240149974822998
+[WARNING] Action exceeds warning threshold: [-6.0957994   0.04050883 -2.1503434   3.6314347  -5.3246393  10.046102
+  0.60891557  0.55415225  0.99741805  3.5183728   7.975019   -0.09541118
+ -0.5000928   0.22304788 -0.39607212 -2.766782    0.2699806  -0.17924814
+  6.62794     0.6897578   1.4584224  -4.021696    6.0615773 ]
+[DEBUG]: Motor 0 position: -1.6239498853683472
+[DEBUG]: Motor 1 position: 0.010127206332981586
+[DEBUG]: Motor 2 position: -0.5375858545303345
+[DEBUG]: Motor 3 position: 1.207858681678772
+[DEBUG]: Motor 4 position: -1.5311598777770996
+[DEBUG]: Motor 5 position: 2.5115253925323486
+[DEBUG]: Motor 6 position: 0.0522288903594017
+[DEBUG]: Motor 7 position: 0.13853806257247925
+[DEBUG]: Motor 8 position: 0.2493545114994049
+[DEBUG]: Motor 9 position: 1.1795932054519653
+[DEBUG]: Motor 10 position: 1.7937546968460083
+[DEBUG]: Motor 11 position: -0.023852795362472534
+[DEBUG]: Motor 12 position: -0.12502320110797882
+[DEBUG]: Motor 13 position: 0.055761970579624176
+[DEBUG]: Motor 14 position: -0.09901802986860275
+[DEBUG]: Motor 15 position: -0.4916955232620239
+[DEBUG]: Motor 16 position: 0.26749515533447266
+[DEBUG]: Motor 17 position: -0.04481203481554985
+[DEBUG]: Motor 18 position: 2.5569849014282227
+[DEBUG]: Motor 22 position: 0.372439444065094
+[DEBUG]: Motor 23 position: 0.16460560262203217
+[DEBUG]: Motor 24 position: -1.0054240226745605
+[DEBUG]: Motor 25 position: 2.4153943061828613
+[WARNING] Action exceeds warning threshold: [ -9.409015    -1.2278208   -6.3675666    8.8413315  -12.187025
+  27.453999     3.115281     3.6200511    1.015858     6.9490156
+   2.343986     0.22633243  -1.0438367    2.036429    -0.36062995
+  -3.2976017    0.5299843   -1.624966    17.242025     1.8920586
+   2.142968    -5.9973893   17.637117  ]
+[DEBUG]: Motor 0 position: -2.452253580093384
+[DEBUG]: Motor 1 position: -0.3069551885128021
+[DEBUG]: Motor 2 position: -1.5918916463851929
+[DEBUG]: Motor 3 position: 2.5103328227996826
+[DEBUG]: Motor 4 position: -3.2467563152313232
+[DEBUG]: Motor 5 position: 6.863499641418457
+[DEBUG]: Motor 6 position: 0.6788202524185181
+[DEBUG]: Motor 7 position: 0.9050127863883972
+[DEBUG]: Motor 8 position: 0.25396451354026794
+[DEBUG]: Motor 9 position: 2.0372538566589355
+[DEBUG]: Motor 10 position: 0.3859965205192566
+[DEBUG]: Motor 11 position: 0.05658310651779175
+[DEBUG]: Motor 12 position: -0.2609591782093048
+[DEBUG]: Motor 13 position: 0.509107232093811
+[DEBUG]: Motor 14 position: -0.09015748649835587
+[DEBUG]: Motor 15 position: -0.6244004368782043
+[DEBUG]: Motor 16 position: 0.3324960768222809
+[DEBUG]: Motor 17 position: -0.4062415063381195
+[DEBUG]: Motor 18 position: 5.210506439208984
+[DEBUG]: Motor 22 position: 0.6730146408081055
+[DEBUG]: Motor 23 position: 0.3357419967651367
+[DEBUG]: Motor 24 position: -1.4993473291397095
+[DEBUG]: Motor 25 position: 5.309279441833496
+[WARNING] Action exceeds warning threshold: [-22.374737    -5.045618   -24.961731    22.758297   -42.284084
+  82.2724      17.986507    17.264816    -0.08951029  19.134432
+ -15.171923     2.6888998   -1.622535     6.938851     2.640284
+  -9.03614      0.5649783   -4.9791136   55.673744     4.005549
+   3.251448   -10.125863    62.664215  ]
+[DEBUG]: Motor 0 position: -5.693684101104736
+[DEBUG]: Motor 1 position: -1.2614045143127441
+[DEBUG]: Motor 2 position: -6.2404327392578125
+[DEBUG]: Motor 3 position: 5.989574432373047
+[DEBUG]: Motor 4 position: -10.771020889282227
+[DEBUG]: Motor 5 position: 20.568099975585938
+[DEBUG]: Motor 6 position: 4.396626949310303
+[DEBUG]: Motor 7 position: 4.316204071044922
+[DEBUG]: Motor 8 position: -0.02237757295370102
+[DEBUG]: Motor 9 position: 5.083608150482178
+[DEBUG]: Motor 10 position: -3.992980718612671
+[DEBUG]: Motor 11 position: 0.6722249388694763
+[DEBUG]: Motor 12 position: -0.40563374757766724
+[DEBUG]: Motor 13 position: 1.7347127199172974
+[DEBUG]: Motor 14 position: 0.6600710153579712
+[DEBUG]: Motor 15 position: -2.059035062789917
+[DEBUG]: Motor 16 position: 0.34124457836151123
+[DEBUG]: Motor 17 position: -1.2447783946990967
+[DEBUG]: Motor 18 position: 14.818435668945312
+[DEBUG]: Motor 22 position: 1.2013872861862183
+[DEBUG]: Motor 23 position: 0.6128619909286499
+[DEBUG]: Motor 24 position: -2.531465768814087
+[DEBUG]: Motor 25 position: 16.56605339050293
+[WARNING] Action exceeds warning threshold: [ -67.351585   -24.337479   -82.704216    68.86433   -154.89915
+  270.93317     79.36589     60.40397     -4.390034    64.73648
+  -56.79939     10.408295    -2.6253912   22.581942    13.274536
+  -31.57504      1.2404069  -12.307234   189.81757     10.997548
+    5.9244084  -25.059595   220.1898   ]
+[DEBUG]: Motor 0 position: -16.937896728515625
+[DEBUG]: Motor 1 position: -6.084369659423828
+[DEBUG]: Motor 2 position: -20.676054000854492
+[DEBUG]: Motor 3 position: 17.516080856323242
+[DEBUG]: Motor 4 position: -38.92478942871094
+[DEBUG]: Motor 5 position: 67.73329162597656
+[DEBUG]: Motor 6 position: 19.741472244262695
+[DEBUG]: Motor 7 position: 15.100992202758789
+[DEBUG]: Motor 8 position: -1.0975085496902466
+[DEBUG]: Motor 9 position: 16.484119415283203
+[DEBUG]: Motor 10 position: -14.399847030639648
+[DEBUG]: Motor 11 position: 2.6020736694335938
+[DEBUG]: Motor 12 position: -0.6563478112220764
+[DEBUG]: Motor 13 position: 5.6454854011535645
+[DEBUG]: Motor 14 position: 3.318634033203125
+[DEBUG]: Motor 15 position: -7.693760395050049
+[DEBUG]: Motor 16 position: 0.5101017355918884
+[DEBUG]: Motor 17 position: -3.076808452606201
+[DEBUG]: Motor 18 position: 48.354393005371094
+[DEBUG]: Motor 22 position: 2.9493870735168457
+[DEBUG]: Motor 23 position: 1.2811020612716675
+[DEBUG]: Motor 24 position: -6.264898777008057
+[DEBUG]: Motor 25 position: 55.947452545166016
+[WARNING] Action exceeds warning threshold: [-206.60992    -83.3519    -264.90558    219.39592   -508.5275
+  867.2295     278.9783     194.38054    -19.7326     213.72304
+ -179.25519     31.021412    -5.6572704   75.71942     42.847675
+ -107.728806     5.2084627  -35.218044   611.1454      31.589779
+   10.535401   -75.52595    707.31537  ]
+[DEBUG]: Motor 0 position: -51.752479553222656
+[DEBUG]: Motor 1 position: -20.837974548339844
+[DEBUG]: Motor 2 position: -66.22639465332031
+[DEBUG]: Motor 3 position: 55.14897918701172
+[DEBUG]: Motor 4 position: -127.33187103271484
+[DEBUG]: Motor 5 position: 216.807373046875
+[DEBUG]: Motor 6 position: 69.64457702636719
+[DEBUG]: Motor 7 position: 48.59513473510742
+[DEBUG]: Motor 8 position: -4.933149814605713
+[DEBUG]: Motor 9 position: 53.73075866699219
+[DEBUG]: Motor 10 position: -45.013797760009766
+[DEBUG]: Motor 11 position: 7.755352973937988
+[DEBUG]: Motor 12 position: -1.4143176078796387
+[DEBUG]: Motor 13 position: 18.929855346679688
+[DEBUG]: Motor 14 position: 10.711918830871582
+[DEBUG]: Motor 15 position: -26.732200622558594
+[DEBUG]: Motor 16 position: 1.5021157264709473
+[DEBUG]: Motor 17 position: -8.804511070251465
+[DEBUG]: Motor 18 position: 153.68634033203125
+[DEBUG]: Motor 22 position: 8.097444534301758
+[DEBUG]: Motor 23 position: 2.4338502883911133
+[DEBUG]: Motor 24 position: -18.881486892700195
+[DEBUG]: Motor 25 position: 177.7288360595703
+[WARNING] Action exceeds warning threshold: [ -654.78577   -268.52798   -853.20526    713.88275  -1655.4978
+  2807.4514     927.89484    630.633      -73.87552    700.88617
+  -587.44696     91.917465   -15.866842   246.44601    137.44795
+  -360.41397     19.48009   -112.38175   1989.2819      98.443954
+    24.16245   -236.62256   2296.3306  ]
+[DEBUG]: Motor 0 position: -163.79644775390625
+[DEBUG]: Motor 1 position: -67.13199615478516
+[DEBUG]: Motor 2 position: -213.3013153076172
+[DEBUG]: Motor 3 position: 178.77069091796875
+[DEBUG]: Motor 4 position: -414.074462890625
+[DEBUG]: Motor 5 position: 701.8628540039062
+[DEBUG]: Motor 6 position: 231.8737030029297
+[DEBUG]: Motor 7 position: 157.6582489013672
+[DEBUG]: Motor 8 position: -18.46887969970703
+[DEBUG]: Motor 9 position: 175.52154541015625
+[DEBUG]: Motor 10 position: -147.06173706054688
+[DEBUG]: Motor 11 position: 22.979366302490234
+[DEBUG]: Motor 12 position: -3.9667105674743652
+[DEBUG]: Motor 13 position: 61.61150360107422
+[DEBUG]: Motor 14 position: 34.36198806762695
+[DEBUG]: Motor 15 position: -89.90349578857422
+[DEBUG]: Motor 16 position: 5.070022106170654
+[DEBUG]: Motor 17 position: -28.09543800354004
+[DEBUG]: Motor 18 position: 498.220458984375
+[DEBUG]: Motor 22 position: 24.810989379882812
+[DEBUG]: Motor 23 position: 5.840612888336182
+[DEBUG]: Motor 24 position: -59.1556396484375
+[DEBUG]: Motor 25 position: 574.982666015625
+[WARNING] Action exceeds warning threshold: [-2118.1252    -872.9927   -2765.7559    2317.3542   -5395.143
+  9128.812     3041.799     2052.0864    -248.81223   2280.625
+ -1923.9327     284.1484     -51.318348   801.72235    449.15292
+ -1184.5328      65.18036   -366.34015   6484.572      313.46304
+    70.06699   -758.4889    7478.9775  ]
+[DEBUG]: Motor 0 position: -529.6312866210938
+[DEBUG]: Motor 1 position: -218.2481689453125
+[DEBUG]: Motor 2 position: -691.43896484375
+[DEBUG]: Motor 3 position: 579.6385498046875
+[DEBUG]: Motor 4 position: -1348.9857177734375
+[DEBUG]: Motor 5 position: 2282.202880859375
+[DEBUG]: Motor 6 position: 760.3497924804688
+[DEBUG]: Motor 7 position: 513.0216064453125
+[DEBUG]: Motor 8 position: -62.20305633544922
+[DEBUG]: Motor 9 position: 570.4562377929688
+[DEBUG]: Motor 10 position: -481.1831970214844
+[DEBUG]: Motor 11 position: 71.03710174560547
+[DEBUG]: Motor 12 position: -12.82958698272705
+[DEBUG]: Motor 13 position: 200.4305877685547
+[DEBUG]: Motor 14 position: 112.2882308959961
+[DEBUG]: Motor 15 position: -295.9331970214844
+[DEBUG]: Motor 16 position: 16.49509048461914
+[DEBUG]: Motor 17 position: -91.58503723144531
+[DEBUG]: Motor 18 position: 1622.04296875
+[DEBUG]: Motor 22 position: 78.56575775146484
+[DEBUG]: Motor 23 position: 17.316747665405273
+[DEBUG]: Motor 24 position: -189.62222290039062
+[DEBUG]: Motor 25 position: 1870.6444091796875
+[WARNING] Action exceeds warning threshold: [ -6883.1934   -2843.6367   -8990.556     7531.642   -17561.81
+  29700.504     9923.154     6678.372     -817.9205    7417.2236
+  -6271.5864     906.3273    -167.03879   2610.4849    1465.6609
+  -3865.1738     213.36395  -1193.4612   21113.484     1010.2125
+    219.93745  -2456.7598   24349.443  ]
+[DEBUG]: Motor 0 position: -1720.8983154296875
+[DEBUG]: Motor 1 position: -710.9091796875
+[DEBUG]: Motor 2 position: -2247.638916015625
+[DEBUG]: Motor 3 position: 1883.2105712890625
+[DEBUG]: Motor 4 position: -4390.65283203125
+[DEBUG]: Motor 5 position: 7425.1259765625
+[DEBUG]: Motor 6 position: 2480.6884765625
+[DEBUG]: Motor 7 position: 1669.593017578125
+[DEBUG]: Motor 8 position: -204.48011779785156
+[DEBUG]: Motor 9 position: 1854.60595703125
+[DEBUG]: Motor 10 position: -1568.0965576171875
+[DEBUG]: Motor 11 position: 226.58181762695312
+[DEBUG]: Motor 12 position: -41.75969696044922
+[DEBUG]: Motor 13 position: 652.6212158203125
+[DEBUG]: Motor 14 position: 366.41522216796875
+[DEBUG]: Motor 15 position: -966.0934448242188
+[DEBUG]: Motor 16 position: 53.54098892211914
+[DEBUG]: Motor 17 position: -298.36529541015625
+[DEBUG]: Motor 18 position: 5279.27099609375
+[DEBUG]: Motor 22 position: 252.7531280517578
+[DEBUG]: Motor 23 position: 54.78436279296875
+[DEBUG]: Motor 24 position: -614.18994140625
+[DEBUG]: Motor 25 position: 6088.2607421875
+[WARNING] Action exceeds warning threshold: [-22390.023    -9255.524   -29243.545    24493.066   -57154.94
+  96630.28     32315.21     21731.09     -2671.158    24130.04
+ -20415.652     2928.71      -542.2908    8496.487     4775.3906
+ -12586.193      696.2251   -3883.349    68708.555     3274.71
+    707.69104  -7983.351    79238.02   ]
+[DEBUG]: Motor 0 position: -5597.60595703125
+[DEBUG]: Motor 1 position: -2313.881103515625
+[DEBUG]: Motor 2 position: -7310.88623046875
+[DEBUG]: Motor 3 position: 6123.56640625
+[DEBUG]: Motor 4 position: -14288.935546875
+[DEBUG]: Motor 5 position: 24157.5703125
+[DEBUG]: Motor 6 position: 8078.70263671875
+[DEBUG]: Motor 7 position: 5432.7724609375
+[DEBUG]: Motor 8 position: -667.7894897460938
+[DEBUG]: Motor 9 position: 6032.8095703125
+[DEBUG]: Motor 10 position: -5104.11328125
+[DEBUG]: Motor 11 position: 732.177490234375
+[DEBUG]: Motor 12 position: -135.57269287109375
+[DEBUG]: Motor 13 position: 2124.121826171875
+[DEBUG]: Motor 14 position: 1193.84765625
+[DEBUG]: Motor 15 position: -3146.348388671875
+[DEBUG]: Motor 16 position: 174.2562713623047
+[DEBUG]: Motor 17 position: -970.8372802734375
+[DEBUG]: Motor 18 position: 17178.0390625
+[DEBUG]: Motor 22 position: 818.8775024414062
+[DEBUG]: Motor 23 position: 176.72276306152344
+[DEBUG]: Motor 24 position: -1995.8377685546875
+[DEBUG]: Motor 25 position: 19810.40625
+[WARNING] Action exceeds warning threshold: [ -72836.75    -30112.129   -95130.555    79672.51   -185954.3
+  314354.62    105159.89     70698.47     -8699.95     78501.54
+  -66421.58      9511.573    -1762.0317   27646.486    15540.558
+  -40957.492     2269.4536  -12630.8545  223530.52     10640.578
+    2291.578   -25965.41    257787.2   ]
+[DEBUG]: Motor 0 position: -18209.287109375
+[DEBUG]: Motor 1 position: -7528.0322265625
+[DEBUG]: Motor 2 position: -23782.638671875
+[DEBUG]: Motor 3 position: 19918.427734375
+[DEBUG]: Motor 4 position: -46488.7734375
+[DEBUG]: Motor 5 position: 78588.65625
+[DEBUG]: Motor 6 position: 26289.873046875
+[DEBUG]: Motor 7 position: 17674.6171875
+[DEBUG]: Motor 8 position: -2174.987548828125
+[DEBUG]: Motor 9 position: 19625.685546875
+[DEBUG]: Motor 10 position: -16605.59375
+[DEBUG]: Motor 11 position: 2377.893310546875
+[DEBUG]: Motor 12 position: -440.5079345703125
+[DEBUG]: Motor 13 position: 6911.62158203125
+[DEBUG]: Motor 14 position: 3885.139404296875
+[DEBUG]: Motor 15 position: -10239.1728515625
+[DEBUG]: Motor 16 position: 567.5634155273438
+[DEBUG]: Motor 17 position: -3157.713623046875
+[DEBUG]: Motor 18 position: 55883.52734375
+[DEBUG]: Motor 22 position: 2660.344482421875
+[DEBUG]: Motor 23 position: 572.6944580078125
+[DEBUG]: Motor 24 position: -6491.3525390625
+[DEBUG]: Motor 25 position: 64447.69921875
+[WARNING] Action exceeds warning threshold: [-236966.75   -97967.98  -309501.03   259211.1   -605022.2   1022760.5
+  342175.66   230022.81   -28317.244  255413.73  -216113.75    30926.252
+   -5732.216   89948.49    50563.613 -133270.69     7385.606  -41096.613
+  727282.75    34605.867    7445.879  -84468.2    838733.56 ]
+[DEBUG]: Motor 0 position: -59241.7890625
+[DEBUG]: Motor 1 position: -24491.994140625
+[DEBUG]: Motor 2 position: -77375.2578125
+[DEBUG]: Motor 3 position: 64803.07421875
+[DEBUG]: Motor 4 position: -151255.75
+[DEBUG]: Motor 5 position: 255690.125
+[DEBUG]: Motor 6 position: 85543.8125
+[DEBUG]: Motor 7 position: 57505.703125
+[DEBUG]: Motor 8 position: -7079.31103515625
+[DEBUG]: Motor 9 position: 63853.734375
+[DEBUG]: Motor 10 position: -54028.63671875
+[DEBUG]: Motor 11 position: 7731.56298828125
+[DEBUG]: Motor 12 position: -1433.053955078125
+[DEBUG]: Motor 13 position: 22487.123046875
+[DEBUG]: Motor 14 position: 12640.9033203125
+[DEBUG]: Motor 15 position: -33317.47265625
+[DEBUG]: Motor 16 position: 1846.6014404296875
+[DEBUG]: Motor 17 position: -10274.1533203125
+[DEBUG]: Motor 18 position: 181821.59375
+[DEBUG]: Motor 22 position: 8651.6669921875
+[DEBUG]: Motor 23 position: 1861.269775390625
+[DEBUG]: Motor 24 position: -21117.05078125
+[DEBUG]: Motor 25 position: 209684.296875
+[WARNING] Action exceeds warning threshold: [ -770984.6    -318748.06  -1006976.75    843355.25  -1968501.9
+  3327631.8    1113335.      748401.44    -92141.945   831011.06
+  -703153.06    100596.586   -18651.312   292655.34    164513.55
+  -433623.62     24031.98   -133714.73   2366297.5     112574.586
+    24214.71   -274809.22   2728905.   ]
+[DEBUG]: Motor 0 position: -192746.25
+[DEBUG]: Motor 1 position: -79687.015625
+[DEBUG]: Motor 2 position: -251744.1875
+[DEBUG]: Motor 3 position: 210839.109375
+[DEBUG]: Motor 4 position: -492125.65625
+[DEBUG]: Motor 5 position: 831907.9375
+[DEBUG]: Motor 6 position: 278333.65625
+[DEBUG]: Motor 7 position: 187100.359375
+[DEBUG]: Motor 8 position: -23035.486328125
+[DEBUG]: Motor 9 position: 207753.0625
+[DEBUG]: Motor 10 position: -175788.46875
+[DEBUG]: Motor 11 position: 25149.146484375
+[DEBUG]: Motor 12 position: -4662.828125
+[DEBUG]: Motor 13 position: 73163.8359375
+[DEBUG]: Motor 14 position: 41128.38671875
+[DEBUG]: Motor 15 position: -108405.703125
+[DEBUG]: Motor 16 position: 6008.1953125
+[DEBUG]: Motor 17 position: -33428.68359375
+[DEBUG]: Motor 18 position: 591575.25
+[DEBUG]: Motor 22 position: 28143.845703125
+[DEBUG]: Motor 23 position: 6053.4775390625
+[DEBUG]: Motor 24 position: -68702.3046875
+[DEBUG]: Motor 25 position: 682227.125
+[WARNING] Action exceeds warning threshold: [-2508450.8  -1037074.1  -3276259.5   2743907.   -6404667.5  10826673.
+  3622350.    2434978.8   -299801.03  2703752.8  -2287759.5    327274.06
+   -60682.81   952180.3    535258.9  -1410839.8     78194.85  -435052.62
+  7698927.5    366249.78    78772.    -894098.3   8878692.  ]
+[DEBUG]: Motor 0 position: -627112.8125
+[DEBUG]: Motor 1 position: -259268.53125
+[DEBUG]: Motor 2 position: -819064.875
+[DEBUG]: Motor 3 position: 685977.0625
+[DEBUG]: Motor 4 position: -1601167.125
+[DEBUG]: Motor 5 position: 2706668.25
+[DEBUG]: Motor 6 position: 905587.375
+[DEBUG]: Motor 7 position: 608744.6875
+[DEBUG]: Motor 8 position: -74950.2578125
+[DEBUG]: Motor 9 position: 675938.5
+[DEBUG]: Motor 10 position: -571940.0625
+[DEBUG]: Motor 11 position: 81818.515625
+[DEBUG]: Motor 12 position: -15170.7021484375
+[DEBUG]: Motor 13 position: 238045.078125
+[DEBUG]: Motor 14 position: 133814.71875
+[DEBUG]: Motor 15 position: -352709.75
+[DEBUG]: Motor 16 position: 19548.912109375
+[DEBUG]: Motor 17 position: -108763.15625
+[DEBUG]: Motor 18 position: 1924732.75
+[DEBUG]: Motor 22 position: 91562.6484375
+[DEBUG]: Motor 23 position: 19692.80078125
+[DEBUG]: Motor 24 position: -223524.578125
+[DEBUG]: Motor 25 position: 2219674.0
+[WARNING] Action exceeds warning threshold: [ -8161409.5   -3374191.2  -10659518.     8927467.   -20838034.
+  35225280.    11785595.     7922366.5    -975432.06   8796835.
+  -7443385.5    1064788.     -197430.25   3097986.     1741505.5
+  -4590274.      254422.69  -1415475.4   25048984.     1191598.2
+    256277.06  -2908999.5   28887432.  ]
+[DEBUG]: Motor 0 position: -2040352.5
+[DEBUG]: Motor 1 position: -843547.8125
+[DEBUG]: Motor 2 position: -2664879.5
+[DEBUG]: Motor 3 position: 2231867.0
+[DEBUG]: Motor 4 position: -5209508.5
+[DEBUG]: Motor 5 position: 8806320.0
+[DEBUG]: Motor 6 position: 2946398.75
+[DEBUG]: Motor 7 position: 1980591.625
+[DEBUG]: Motor 8 position: -243858.015625
+[DEBUG]: Motor 9 position: 2199209.0
+[DEBUG]: Motor 10 position: -1860846.625
+[DEBUG]: Motor 11 position: 266197.0
+[DEBUG]: Motor 12 position: -49357.5625
+[DEBUG]: Motor 13 position: 774496.5
+[DEBUG]: Motor 14 position: 435376.375
+[DEBUG]: Motor 15 position: -1147568.25
+[DEBUG]: Motor 16 position: 63605.87109375
+[DEBUG]: Motor 17 position: -353868.84375
+[DEBUG]: Motor 18 position: 6262247.0
+[DEBUG]: Motor 22 position: 297899.75
+[DEBUG]: Motor 23 position: 64069.06640625
+[DEBUG]: Motor 24 position: -727249.875
+[DEBUG]: Motor 25 position: 7221859.0
+[WARNING] Action exceeds warning threshold: [-2.6553672e+07 -1.0978154e+07 -3.4681456e+07  2.9046134e+07
+ -6.7797952e+07  1.1460783e+08  3.8345252e+07  2.5775962e+07
+ -3.1736475e+06  2.8621082e+07 -2.4217580e+07  3.4643475e+06
+ -6.4236000e+05  1.0079509e+07  5.6661100e+06 -1.4934785e+07
+  8.2778025e+05 -4.6053410e+06  8.1498544e+07  3.8769235e+06
+  8.3380625e+05 -9.4646200e+06  9.3987160e+07]
+[DEBUG]: Motor 0 position: -6638418.0
+[DEBUG]: Motor 1 position: -2744538.5
+[DEBUG]: Motor 2 position: -8670364.0
+[DEBUG]: Motor 3 position: 7261534.0
+[DEBUG]: Motor 4 position: -16949488.0
+[DEBUG]: Motor 5 position: 28651958.0
+[DEBUG]: Motor 6 position: 9586313.0
+[DEBUG]: Motor 7 position: 6443990.5
+[DEBUG]: Motor 8 position: -793411.875
+[DEBUG]: Motor 9 position: 7155271.0
+[DEBUG]: Motor 10 position: -6054395.0
+[DEBUG]: Motor 11 position: 866086.875
+[DEBUG]: Motor 12 position: -160590.0
+[DEBUG]: Motor 13 position: 2519877.25
+[DEBUG]: Motor 14 position: 1416527.5
+[DEBUG]: Motor 15 position: -3733696.0
+[DEBUG]: Motor 16 position: 206945.265625
+[DEBUG]: Motor 17 position: -1151335.25
+[DEBUG]: Motor 18 position: 20374636.0
+[DEBUG]: Motor 22 position: 969231.0625
+[DEBUG]: Motor 23 position: 208451.359375
+[DEBUG]: Motor 24 position: -2366155.0
+[DEBUG]: Motor 25 position: 23496790.0
+[WARNING] Action exceeds warning threshold: [-8.6394248e+07 -3.5718160e+07 -1.1283847e+08  9.4503568e+07
+ -2.2058530e+08  3.7288442e+08  1.2475892e+08  8.3863832e+07
+ -1.0325681e+07  9.3120704e+07 -7.8793568e+07  1.1271459e+07
+ -2.0899690e+06  3.2794382e+07  1.8435058e+07 -4.8591400e+07
+  2.6932318e+06 -1.4983840e+07  2.6516120e+08  1.2613834e+07
+  2.7128400e+06 -3.0793778e+07  3.0579386e+08]
+[DEBUG]: Motor 0 position: -21598562.0
+[DEBUG]: Motor 1 position: -8929540.0
+[DEBUG]: Motor 2 position: -28209618.0
+[DEBUG]: Motor 3 position: 23625892.0
+[DEBUG]: Motor 4 position: -55146324.0
+[DEBUG]: Motor 5 position: 93221104.0
+[DEBUG]: Motor 6 position: 31189730.0
+[DEBUG]: Motor 7 position: 20965958.0
+[DEBUG]: Motor 8 position: -2581420.25
+[DEBUG]: Motor 9 position: 23280176.0
+[DEBUG]: Motor 10 position: -19698392.0
+[DEBUG]: Motor 11 position: 2817864.75
+[DEBUG]: Motor 12 position: -522492.25
+[DEBUG]: Motor 13 position: 8198595.5
+[DEBUG]: Motor 14 position: 4608764.5
+[DEBUG]: Motor 15 position: -12147850.0
+[DEBUG]: Motor 16 position: 673308.125
+[DEBUG]: Motor 17 position: -3745960.0
+[DEBUG]: Motor 18 position: 66290300.0
+[DEBUG]: Motor 22 position: 3153458.75
+[DEBUG]: Motor 23 position: 678209.8125
+[DEBUG]: Motor 24 position: -7698444.5
+[DEBUG]: Motor 25 position: 76448464.0
+[WARNING] Action exceeds warning threshold: [-2.8108944e+08 -1.1621152e+08 -3.6712765e+08  3.0747370e+08
+ -7.1768960e+08  1.2132054e+09  4.0591171e+08  2.7285693e+08
+ -3.3595348e+07  3.0297446e+08 -2.5636035e+08  3.6672372e+07
+ -6.7998585e+06  1.0669877e+08  5.9979836e+07 -1.5809547e+08
+  8.7625920e+06 -4.8750888e+07  8.6271981e+08  4.1039980e+07
+  8.8264040e+06 -1.0018971e+08  9.9492128e+08]
+[DEBUG]: Motor 0 position: -70272360.0
+[DEBUG]: Motor 1 position: -29052880.0
+[DEBUG]: Motor 2 position: -91781912.0
+[DEBUG]: Motor 3 position: 76868424.0
+[DEBUG]: Motor 4 position: -179422400.0
+[DEBUG]: Motor 5 position: 303301344.0
+[DEBUG]: Motor 6 position: 101477928.0
+[DEBUG]: Motor 7 position: 68214232.0
+[DEBUG]: Motor 8 position: -8398837.0
+[DEBUG]: Motor 9 position: 75743616.0
+[DEBUG]: Motor 10 position: -64090088.0
+[DEBUG]: Motor 11 position: 9168093.0
+[DEBUG]: Motor 12 position: -1699964.625
+[DEBUG]: Motor 13 position: 26674692.0
+[DEBUG]: Motor 14 position: 14994959.0
+[DEBUG]: Motor 15 position: -39523868.0
+[DEBUG]: Motor 16 position: 2190648.25
+[DEBUG]: Motor 17 position: -12187722.0
+[DEBUG]: Motor 18 position: 215679952.0
+[DEBUG]: Motor 22 position: 10259995.0
+[DEBUG]: Motor 23 position: 2206600.75
+[DEBUG]: Motor 24 position: -25047428.0
+[DEBUG]: Motor 25 position: 248730320.0
+[WARNING] Action exceeds warning threshold: [-9.14543936e+08 -3.78102176e+08 -1.19447526e+09  1.00038701e+09
+ -2.33505254e+09  3.94724710e+09  1.32066214e+09  8.87758720e+08
+ -1.09304784e+08  9.85748352e+08 -8.34085952e+08  1.19316088e+08
+ -2.21235300e+07  3.47151712e+08  1.95148368e+08 -5.14374112e+08
+  2.85097800e+07 -1.58614480e+08  2.80691891e+09  1.33526136e+08
+  2.87172580e+07 -3.25973664e+08  3.23704499e+09]
+[DEBUG]: Motor 0 position: -228635984.0
+[DEBUG]: Motor 1 position: -94525544.0
+[DEBUG]: Motor 2 position: -298618816.0
+[DEBUG]: Motor 3 position: 250096752.0
+[DEBUG]: Motor 4 position: -583763136.0
+[DEBUG]: Motor 5 position: 986811776.0
+[DEBUG]: Motor 6 position: 330165536.0
+[DEBUG]: Motor 7 position: 221939680.0
+[DEBUG]: Motor 8 position: -27326196.0
+[DEBUG]: Motor 9 position: 246437088.0
+[DEBUG]: Motor 10 position: -208521488.0
+[DEBUG]: Motor 11 position: 29829022.0
+[DEBUG]: Motor 12 position: -5530882.5
+[DEBUG]: Motor 13 position: 86787928.0
+[DEBUG]: Motor 14 position: 48787092.0
+[DEBUG]: Motor 15 position: -128593528.0
+[DEBUG]: Motor 16 position: 7127445.0
+[DEBUG]: Motor 17 position: -39653620.0
+[DEBUG]: Motor 18 position: 701729728.0
+[DEBUG]: Motor 22 position: 33381534.0
+[DEBUG]: Motor 23 position: 7179314.5
+[DEBUG]: Motor 24 position: -81493416.0
+[DEBUG]: Motor 25 position: 809261248.0
+[WARNING] Action exceeds warning threshold: [-2.97553203e+09 -1.23018278e+09 -3.88630861e+09  3.25482829e+09
+ -7.59725363e+09  1.28426394e+10  4.29686579e+09  2.88838477e+09
+ -3.55630272e+08  3.20720026e+09 -2.71375462e+09  3.88203936e+08
+ -7.19808960e+07  1.12948211e+09  6.34929152e+08 -1.67355226e+09
+  9.27584320e+07 -5.16062112e+08  9.13250304e+09  4.34436000e+08
+  9.34336640e+07 -1.06057786e+09  1.05319506e+10]
+[DEBUG]: Motor 0 position: -743883008.0
+[DEBUG]: Motor 1 position: -307545696.0
+[DEBUG]: Motor 2 position: -971577152.0
+[DEBUG]: Motor 3 position: 813707072.0
+[DEBUG]: Motor 4 position: -1899313408.0
+[DEBUG]: Motor 5 position: 3210659840.0
+[DEBUG]: Motor 6 position: 1074216448.0
+[DEBUG]: Motor 7 position: 722096192.0
+[DEBUG]: Motor 8 position: -88907568.0
+[DEBUG]: Motor 9 position: 801800064.0
+[DEBUG]: Motor 10 position: -678438656.0
+[DEBUG]: Motor 11 position: 97050984.0
+[DEBUG]: Motor 12 position: -17995224.0
+[DEBUG]: Motor 13 position: 282370528.0
+[DEBUG]: Motor 14 position: 158732288.0
+[DEBUG]: Motor 15 position: -418388064.0
+[DEBUG]: Motor 16 position: 23189608.0
+[DEBUG]: Motor 17 position: -129015528.0
+[DEBUG]: Motor 18 position: 2283125760.0
+[DEBUG]: Motor 22 position: 108609000.0
+[DEBUG]: Motor 23 position: 23358416.0
+[DEBUG]: Motor 24 position: -265144464.0
+[DEBUG]: Motor 25 position: 2632987648.0
+[WARNING] Action exceeds warning threshold: [-9.6810988e+09 -4.0024809e+09 -1.2644367e+10  1.0589807e+10
+ -2.4718186e+10  4.1784402e+10  1.3980151e+10  9.3975542e+09
+ -1.1570697e+09  1.0434848e+10 -8.8293919e+09  1.2630492e+09
+ -2.3419339e+08  3.6748480e+09  2.0657855e+09 -5.4450145e+09
+  3.0179763e+08 -1.6790469e+09  2.9713226e+10  1.4134696e+09
+  3.0399136e+08 -3.4506627e+09  3.4266419e+10]
+[DEBUG]: Motor 0 position: -2420274688.0
+[DEBUG]: Motor 1 position: -1000620224.0
+[DEBUG]: Motor 2 position: -3161091840.0
+[DEBUG]: Motor 3 position: 2647451648.0
+[DEBUG]: Motor 4 position: -6179546624.0
+[DEBUG]: Motor 5 position: 10446100480.0
+[DEBUG]: Motor 6 position: 3495037696.0
+[DEBUG]: Motor 7 position: 2349388544.0
+[DEBUG]: Motor 8 position: -289267424.0
+[DEBUG]: Motor 9 position: 2608711936.0
+[DEBUG]: Motor 10 position: -2207347968.0
+[DEBUG]: Motor 11 position: 315762304.0
+[DEBUG]: Motor 12 position: -58548348.0
+[DEBUG]: Motor 13 position: 918712000.0
+[DEBUG]: Motor 14 position: 516446368.0
+[DEBUG]: Motor 15 position: -1361253632.0
+[DEBUG]: Motor 16 position: 75449408.0
+[DEBUG]: Motor 17 position: -419761728.0
+[DEBUG]: Motor 18 position: 7428306432.0
+[DEBUG]: Motor 22 position: 353367392.0
+[DEBUG]: Motor 23 position: 75997840.0
+[DEBUG]: Motor 24 position: -862665664.0
+[DEBUG]: Motor 25 position: 8566604800.0
+[WARNING] Action exceeds warning threshold: [-3.1498117e+10 -1.3022340e+10 -4.1139331e+10  3.4454675e+10
+ -8.0422322e+10  1.3594846e+11  4.5485371e+10  3.0575581e+10
+ -3.7646062e+09  3.3950497e+10 -2.8727022e+10  4.1094162e+09
+ -7.6196800e+08  1.1956378e+10  6.7211709e+09 -1.7715737e+10
+  9.8191136e+08 -5.4628879e+09  9.6674046e+10  4.5988209e+09
+  9.8906438e+08 -1.1226979e+10  1.1148817e+11]
+[DEBUG]: Motor 0 position: -7874529280.0
+[DEBUG]: Motor 1 position: -3255585024.0
+[DEBUG]: Motor 2 position: -10284832768.0
+[DEBUG]: Motor 3 position: 8613668864.0
+[DEBUG]: Motor 4 position: -20105580544.0
+[DEBUG]: Motor 5 position: 33987115008.0
+[DEBUG]: Motor 6 position: 11371342848.0
+[DEBUG]: Motor 7 position: 7643895296.0
+[DEBUG]: Motor 8 position: -941151552.0
+[DEBUG]: Motor 9 position: 8487624192.0
+[DEBUG]: Motor 10 position: -7181755392.0
+[DEBUG]: Motor 11 position: 1027354048.0
+[DEBUG]: Motor 12 position: -190492000.0
+[DEBUG]: Motor 13 position: 2989094400.0
+[DEBUG]: Motor 14 position: 1680292736.0
+[DEBUG]: Motor 15 position: -4428934144.0
+[DEBUG]: Motor 16 position: 245477840.0
+[DEBUG]: Motor 17 position: -1365721984.0
+[DEBUG]: Motor 18 position: 24168511488.0
+[DEBUG]: Motor 22 position: 1149705216.0
+[DEBUG]: Motor 23 position: 247266096.0
+[DEBUG]: Motor 24 position: -2806744832.0
+[DEBUG]: Motor 25 position: 27872043008.0
+[WARNING] Action exceeds warning threshold: [-1.02481240e+11 -4.23690691e+10 -1.33849612e+11  1.12100647e+11
+ -2.61659410e+11  4.42317603e+11  1.47989774e+11  9.94797896e+10
+ -1.22484040e+10  1.10460215e+11 -9.34653952e+10  1.33702943e+10
+ -2.47912038e+09  3.89008671e+10  2.18678252e+10 -5.76393708e+10
+  3.19472870e+09 -1.77738998e+10  3.14535608e+11  1.49625733e+10
+  3.21798221e+09 -3.65277225e+10  3.62734354e+11]
+[DEBUG]: Motor 0 position: -25620310016.0
+[DEBUG]: Motor 1 position: -10592267264.0
+[DEBUG]: Motor 2 position: -33462403072.0
+[DEBUG]: Motor 3 position: 28025161728.0
+[DEBUG]: Motor 4 position: -65414852608.0
+[DEBUG]: Motor 5 position: 110579400704.0
+[DEBUG]: Motor 6 position: 36997443584.0
+[DEBUG]: Motor 7 position: 24869947392.0
+[DEBUG]: Motor 8 position: -3062100992.0
+[DEBUG]: Motor 9 position: 27615053824.0
+[DEBUG]: Motor 10 position: -23366348800.0
+[DEBUG]: Motor 11 position: 3342573568.0
+[DEBUG]: Motor 12 position: -619780096.0
+[DEBUG]: Motor 13 position: 9725216768.0
+[DEBUG]: Motor 14 position: 5466956288.0
+[DEBUG]: Motor 15 position: -14409842688.0
+[DEBUG]: Motor 16 position: 798682176.0
+[DEBUG]: Motor 17 position: -4443474944.0
+[DEBUG]: Motor 18 position: 78633902080.0
+[DEBUG]: Motor 22 position: 3740643328.0
+[DEBUG]: Motor 23 position: 804495552.0
+[DEBUG]: Motor 24 position: -9131930624.0
+[DEBUG]: Motor 25 position: 90683588608.0
+[WARNING] Action exceeds warning threshold: [-3.3342987e+11 -1.3785077e+11 -4.3548888e+11  3.6472704e+11
+ -8.5132725e+11  1.4391108e+12  4.8149479e+11  3.2366422e+11
+ -3.9850955e+10  3.5939005e+11 -3.0409612e+11  4.3501113e+10
+ -8.0659395e+09  1.2656662e+11  7.1148347e+10 -1.8753359e+11
+  1.0394284e+10 -5.7828545e+10  1.0233633e+12  4.8681722e+10
+  1.0469924e+10 -1.1884547e+11  1.1801812e+12]
+[DEBUG]: Motor 0 position: -83357466624.0
+[DEBUG]: Motor 1 position: -34462691328.0
+[DEBUG]: Motor 2 position: -108872220672.0
+[DEBUG]: Motor 3 position: 91181760512.0
+[DEBUG]: Motor 4 position: -212831813632.0
+[DEBUG]: Motor 5 position: 359777697792.0
+[DEBUG]: Motor 6 position: 120373698560.0
+[DEBUG]: Motor 7 position: 80916054016.0
+[DEBUG]: Motor 8 position: -9962738688.0
+[DEBUG]: Motor 9 position: 89847513088.0
+[DEBUG]: Motor 10 position: -76024029184.0
+[DEBUG]: Motor 11 position: 10875278336.0
+[DEBUG]: Motor 12 position: -2016484864.0
+[DEBUG]: Motor 13 position: 31641655296.0
+[DEBUG]: Motor 14 position: 17787086848.0
+[DEBUG]: Motor 15 position: -46883397632.0
+[DEBUG]: Motor 16 position: 2598571008.0
+[DEBUG]: Motor 17 position: -14457136128.0
+[DEBUG]: Motor 18 position: 255840829440.0
+[DEBUG]: Motor 22 position: 12170430464.0
+[DEBUG]: Motor 23 position: 2617480960.0
+[DEBUG]: Motor 24 position: -29711368192.0
+[DEBUG]: Motor 25 position: 295045300224.0
+[WARNING] Action exceeds warning threshold: [-1.08483694e+12 -4.48507085e+11 -1.41689356e+12  1.18666455e+12
+ -2.76985178e+12  4.68224626e+12  1.56657674e+12  1.05306417e+12
+ -1.29657881e+11  1.16930052e+12 -9.89397713e+11  1.41533872e+11
+ -2.62431826e+10  4.11793392e+11  2.31485981e+11 -6.10153529e+11
+  3.38185810e+10 -1.88149383e+11  3.32958217e+12  1.58389273e+11
+  3.40645315e+10 -3.86671935e+11  3.83980064e+12]
+[DEBUG]: Motor 0 position: -271209234432.0
+[DEBUG]: Motor 1 position: -112126771200.0
+[DEBUG]: Motor 2 position: -354223390720.0
+[DEBUG]: Motor 3 position: 296666136576.0
+[DEBUG]: Motor 4 position: -692462944256.0
+[DEBUG]: Motor 5 position: 1170561564672.0
+[DEBUG]: Motor 6 position: 391644184576.0
+[DEBUG]: Motor 7 position: 263266041856.0
+[DEBUG]: Motor 8 position: -32414470144.0
+[DEBUG]: Motor 9 position: 292325130240.0
+[DEBUG]: Motor 10 position: -247349428224.0
+[DEBUG]: Motor 11 position: 35383468032.0
+[DEBUG]: Motor 12 position: -6560795648.0
+[DEBUG]: Motor 13 position: 102948347904.0
+[DEBUG]: Motor 14 position: 57871495168.0
+[DEBUG]: Motor 15 position: -152538382336.0
+[DEBUG]: Motor 16 position: 8454645248.0
+[DEBUG]: Motor 17 position: -47037345792.0
+[DEBUG]: Motor 18 position: 832395542528.0
+[DEBUG]: Motor 22 position: 39597318144.0
+[DEBUG]: Motor 23 position: 8516132864.0
+[DEBUG]: Motor 24 position: -96667983872.0
+[DEBUG]: Motor 25 position: 959950159872.0
+[WARNING] Action exceeds warning threshold: [-3.5295923e+12 -1.4592482e+12 -4.6099595e+12  3.8608959e+12
+ -9.0119036e+12  1.5234005e+13  5.0969659e+12  3.4262153e+12
+ -4.2185068e+11  3.8043989e+12 -3.2190714e+12  4.6048952e+11
+ -8.5384126e+10  1.3397975e+12  7.5315551e+11 -1.9851767e+12
+  1.1003118e+11 -6.1215749e+11  1.0833025e+13  5.1533139e+11
+  1.1083127e+11 -1.2580634e+12  1.2493057e+13]
+[DEBUG]: Motor 0 position: -882398068736.0
+[DEBUG]: Motor 1 position: -364812042240.0
+[DEBUG]: Motor 2 position: -1152489881600.0
+[DEBUG]: Motor 3 position: 965223972864.0
+[DEBUG]: Motor 4 position: -2252975898624.0
+[DEBUG]: Motor 5 position: 3808501170176.0
+[DEBUG]: Motor 6 position: 1274241482752.0
+[DEBUG]: Motor 7 position: 856553816064.0
+[DEBUG]: Motor 8 position: -105462669312.0
+[DEBUG]: Motor 9 position: 951099719680.0
+[DEBUG]: Motor 10 position: -804767858688.0
+[DEBUG]: Motor 11 position: 115122380800.0
+[DEBUG]: Motor 12 position: -21346031616.0
+[DEBUG]: Motor 13 position: 334949384192.0
+[DEBUG]: Motor 14 position: 188288876544.0
+[DEBUG]: Motor 15 position: -496294166528.0
+[DEBUG]: Motor 16 position: 27507795968.0
+[DEBUG]: Motor 17 position: -153039372288.0
+[DEBUG]: Motor 18 position: 2708256325632.0
+[DEBUG]: Motor 22 position: 128832847872.0
+[DEBUG]: Motor 23 position: 27707817984.0
+[DEBUG]: Motor 24 position: -314515849216.0
+[DEBUG]: Motor 25 position: 3123264356352.0
+[WARNING] Action exceeds warning threshold: [-1.1483767e+13 -4.7477587e+12 -1.4998824e+13  1.2561693e+13
+ -2.9320840e+13  4.9564887e+13  1.6583322e+13  1.1147428e+13
+ -1.3725207e+12  1.2377880e+13 -1.0473478e+13  1.4982319e+12
+ -2.7780307e+11  4.3591244e+12  2.4504435e+12 -6.4589110e+12
+  3.5799263e+11 -1.9916932e+12  3.5245999e+13  1.6766633e+12
+  3.6059798e+11 -4.0931987e+12  4.0647013e+13]
+[DEBUG]: Motor 0 position: -2870941843456.0
+[DEBUG]: Motor 1 position: -1186939666432.0
+[DEBUG]: Motor 2 position: -3749705940992.0
+[DEBUG]: Motor 3 position: 3140423254016.0
+[DEBUG]: Motor 4 position: -7330209988608.0
+[DEBUG]: Motor 5 position: 12391221821440.0
+[DEBUG]: Motor 6 position: 4145830428672.0
+[DEBUG]: Motor 7 position: 2786857058304.0
+[DEBUG]: Motor 8 position: -343130177536.0
+[DEBUG]: Motor 9 position: 3094469935104.0
+[DEBUG]: Motor 10 position: -2618369507328.0
+[DEBUG]: Motor 11 position: 374557966336.0
+[DEBUG]: Motor 12 position: -69450768384.0
+[DEBUG]: Motor 13 position: 1089781104640.0
+[DEBUG]: Motor 14 position: 612610867200.0
+[DEBUG]: Motor 15 position: -1614727741440.0
+[DEBUG]: Motor 16 position: 89498157056.0
+[DEBUG]: Motor 17 position: -497923293184.0
+[DEBUG]: Motor 18 position: 8811499749376.0
+[DEBUG]: Motor 22 position: 419165831168.0
+[DEBUG]: Motor 23 position: 90149494784.0
+[DEBUG]: Motor 24 position: -1023299682304.0
+[DEBUG]: Motor 25 position: 10161753161728.0
+[WARNING] Action exceeds warning threshold: [-3.73632459e+13 -1.54471728e+13 -4.87996952e+13  4.08703048e+13
+ -9.53974060e+13  1.61262802e+14  5.39549940e+13  3.62689226e+13
+ -4.46558896e+12  4.02722516e+13 -3.40761636e+13  4.87461696e+12
+ -9.03848526e+11  1.41827076e+13  7.97270186e+12 -2.10145116e+13
+  1.16475848e+12 -6.48010845e+12  1.14675283e+14  5.45514324e+12
+  1.17323163e+12 -1.33175045e+13  1.32247814e+14]
+[DEBUG]: Motor 0 position: -9340811476992.0
+[DEBUG]: Motor 1 position: -3861793210368.0
+[DEBUG]: Motor 2 position: -12199923810304.0
+[DEBUG]: Motor 3 position: 10217576202240.0
+[DEBUG]: Motor 4 position: -23849351512064.0
+[DEBUG]: Motor 5 position: 40315700379648.0
+[DEBUG]: Motor 6 position: 13488748494848.0
+[DEBUG]: Motor 7 position: 9067230658560.0
+[DEBUG]: Motor 8 position: -1116397240320.0
+[DEBUG]: Motor 9 position: 10068062896128.0
+[DEBUG]: Motor 10 position: -8519040892928.0
+[DEBUG]: Motor 11 position: 1218654240768.0
+[DEBUG]: Motor 12 position: -225962131456.0
+[DEBUG]: Motor 13 position: 3545676906496.0
+[DEBUG]: Motor 14 position: 1993175465984.0
+[DEBUG]: Motor 15 position: -5253627904000.0
+[DEBUG]: Motor 16 position: 291189620736.0
+[DEBUG]: Motor 17 position: -1620027113472.0
+[DEBUG]: Motor 18 position: 28668820717568.0
+[DEBUG]: Motor 22 position: 1363785809920.0
+[DEBUG]: Motor 23 position: 293307908096.0
+[DEBUG]: Motor 24 position: -3329376124928.0
+[DEBUG]: Motor 25 position: 33061953601536.0
+[WARNING] Action exceeds warning threshold: [-1.21563840e+14 -5.02584322e+13 -1.58773130e+14  1.32974410e+14
+ -3.10381885e+14  5.24679547e+14  1.75546235e+14  1.18003513e+14
+ -1.45291131e+13  1.31028555e+14 -1.10869111e+14  1.58598347e+13
+ -2.94074397e+12  4.61444492e+13  2.59396920e+13 -6.83721842e+13
+  3.78961736e+12 -2.10834723e+13  3.73103775e+14  1.77486483e+13
+  3.81717787e+12 -4.33294294e+13  4.30277441e+14]
+[DEBUG]: Motor 0 position: -30390959996928.0
+[DEBUG]: Motor 1 position: -12564608057344.0
+[DEBUG]: Motor 2 position: -39693282443264.0
+[DEBUG]: Motor 3 position: 33243602616320.0
+[DEBUG]: Motor 4 position: -77595471249408.0
+[DEBUG]: Motor 5 position: 131169886666752.0
+[DEBUG]: Motor 6 position: 43886558838784.0
+[DEBUG]: Motor 7 position: 29500878356480.0
+[DEBUG]: Motor 8 position: -3632278274048.0
+[DEBUG]: Motor 9 position: 32757138849792.0
+[DEBUG]: Motor 10 position: -27717277843456.0
+[DEBUG]: Motor 11 position: 3964958670848.0
+[DEBUG]: Motor 12 position: -735185993728.0
+[DEBUG]: Motor 13 position: 11536112287744.0
+[DEBUG]: Motor 14 position: 6484922990592.0
+[DEBUG]: Motor 15 position: -17093046042624.0
+[DEBUG]: Motor 16 position: 947404341248.0
+[DEBUG]: Motor 17 position: -5270868066304.0
+[DEBUG]: Motor 18 position: 93275943862272.0
+[DEBUG]: Motor 22 position: 4437162065920.0
+[DEBUG]: Motor 23 position: 954294468608.0
+[DEBUG]: Motor 24 position: -10832357359616.0
+[DEBUG]: Motor 25 position: 107569360142336.0
+[WARNING] Action exceeds warning threshold: [-3.95516559e+14 -1.63519354e+14 -5.16579205e+14  4.32641451e+14
+ -1.00984895e+15  1.70708092e+15  5.71151797e+14  3.83932260e+14
+ -4.72713538e+13  4.26310434e+14 -3.60720412e+14  5.16011506e+13
+ -9.56783342e+12  1.50134105e+14  8.43965687e+13 -2.22453284e+14
+  1.23297260e+13 -6.85965669e+13  1.21391882e+15  5.77466574e+13
+  1.24194432e+13 -1.40975305e+14  1.39993734e+15]
+[DEBUG]: Motor 0 position: -98879139741696.0
+[DEBUG]: Motor 1 position: -40879838461952.0
+[DEBUG]: Motor 2 position: -129144801198080.0
+[DEBUG]: Motor 3 position: 108160362741760.0
+[DEBUG]: Motor 4 position: -252462237745152.0
+[DEBUG]: Motor 5 position: 426770230673408.0
+[DEBUG]: Motor 6 position: 142787949363200.0
+[DEBUG]: Motor 7 position: 95983065104384.0
+[DEBUG]: Motor 8 position: -11817838444544.0
+[DEBUG]: Motor 9 position: 106577608572928.0
+[DEBUG]: Motor 10 position: -90180102914048.0
+[DEBUG]: Motor 11 position: 12900287643648.0
+[DEBUG]: Motor 12 position: -2391958355968.0
+[DEBUG]: Motor 13 position: 37533526261760.0
+[DEBUG]: Motor 14 position: 21099142184960.0
+[DEBUG]: Motor 15 position: -55613321117696.0
+[DEBUG]: Motor 16 position: 3082431496192.0
+[DEBUG]: Motor 17 position: -17149141712896.0
+[DEBUG]: Motor 18 position: 303479704780800.0
+[DEBUG]: Motor 22 position: 14436664344576.0
+[DEBUG]: Motor 23 position: 3104860798976.0
+[DEBUG]: Motor 24 position: -35243826348032.0
+[DEBUG]: Motor 25 position: 349984335593472.0
+[WARNING] Action exceeds warning threshold: [-1.2868398e+15 -5.3202139e+14 -1.6807267e+15  1.4076279e+15
+ -3.2856132e+15  5.5541051e+15  1.8582811e+15  1.2491502e+15
+ -1.5380082e+14  1.3870299e+15 -1.1736277e+15  1.6788802e+14
+ -3.1129803e+13  4.8847140e+14  2.7459016e+14 -7.2376769e+14
+  4.0115473e+13 -2.2318328e+14  3.9495692e+15  1.8788227e+14
+  4.0407610e+13 -4.5867231e+14  4.5547924e+15]
+[DEBUG]: Motor 0 position: -321709961904128.0
+[DEBUG]: Motor 1 position: -133005347651584.0
+[DEBUG]: Motor 2 position: -420181683732480.0
+[DEBUG]: Motor 3 position: 351906970992640.0
+[DEBUG]: Motor 4 position: -821403301445632.0
+[DEBUG]: Motor 5 position: 1388526285357056.0
+[DEBUG]: Motor 6 position: 464570271399936.0
+[DEBUG]: Motor 7 position: 312287541854208.0
+[DEBUG]: Motor 8 position: -38450203983872.0
+[DEBUG]: Motor 9 position: 346757472976896.0
+[DEBUG]: Motor 10 position: -293406932729856.0
+[DEBUG]: Motor 11 position: 41972005863424.0
+[DEBUG]: Motor 12 position: -7782450855936.0
+[DEBUG]: Motor 13 position: 122117848825856.0
+[DEBUG]: Motor 14 position: 68647540228096.0
+[DEBUG]: Motor 15 position: -180941922238464.0
+[DEBUG]: Motor 16 position: 10028868173824.0
+[DEBUG]: Motor 17 position: -55795819479040.0
+[DEBUG]: Motor 18 position: 987392311820288.0
+[DEBUG]: Motor 22 position: 46970567655424.0
+[DEBUG]: Motor 23 position: 10101902540800.0
+[DEBUG]: Motor 24 position: -114668077056000.0
+[DEBUG]: Motor 25 position: 1138698104078336.0
+[WARNING] Action exceeds warning threshold: [-4.1868214e+15 -1.7309681e+15 -5.4683577e+15  4.5798154e+15
+ -1.0689965e+16  1.8070667e+16  6.0460480e+15  4.0641960e+15
+ -5.0040174e+14  4.5127978e+15 -3.8184823e+15  5.4623626e+14
+ -1.0128333e+14  1.5892757e+15  8.9339789e+14 -2.3548283e+15
+  1.3051882e+14 -7.2614448e+14  1.2850195e+16  6.1128827e+14
+  1.3146864e+14 -1.4923214e+15  1.4819328e+16]
+[DEBUG]: Motor 0 position: -1046705340416000.0
+[DEBUG]: Motor 1 position: -432742013599744.0
+[DEBUG]: Motor 2 position: -1367089432494080.0
+[DEBUG]: Motor 3 position: 1144953858162688.0
+[DEBUG]: Motor 4 position: -2672491323457536.0
+[DEBUG]: Motor 5 position: 4517666719006720.0
+[DEBUG]: Motor 6 position: 1511512002789376.0
+[DEBUG]: Motor 7 position: 1016049004707840.0
+[DEBUG]: Motor 8 position: -125100435177472.0
+[DEBUG]: Motor 9 position: 1128199459176448.0
+[DEBUG]: Motor 10 position: -954620570501120.0
+[DEBUG]: Motor 11 position: 136559063990272.0
+[DEBUG]: Motor 12 position: -25320832892928.0
+[DEBUG]: Motor 13 position: 397318935281664.0
+[DEBUG]: Motor 14 position: 223349473017856.0
+[DEBUG]: Motor 15 position: -588707073622016.0
+[DEBUG]: Motor 16 position: 32629705408512.0
+[DEBUG]: Motor 17 position: -181536120897536.0
+[DEBUG]: Motor 18 position: 3212548832755712.0
+[DEBUG]: Motor 22 position: 152822066708480.0
+[DEBUG]: Motor 23 position: 32867159638016.0
+[DEBUG]: Motor 24 position: -373080354455552.0
+[DEBUG]: Motor 25 position: 3704832078643200.0
+[WARNING] Action exceeds warning threshold: [-1.3622119e+16 -5.6318231e+15 -1.7791688e+16  1.4900749e+16
+ -3.4780546e+16  5.8794147e+16  1.9671229e+16  1.3223145e+16
+ -1.6280907e+15  1.4682699e+16 -1.2423694e+16  1.7772105e+15
+ -3.2953184e+14  5.1708190e+15  2.9067286e+15 -7.6615924e+15
+  4.2465405e+14 -2.3625622e+15  4.1809011e+16  1.9888708e+15
+  4.2774123e+14 -4.8553746e+15  4.8215719e+16]
+[DEBUG]: Motor 0 position: -3405529766428672.0
+[DEBUG]: Motor 1 position: -1407955777880064.0
+[DEBUG]: Motor 2 position: -4447922087264256.0
+[DEBUG]: Motor 3 position: 3725187270836224.0
+[DEBUG]: Motor 4 position: -8695136594690048.0
+[DEBUG]: Motor 5 position: 1.4698536654340096e+16
+[DEBUG]: Motor 6 position: 4917807347138560.0
+[DEBUG]: Motor 7 position: 3305786130300928.0
+[DEBUG]: Motor 8 position: -407022675689472.0
+[DEBUG]: Motor 9 position: 3670674740609024.0
+[DEBUG]: Motor 10 position: -3105923585277952.0
+[DEBUG]: Motor 11 position: 444302622720000.0
+[DEBUG]: Motor 12 position: -82382958886912.0
+[DEBUG]: Motor 13 position: 1292704759676928.0
+[DEBUG]: Motor 14 position: 726682159808512.0
+[DEBUG]: Motor 15 position: -1915398110838784.0
+[DEBUG]: Motor 16 position: 106163513327616.0
+[DEBUG]: Motor 17 position: -590640547102720.0
+[DEBUG]: Motor 18 position: 1.0452252812640256e+16
+[DEBUG]: Motor 22 position: 497217693548544.0
+[DEBUG]: Motor 23 position: 106935307206656.0
+[DEBUG]: Motor 24 position: -1213843657195520.0
+[DEBUG]: Motor 25 position: 1.2053929869180928e+16
+[WARNING] Action exceeds warning threshold: [-4.43204934e+16 -1.83235245e+16 -5.78864740e+16  4.84805944e+16
+ -1.13160921e+17  1.91290817e+17  6.40017086e+16  4.30223953e+16
+ -5.29710396e+15  4.77711775e+16 -4.04213245e+16  5.78228977e+15
+ -1.07215436e+15  1.68236113e+16  9.45724740e+15 -2.49275220e+16
+  1.38164024e+15 -7.68675505e+15  1.36028443e+17  6.47092389e+15
+  1.39169423e+15 -1.57972913e+16  1.56873131e+17]
+[DEBUG]: Motor 0 position: -1.1080123344224256e+16
+[DEBUG]: Motor 1 position: -4580881121411072.0
+[DEBUG]: Motor 2 position: -1.447161849970688e+16
+[DEBUG]: Motor 3 position: 1.2120148601208832e+16
+[DEBUG]: Motor 4 position: -2.829023017172992e+16
+[DEBUG]: Motor 5 position: 4.782270419933594e+16
+[DEBUG]: Motor 6 position: 1.6000427141103616e+16
+[DEBUG]: Motor 7 position: 1.0755598836563968e+16
+[DEBUG]: Motor 8 position: -1324275990528000.0
+[DEBUG]: Motor 9 position: 1.1942794369171456e+16
+[DEBUG]: Motor 10 position: -1.0105331124273152e+16
+[DEBUG]: Motor 11 position: 1445572443635712.0
+[DEBUG]: Motor 12 position: -268038590955520.0
+[DEBUG]: Motor 13 position: 4205902827618304.0
+[DEBUG]: Motor 14 position: 2364311850713088.0
+[DEBUG]: Motor 15 position: -6231880508637184.0
+[DEBUG]: Motor 16 position: 345410061205504.0
+[DEBUG]: Motor 17 position: -1921688761532416.0
+[DEBUG]: Motor 18 position: 3.400711081558016e+16
+[DEBUG]: Motor 22 position: 1617730973204480.0
+[DEBUG]: Motor 23 position: 347923556597760.0
+[DEBUG]: Motor 24 position: -3949322823532544.0
+[DEBUG]: Motor 25 position: 3.921828268264653e+16
+[WARNING] Action exceeds warning threshold: [-1.4419976e+17 -5.9616882e+16 -1.8833763e+17  1.5773508e+17
+ -3.6817683e+17  6.2237794e+17  2.0823398e+17  1.3997638e+17
+ -1.7234494e+16  1.5542689e+17 -1.3151354e+17  1.8813067e+16
+ -3.4883279e+15  5.4736777e+16  3.0769758e+16 -8.1103422e+16
+  4.4952333e+15 -2.5009341e+16  4.4257807e+17  2.1053593e+16
+  4.5279430e+15 -5.1397564e+16  5.1039749e+17]
+[DEBUG]: Motor 0 position: -3.604994114296218e+16
+[DEBUG]: Motor 1 position: -1.4904220490661888e+16
+[DEBUG]: Motor 2 position: -4.708440791108813e+16
+[DEBUG]: Motor 3 position: 3.943376978182144e+16
+[DEBUG]: Motor 4 position: -9.204420716999475e+16
+[DEBUG]: Motor 5 position: 1.5559448460682854e+17
+[DEBUG]: Motor 6 position: 5.205849543593165e+16
+[DEBUG]: Motor 7 position: 3.499409430020096e+16
+[DEBUG]: Motor 8 position: -4308623412953088.0
+[DEBUG]: Motor 9 position: 3.885672374573466e+16
+[DEBUG]: Motor 10 position: -3.287838482025677e+16
+[DEBUG]: Motor 11 position: 4703266751381504.0
+[DEBUG]: Motor 12 position: -872081969381376.0
+[DEBUG]: Motor 13 position: 1.3684194228043776e+16
+[DEBUG]: Motor 14 position: 7692439435345920.0
+[DEBUG]: Motor 15 position: -2.027585555713229e+16
+[DEBUG]: Motor 16 position: 1123808324878336.0
+[DEBUG]: Motor 17 position: -6252335290384384.0
+[DEBUG]: Motor 18 position: 1.1064451652806246e+17
+[DEBUG]: Motor 22 position: 5263398132514816.0
+[DEBUG]: Motor 23 position: 1131985741283328.0
+[DEBUG]: Motor 24 position: -1.2849391098396672e+16
+[DEBUG]: Motor 25 position: 1.2759937237542502e+17
+[WARNING] Action exceeds warning threshold: [-4.6916371e+17 -1.9396766e+17 -6.1276917e+17  5.1320138e+17
+ -1.1978885e+18  2.0249488e+18  6.7750347e+17  4.5542263e+17
+ -5.6073607e+16  5.0569168e+17 -4.2788852e+17  6.1209683e+16
+ -1.1349459e+16  1.7808977e+17  1.0011170e+17 -2.6387535e+17
+  1.4625732e+16 -8.1369599e+16  1.4399573e+18  6.8499489e+16
+  1.4732009e+16 -1.6722546e+17  1.6606132e+18]
+[DEBUG]: Motor 0 position: -1.1729092687901491e+17
+[DEBUG]: Motor 1 position: -4.849191593862758e+16
+[DEBUG]: Motor 2 position: -1.5319229221830656e+17
+[DEBUG]: Motor 3 position: 1.283003453978706e+17
+[DEBUG]: Motor 4 position: -2.9947212663147725e+17
+[DEBUG]: Motor 5 position: 5.0623721238010266e+17
+[DEBUG]: Motor 6 position: 1.6937586642858803e+17
+[DEBUG]: Motor 7 position: 1.1385565741685146e+17
+[DEBUG]: Motor 8 position: -1.4018401739472896e+16
+[DEBUG]: Motor 9 position: 1.2642292070350848e+17
+[DEBUG]: Motor 10 position: -1.0697213051142144e+17
+[DEBUG]: Motor 11 position: 1.530242086731776e+16
+[DEBUG]: Motor 12 position: -2837364648968192.0
+[DEBUG]: Motor 13 position: 4.452244273915494e+16
+[DEBUG]: Motor 14 position: 2.502792548502733e+16
+[DEBUG]: Motor 15 position: -6.596883794572083e+16
+[DEBUG]: Motor 16 position: 3656432897490944.0
+[DEBUG]: Motor 17 position: -2.0342399632932864e+16
+[DEBUG]: Motor 18 position: 3.59989315343745e+17
+[DEBUG]: Motor 22 position: 1.712487212777472e+16
+[DEBUG]: Motor 23 position: 3683002370490368.0
+[DEBUG]: Motor 24 position: -4.180636555070669e+16
+[DEBUG]: Motor 25 position: 4.151532911780168e+17
+[WARNING] Action exceeds warning threshold: [-1.5264560e+18 -6.3108662e+17 -1.9936866e+18  1.6697377e+18
+ -3.8974128e+18  6.5883100e+18  2.2043039e+18  1.4817493e+18
+ -1.8243939e+17  1.6453033e+18 -1.3921653e+18  1.9914999e+17
+ -3.6926295e+16  5.7942772e+17  3.2572008e+17 -8.5853709e+17
+  4.7585197e+16 -2.6474135e+17  4.6850015e+18  2.2286699e+17
+  4.7931560e+16 -5.4407989e+17  5.4029204e+18]
+[DEBUG]: Motor 0 position: -3.816139946427679e+17
+[DEBUG]: Motor 1 position: -1.577716550687785e+17
+[DEBUG]: Motor 2 position: -4.984216432117023e+17
+[DEBUG]: Motor 3 position: 4.174344342082683e+17
+[DEBUG]: Motor 4 position: -9.743531883941069e+17
+[DEBUG]: Motor 5 position: 1.6470774893793772e+18
+[DEBUG]: Motor 6 position: 5.510759837555753e+17
+[DEBUG]: Motor 7 position: 3.7043732150747136e+17
+[DEBUG]: Motor 8 position: -4.560984685412352e+16
+[DEBUG]: Motor 9 position: 4.113258224822518e+17
+[DEBUG]: Motor 10 position: -3.4804133480156365e+17
+[DEBUG]: Motor 11 position: 4.978749711843328e+16
+[DEBUG]: Motor 12 position: -9231573714993152.0
+[DEBUG]: Motor 13 position: 1.4485692892787507e+17
+[DEBUG]: Motor 14 position: 8.143002013165158e+16
+[DEBUG]: Motor 15 position: -2.1463427328874906e+17
+[DEBUG]: Motor 16 position: 1.1896299200708608e+16
+[DEBUG]: Motor 17 position: -6.61853386571776e+16
+[DEBUG]: Motor 18 position: 1.171250363441873e+18
+[DEBUG]: Motor 22 position: 5.571674671520154e+16
+[DEBUG]: Motor 23 position: 1.1982890036363264e+16
+[DEBUG]: Motor 24 position: -1.3601997358681293e+17
+[DEBUG]: Motor 25 position: 1.3507301060745626e+18
+[WARNING] Action exceeds warning threshold: [-4.96643135e+18 -2.05328354e+18 -6.48659799e+18  5.43260174e+18
+ -1.26804994e+19  2.14355245e+19  7.17185541e+18  4.82097421e+18
+ -5.93580492e+17  5.35310430e+18 -4.52950495e+18  6.47946944e+17
+ -1.20143051e+17  1.88520821e+18  1.05975336e+18 -2.79331066e+18
+  1.54822782e+17 -8.61355897e+17  1.52429739e+19  7.25113556e+17
+  1.55949077e+17 -1.77020149e+18  1.75787742e+19]
+[DEBUG]: Motor 0 position: -1.2416078376253522e+18
+[DEBUG]: Motor 1 position: -5.133208847615263e+17
+[DEBUG]: Motor 2 position: -1.621649496280662e+18
+[DEBUG]: Motor 3 position: 1.3581504351725158e+18
+[DEBUG]: Motor 4 position: -3.1701248444653896e+18
+[DEBUG]: Motor 5 position: 5.358881135315124e+18
+[DEBUG]: Motor 6 position: 1.7929638532486267e+18
+[DEBUG]: Motor 7 position: 1.205243552120963e+18
+[DEBUG]: Motor 8 position: -1.4839512298631987e+17
+[DEBUG]: Motor 9 position: 1.3382760753056973e+18
+[DEBUG]: Motor 10 position: -1.1323762364886548e+18
+[DEBUG]: Motor 11 position: 1.619867359730729e+17
+[DEBUG]: Motor 12 position: -3.0035762862882816e+16
+[DEBUG]: Motor 13 position: 4.7130205147365376e+17
+[DEBUG]: Motor 14 position: 2.6493833900877414e+17
+[DEBUG]: Motor 15 position: -6.983276661886157e+17
+[DEBUG]: Motor 16 position: 3.870569551573811e+16
+[DEBUG]: Motor 17 position: -2.1533897434280755e+17
+[DEBUG]: Motor 18 position: 3.8107434746390774e+18
+[DEBUG]: Motor 22 position: 1.8127838903690854e+17
+[DEBUG]: Motor 23 position: 3.898726927669658e+16
+[DEBUG]: Motor 24 position: -4.4255037216312525e+17
+[DEBUG]: Motor 25 position: 4.394693550395097e+18
+[WARNING] Action exceeds warning threshold: [-1.6158620e+19 -6.6805013e+18 -2.1104598e+19  1.7675350e+19
+ -4.1256865e+19  6.9741970e+19  2.3334122e+19  1.5685372e+19
+ -1.9312504e+18  1.7416698e+19 -1.4737053e+19  2.1081387e+18
+ -3.9089336e+17  6.1336537e+18  3.4479783e+18 -9.0882245e+18
+  5.0372098e+17 -2.8024759e+18  4.9594066e+19  2.3592023e+18
+  5.0738902e+17 -5.7594706e+18  5.7193758e+19]
+[DEBUG]: Motor 0 position: -4.039654923594367e+18
+[DEBUG]: Motor 1 position: -1.6701253146818642e+18
+[DEBUG]: Motor 2 position: -5.276149482394747e+18
+[DEBUG]: Motor 3 position: 4.4188374513515233e+18
+[DEBUG]: Motor 4 position: -1.0314216214469018e+19
+[DEBUG]: Motor 5 position: 1.7435492443318387e+19
+[DEBUG]: Motor 6 position: 5.833530409421373e+18
+[DEBUG]: Motor 7 position: 3.9213430743991583e+18
+[DEBUG]: Motor 8 position: -4.828125981866721e+17
+[DEBUG]: Motor 9 position: 4.354174622766203e+18
+[DEBUG]: Motor 10 position: -3.684263353561121e+18
+[DEBUG]: Motor 11 position: 5.270346809779159e+17
+[DEBUG]: Motor 12 position: -9.772333934628045e+16
+[DEBUG]: Motor 13 position: 1.533413413273731e+18
+[DEBUG]: Motor 14 position: 8.619945761880146e+17
+[DEBUG]: Motor 15 position: -2.2720561164037652e+18
+[DEBUG]: Motor 16 position: 1.2593024500498432e+17
+[DEBUG]: Motor 17 position: -7.006189797014241e+17
+[DEBUG]: Motor 18 position: 1.239851642677887e+19
+[DEBUG]: Motor 22 position: 5.898005771274158e+17
+[DEBUG]: Motor 23 position: 1.2684725488241869e+17
+[DEBUG]: Motor 24 position: -1.4398676511773164e+18
+[DEBUG]: Motor 25 position: 1.4298439534226964e+19
+Moving to default pos.
+[DEBUG] Motor 00: target=-0.100, actual=-0.069, err=+0.031
+[DEBUG] Motor 01: target=+0.000, actual=-0.004, err=-0.004
+[DEBUG] Motor 02: target=+0.000, actual=+0.014, err=+0.014
+[DEBUG] Motor 03: target=+0.300, actual=+0.343, err=+0.043
+[DEBUG] Motor 04: target=-0.200, actual=-0.469, err=-0.269
+[DEBUG] Motor 05: target=+0.000, actual=-0.057, err=-0.057
+[DEBUG] Motor 06: target=-0.100, actual=+0.001, err=+0.101
+[DEBUG] Motor 07: target=+0.000, actual=-0.008, err=-0.008
+[DEBUG] Motor 08: target=+0.000, actual=+0.016, err=+0.016
+[DEBUG] Motor 09: target=+0.300, actual=+0.335, err=+0.035
+[DEBUG] Motor 10: target=-0.200, actual=-0.500, err=-0.300
+[DEBUG] Motor 11: target=+0.000, actual=+0.003, err=+0.003
+[DEBUG] Motor 12: target=+0.000, actual=-0.001, err=-0.001
+[DEBUG] Motor 13: target=+0.000, actual=+0.000, err=+0.000
+[DEBUG] Motor 14: target=+0.000, actual=+0.000, err=+0.000
+[DEBUG] Motor 15: target=+0.200, actual=+0.186, err=-0.014
+[DEBUG] Motor 16: target=+0.200, actual=+0.178, err=-0.022
+[DEBUG] Motor 17: target=+0.000, actual=-0.005, err=-0.005
+[DEBUG] Motor 18: target=+0.900, actual=+0.910, err=+0.010
+[DEBUG] Motor 22: target=+0.200, actual=+0.189, err=-0.011
+[DEBUG] Motor 23: target=-0.200, actual=-0.179, err=+0.021
+[DEBUG] Motor 24: target=+0.000, actual=+0.005, err=+0.005
+[DEBUG] Motor 25: target=+0.900, actual=+0.911, err=+0.011
+[DEBUG] Motor 19: target=-0.050, actual=-0.050, err=+0.000
+[DEBUG] Motor 20: target=+0.120, actual=+0.123, err=+0.003
+[DEBUG] Motor 21: target=-0.030, actual=-0.029, err=+0.001
+[DEBUG] Motor 26: target=-0.160, actual=-0.163, err=-0.003
+[DEBUG] Motor 27: target=+0.120, actual=+0.122, err=+0.002
+[DEBUG] Motor 28: target=-0.020, actual=-0.016, err=+0.004
+Successfully moved to default pos!
+Enter default pos state.
+Waiting for the Button A signal...
+Exit

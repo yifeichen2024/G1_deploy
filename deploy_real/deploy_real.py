@@ -24,9 +24,10 @@ class Controller:
     def __init__(self, config: Config) -> None:
         self.config = config
         self.remote_controller = RemoteController()
-
+        print("[DEBUG]: Start to load the policy...")
         # Initialize the policy network
         self.policy = torch.jit.load(config.policy_path)
+        print("[DEBUG]: Load successful!")
         # Initializing process variables
         self.qj = np.zeros(config.num_actions, dtype=np.float32)
         self.dqj = np.zeros(config.num_actions, dtype=np.float32)
@@ -210,7 +211,7 @@ class Controller:
             self.low_cmd.motor_cmd[motor_idx].kp = self.config.kps[i]
             self.low_cmd.motor_cmd[motor_idx].kd = self.config.kds[i]
             self.low_cmd.motor_cmd[motor_idx].tau = 0
-
+            print(f"[DEBUG]: Motor {motor_idx} position: {target_dof_pos[i]}")
         for i in range(len(self.config.arm_waist_joint2motor_idx)):
             motor_idx = self.config.arm_waist_joint2motor_idx[i]
             self.low_cmd.motor_cmd[motor_idx].q = self.config.arm_waist_target[i]
@@ -234,10 +235,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Load config
-    #config_path = f"{LEGGED_GYM_ROOT_DIR}/deploy/deploy_real/configs/{args.config}"
-    #config_path = f"home/zy/unitree_rl_gym/deploy/deploy_real/configs/{args.config}"
-    config_path = "/home/zy/unitree_rl_gym/deploy/deploy_real/configs/g1.yaml"
+    config_path = f"deploy_real/configs/{args.config}"
     config = Config(config_path)
+    
+    # DEBUG
+    import torch
+    print(torch.__version__)
 
     # Initialize DDS communication
     ChannelFactoryInitialize(0, args.net)

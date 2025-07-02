@@ -37,7 +37,6 @@ class Controller:
         self.ort_session = onnxruntime.InferenceSession(config.policy_path)
         self.input_name = self.ort_session.get_inputs()[0].name
 
-
         # Initializing process variables
         self.qj = np.zeros(config.num_actions, dtype=np.float32)
         self.dqj = np.zeros(config.num_actions, dtype=np.float32)
@@ -85,8 +84,10 @@ class Controller:
         else:
             raise ValueError("Invalid msg_type")
 
+        print("[DEBUG]: Waiting for the lower state info...")
         # wait for the subscriber to receive data
         self.wait_for_low_state()
+        print("[DEBUG]: Lower state get!")
 
         # Initialize the command msg
         if config.msg_type == "hg":
@@ -122,8 +123,8 @@ class Controller:
 
     def move_to_default_pos(self):
         print("Moving to default pos.")
-        # move time 2s
-        total_time = 2
+        # move time 5 s
+        total_time = 5
         num_step = int(total_time / self.config.control_dt)
         
         dof_idx = self.config.action_joint2motor_idx + self.config.fixed_joint2motor_idx
@@ -150,6 +151,17 @@ class Controller:
                 self.low_cmd.motor_cmd[motor_idx].tau = 0
             self.send_cmd(self.low_cmd)
             time.sleep(self.config.control_dt)
+
+        for i in range(dof_size):
+            motor_idx = dof_idx[i]
+            current_q = self.low_state.motor_state[motor_idx].q
+            target_q = default_pos[i]
+            err = current_q - target_q
+            print(f"[DEBUG] Motor {motor_idx:02d}: target={target_q:+.3f}, actual={current_q:+.3f}, err={err:+.3f}")
+        if abs(err) < 0.01:
+            print("Successfully moved to default pos!")
+        else:
+            print("Failed to move to default pos!")
 
     def default_pos_state(self):
         print("Enter default pos state.")
@@ -236,21 +248,22 @@ class Controller:
         base_ang_vel = ang_vel* self.config.ang_vel_scale
         
         self.ref_motion_phase += self.config.ref_motion_phase
+        self.ref_motion_phase = self.ref_motion_phase % 1 # Prevention
         num_actions = self.config.num_actions
 
 
-        print("Shapes of arrays to concatenate:")
-        print(f"self.action shape: {np.array(self.action).shape}")
-        print(f"base_ang_vel shape: {np.array(base_ang_vel).shape}")
-        print(f"dof_pos shape: {np.array(dof_pos).shape}")
-        print(f"dof_vel shape: {np.array(dof_vel).shape}")
-        # print(f"history_obs_buf shape: {np.array(history_obs_buf).shape}")
-        print(f"projected_gravity shape: {np.array(projected_gravity).shape}")
-        print(f"[self.ref_motion_phase] shape: {np.array([self.ref_motion_phase]).shape}")
+        # print("Shapes of arrays to concatenate:")
+        # print(f"self.action shape: {np.array(self.action).shape}")
+        # print(f"base_ang_vel shape: {np.array(base_ang_vel).shape}")
+        # print(f"dof_pos shape: {np.array(dof_pos).shape}")
+        # print(f"dof_vel shape: {np.array(dof_vel).shape}")
+        # # print(f"history_obs_buf shape: {np.array(history_obs_buf).shape}")
+        # print(f"projected_gravity shape: {np.array(projected_gravity).shape}")
+        # print(f"[self.ref_motion_phase] shape: {np.array([self.ref_motion_phase]).shape}")
 
         history_obs_buf = np.concatenate((self.action_buf, self.ang_vel_buf, self.dof_pos_buf, self.dof_vel_buf, self.proj_g_buf, self.ref_motion_phase_buf), axis=-1, dtype=np.float32)
         
-        print(f"history_obs_buf shape: {np.array(history_obs_buf).shape}")
+        # print(f"history_obs_buf shape: {np.array(history_obs_buf).shape}")
 
         try:
             obs_buf = np.concatenate((self.action, base_ang_vel.flatten(), dof_pos, dof_vel, history_obs_buf, projected_gravity, [self.ref_motion_phase]), axis=-1, dtype=np.float32)
@@ -277,15 +290,25 @@ class Controller:
         self.ref_motion_phase_buf = np.concatenate(([self.ref_motion_phase], self.ref_motion_phase_buf[:-1] ), axis=-1, dtype=np.float32)                
         
         
-        
+        # Get ready for the observation input 
         obs_tensor = torch.from_numpy(obs_buf).unsqueeze(0).cpu().numpy()
+        # Get the action from the policy network
         self.action = np.squeeze(self.ort_session.run(None, {self.input_name: obs_tensor})[0])
 
+        # Warning for the action threshold
+        if np.any(np.abs(self.action) > self.config.action_clip_warn_threshold):
+            print(f"[WARNING] Action exceeds warning threshold: {self.action}")
 
+        # action clipping
+        # self.action = np.clip(self.action, -self.config.action_clip, self.config.action_clip)
+        
         # self.action = self.policy(obs_tensor).detach().numpy().squeeze()
         
         # transform action to target_dof_pos
         target_dof_pos = self.config.default_angles + self.action * self.config.action_scale
+
+        # Target_position clip 
+        # target_dof_pos = np.clip(target_dof_pos, self.config.dof_pos_lower_limit, self.config.dof_pos_upper_limit)
 
         # Build low cmd
         for i in range(len(self.config.action_joint2motor_idx)):
@@ -295,7 +318,7 @@ class Controller:
             self.low_cmd.motor_cmd[motor_idx].kp = self.config.kps[i]
             self.low_cmd.motor_cmd[motor_idx].kd = self.config.kds[i]
             self.low_cmd.motor_cmd[motor_idx].tau = 0
-
+            print(f"[DEBUG]: Motor {motor_idx} position: {target_dof_pos[i]}")
         for i in range(len(self.config.fixed_joint2motor_idx)):
             motor_idx = self.config.fixed_joint2motor_idx[i]
             self.low_cmd.motor_cmd[motor_idx].q = self.config.fixed_target[i]
@@ -304,29 +327,74 @@ class Controller:
             self.low_cmd.motor_cmd[motor_idx].kd = self.config.fixed_kds[i]
             self.low_cmd.motor_cmd[motor_idx].tau = 0
 
+        # 实时速度超限报警
+        dqj_abs = np.abs(self.dqj)
+        if np.any(dqj_abs > self.config.dof_vel_limit):
+            print(f"[ERROR] Joint velocity exceeds limit! DQJ: {self.dqj}, Limit: {self.config.dof_vel_limit}")
+
+        for i in range(len(self.config.action_joint2motor_idx)):
+            motor_idx = self.config.action_joint2motor_idx[i]
+            measured_tau = self.low_state.motor_state[motor_idx].tau_est
+            if np.abs(measured_tau) > self.config.dof_effort_limit[i]:
+                print(f"[ERROR] Torque exceeds limit! Motor {motor_idx}, Tau: {measured_tau:.3f}, Limit: {self.config.dof_effort_limit[i]}")
+
+                # # send damping mode for protection
+                # create_damping_cmd(self.low_cmd)
+                # self.send_cmd(self.low_cmd)
+                # time.sleep(self.config.control_dt)
+
+                # # Directly return
+                # return True
+            
         # send the command
-        self.send_cmd(self.low_cmd)
+        # self.send_cmd(self.low_cmd)
 
         time.sleep(self.config.control_dt)
 
 
 if __name__ == "__main__":
     import argparse
+    import sys
+    import datetime
+    # log info
+    log_filename = f"deploy_log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+
+    import torch
+    print(torch.__file__)
+
+    class Logger:
+        def __init__(self, filename):
+            self.terminal = sys.stdout
+            self.log = open(filename, "w")
+
+        def write(self, message):
+            self.terminal.write(message)
+            self.log.write(message)
+            self.log.flush()
+
+        def flush(self):
+            pass
+
+    sys.stdout = Logger(log_filename)
+    print(f"[INFO] Logging to {log_filename}")
+
 
     parser = argparse.ArgumentParser()
     parser.add_argument("net", type=str, help="network interface")
-    parser.add_argument("config", type=str, help="config file name in the configs folder", default="g1.yaml")
+    parser.add_argument("config", type=str, help="config file name in the configs folder", default="g1_29dof_PBHC.yaml")
     args = parser.parse_args()
 
     # Load config
-    config_path = f"{LEGGED_GYM_ROOT_DIR}/deploy/deploy_real/configs/{args.config}"
+    config_path = f"deploy_real/configs/{args.config}"
     config = Config(config_path)
 
     # Initialize DDS communication
+    # ChannelFactoryInitialize(0, 'enp2s0') # DEBUG 
     ChannelFactoryInitialize(0, args.net)
 
+    print("[DEBUG]: Start to initialize the controller!")
     controller = Controller(config)
-
+    print("[DEBUG]: Controller initialized.")
     # Enter the zero torque state, press the start key to continue executing
     controller.zero_torque_state()
 
@@ -335,16 +403,27 @@ if __name__ == "__main__":
 
     # Enter the default position state, press the A key to continue executing
     controller.default_pos_state()
-
+    print("Ready to run the movements")
     while True:
         try:
-            controller.run()
+
+            if controller.run(): 
+                break
             # Press the select key to exit
             if controller.remote_controller.button[KeyMap.select] == 1:
                 break
+
+            # 按 X 重置动作到默认位置
+            if controller.remote_controller.button[KeyMap.X] == 1:
+                print("[INFO] Resetting to default position")
+                controller.move_to_default_pos()
+
         except KeyboardInterrupt:
             break
     # Enter the damping state
     create_damping_cmd(controller.low_cmd)
     controller.send_cmd(controller.low_cmd)
+
+    controller.move_to_default_pos()
+    controller.default_pos_state()
     print("Exit")

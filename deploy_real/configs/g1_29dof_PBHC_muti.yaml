@@ -1,0 +1,292 @@
+# ===== Configuration for PBHC =====
+# This config use fixed position and PD gain to lock the wrist, 
+# reduce the overall dof to 23 (without the 6 dof of the wrist)
+# which matches the PBHC output
+
+# Learnd onnx policy 
+policy_paths:
+  -  "/home/meetup/g1_deploy/pretrain/stance_3_model_6000.onnx" 
+  -  "/home/meetup/g1_deploy/pretrain/model_72000.onnx"
+  # -  "/home/meetup/g1_deploy/pretrain/dance_model_170000.onnx"
+  # -  "/home/meetup/g1_deploy/pretrain/Horsestance_model_119000.onnx"
+
+# policy_path: "/home/meetup/g1_deploy/pretrain/Stance_2_model_10000.onnx"  
+
+# Description of the 29 dof robot.
+xml_path: "/home/meetup/g1_deploy/g1_29dof.xml"
+
+control_dt: 0.02
+motion_lens: 
+  - 9999.0 # Stand
+  - 22 # dance 
+  # - 12.0 # Horse stance
+  # - 24 # wait1
+  # - 16.2 # wait2
+  # - 20.2 # dance 
+policy_names:
+  - "Stance"
+  - "Horsestance_punch"
+  # - "wait1"
+  # - "wait2"
+  # - "dance"
+  
+msg_type: "hg" # "hg" for g1, "go" for h1 
+imu_type: "pelvis" # "torso" or "pelvis"
+
+lowcmd_topic: "rt/lowcmd"
+lowstate_topic: "rt/lowstate"
+
+# === Fixed joints ===
+# for PBHC, we need to lock all the wrist joints (3 each arm)
+fixed_joint2motor_idx: [
+  19, # Left_wrist_roll
+  20, # Left_wrist_pitch
+  21, # Left_wrist_yaw
+  26, # Right_wrist_roll
+  27, # Right_wrist_pitch
+  28, # Right_wrist_yaw
+]
+
+# DEBUG: need to adjust this
+fixed_kps: [
+  60, # Left_wrist_roll
+  60, # Left_wrist_pitch
+  60, # Left_wrist_yaw
+  60, # Right_wrist_roll
+  60, # Right_wrist_pitch
+  60  # Right_wrist_yaw
+]
+
+# DEBUG: need to adjust this accordingly 
+fixed_kds: [
+  1, # Left_wrist_roll
+  1, # Left_wrist_pitch
+  1, # Left_wrist_yaw
+  1, # Right_wrist_roll
+  1, # Right_wrist_pitch
+  1  # Right_wrist_yaw
+]
+
+# Fixed target for the wrist
+fixed_target: [
+  -0.05, # Left_wrist_roll
+   0.12, # left wrist_pitch
+  -0.03, # left wrist_yaw
+  -0.16, # right wrist_roll
+   0.12, # right_wrist_pitch
+  -0.02  # right_wrist_yaw 
+]
+
+# Not used in the Real deploy
+simulation_duration: 60.0
+simulation_dt: 0.002
+
+control_decimation: 10 
+kps: [
+  100, # left_hip pitch
+  100, # left_hip roll
+  100, # left_hip yaw
+  150, # left knee
+   40, # left ankle pitch
+   40, # left ankle roll
+  100, # right hip pitch
+  100, # right hip roll
+  100, # right hip yaw
+  150, # right knee
+   40, # right ankle pitch
+   40, # right ankle roll
+  400, # waist yaw
+  400, # waist roll
+  400, # waist pitch
+  100, # left shoulder pitch
+  100, # left shoulder roll
+  50,  # left shoulder yaw
+  50,  # left elbow 
+  100, # right shoulder pitch
+  100, # right shoulder roll
+  50,  # right shoulder yaw
+  50   # right elbow 
+]
+
+kds: [
+  2.0, # left_hip pitch
+  2.0, # left_hip roll
+  2.0, # left_hip yaw
+  4.0, # left knee
+  2.0, # left ankle pitch
+  2.0, # left ankle roll
+  2.0, # right hip pitch
+  2.0, # right hip roll
+  2.0, # right hip yaw
+  4.0, # right knee
+  2.0, # right ankle pitch
+  2.0, # right ankle roll
+  5.0, # waist yaw
+  5.0, # waist roll
+  5.0, # waist pitch
+  2.0, # left shoulder pitch
+  2.0, # left shoulder roll
+  2.0, # left shoulder yaw
+  2.0, # left elbow 
+  2.0, # right shoulder pitch
+  2.0, # right shoulder roll
+  2.0, # right shoulder yaw
+  2.0   # right elbow 
+]
+
+default_angles: [
+  -0.1,  # left_hip_pitch_joint
+   0.0,  # left_hip_roll_joint
+   0.0,  # left_hip_yaw_joint
+   0.3,  # left_knee_joint
+  -0.2,  # left_ankle_pitch_joint
+   0.0,  # left_ankle_roll_joint
+  -0.1,  # right_hip_pitch_joint
+   0.0,  # right_hip_roll_joint
+   0.0,  # right_hip_yaw_joint
+   0.3,  # right_knee_joint
+  -0.2,  # right_ankle_pitch_joint
+   0.0,  # right_ankle_roll_joint
+   0.0,  # waist_yaw_joint  
+   0.0,  # waist_roll_joint # TODO: Replace by the real value
+   0.0,  # waist_pitch_joint# TODO: Replace by the real value 
+   0.2,  # left_shoulder_pitch_joint  
+   0.2,  # left_shoulder_roll_joint   
+   0.0,  # left_shoulder_yaw_joint  
+   0.9,  # left_elbow_joint
+   0.2,  # right_shoulder_pitch_joint 
+   -0.2,  # right_shoulder_roll_joint 
+   0.0,  # right_shoulder_yaw_joint   
+   0.9,  # right_elbow_joint
+]
+
+ang_vel_scale: 0.25
+action_scale: 0.25
+dof_pos_scale: 1.0
+dof_vel_scale: 0.05 
+cmd_scale: [2.0, 2.0, 0.25]
+max_cmd: [0.8, 0.5, 1.57]
+
+num_obs: 380
+
+history_length : 4
+
+cmd_init: [0.5, 0, 0]
+
+
+ref_motion_phase : 0.00314
+num_actions: 23
+action_joint2motor_idx: [
+  0, 1, 2, 3, 4, 5, 
+  6, 7, 8, 9, 10, 11, # Leg dof
+  12, 13, 14, # waist 
+  15, 16, 17, 18, # left arm 
+  22, 23, 24, 25, # right arm 
+]
+
+
+# === Safty check === 
+action_clip: 1.0               # single step clip
+action_clip_warn_threshold: 0.8 # warning threshold
+debug: true                    # print debug info
+
+dof_pos_lower_limit: [
+  -2.5307,
+  -0.5236,
+  -2.7576,
+  -0.087267,
+  -0.87267,
+  -0.2618,
+  -2.5307,
+  -2.9671,
+  -2.7576,
+  -0.087267,
+  -0.87267,
+  -0.2618,
+  -2.618,
+  -0.52,
+  -0.52,
+  -3.0892,
+  -1.5882,
+  -2.618,
+  -1.0472,
+  -3.0892,
+  -2.2515,
+  -2.618,
+  -1.0472,
+]
+dof_pos_upper_limit: [
+  2.8798,
+  2.9671,
+  2.7576,
+  2.8798,
+  0.5236,
+  0.2618,
+  2.8798,
+  0.5236,
+  2.7576,
+  2.8798,
+  0.5236,
+  0.2618,
+  2.618,
+  0.52,
+  0.52,
+  2.6704,
+  2.2515,
+  2.618,
+  2.0944,
+  2.6704,
+  1.5882,
+  2.618,
+  2.0944,
+]
+dof_vel_limit: [
+  32.0,
+  20.0,
+  32.0,
+  20.0,
+  37.0,
+  37.0,
+  32.0,
+  20.0,
+  32.0,
+  20.0,
+  37.0,
+  37.0,
+  32.0,
+  37.0,
+  37.0,
+  37.0,
+  37.0,
+  37.0,
+  37.0,
+  37.0,
+  37.0,
+  37.0,
+  37.0
+]
+dof_effort_limit: [
+  88.0,
+  139.0,
+  88.0,
+  139.0,
+  50.0,
+  50.0,
+  88.0,
+  139.0,
+  88.0,
+  139.0,
+  50.0,
+  50.0,
+  88.0,
+  50.0,
+  50.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0,
+  25.0
+]

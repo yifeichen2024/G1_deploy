@@ -277,7 +277,7 @@ class CustomRecorder:
         time.sleep(0.05)
         # 4. Return to default (stiff)
         self.current_target_q = cfg.default_angles.copy()
-        self.move_to_default()
+        self.move_to_default(duration=10) # Add more time because the end of the record action may be larger, and the PD gain switch is sudden.
         print("Done. Ctrl‑C to exit.")
 
 # -----------------------------------------------------------------------------

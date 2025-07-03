@@ -1,0 +1,18 @@
+(unitree-rl) (base) meetup@meetup-IdeaPad-Gaming-3-15ACH6:~/g1_deploy$ python deploy_real/g1_highlevel_arm_play.py deploy_real/high_level_traj/upper_body_traj.npz 1
+[DDS] State ready, starting playback…
+[RecurrentThread] target func raise exception: name=AttributeError, args=("'RecurrentThread' object has no attribute 'Stop'",)
+[RecurrentThread] target func raise exception: name=AttributeError, args=("'RecurrentThread' object has no attribute 'Stop'",)
+[RecurrentThread] target func raise exception: name=AttributeError, args=("'RecurrentThread' object has no attribute 'Stop'",)
+[RecurrentThread] target func raise exception: name=AttributeError, args=("'RecurrentThread' object has no attribute 'Stop'",)
+[RecurrentThread] target func raise exception: name=AttributeError, args=("'RecurrentThread' object has no attribute 'Stop'",)
+[RecurrentThread] target func raise exception: name=AttributeError, args=("'RecurrentThread' object has no attribute 'Stop'",)
+[RecurrentThread] target func raise exception: name=AttributeError, args=("'RecurrentThread' object has no attribute 'Stop'",)
+[RecurrentThread] target func raise exception: name=AttributeError, args=("'RecurrentThread' object has no attribute 'Stop'",)
+[RecurrentThread] target func raise exception: name=AttributeError, args=("'RecurrentThread' object has no attribute 'Stop'",)
+[RecurrentThread] target func raise exception: name=AttributeError, args=("'RecurrentThread' object has no attribute 'Stop'",)
+[RecurrentThread] target func raise exception: name=AttributeError, args=("'RecurrentThread' object has no attribute 'Stop'",)
+[RecurrentThread] target func raise exception: name=AttributeError, args=("'RecurrentThread' object has no attribute 'Stop'",)
+[RecurrentThread] target func raise exception: name=AttributeError, args=("'RecurrentThread' object has no attribute 'Stop'",)
+[RecurrentThread] target func raise exception: name=AttributeError, args=("'RecurrentThread' object has no attribute 'Stop'",)
+[RecurrentThread] target func raise exception: name=AttributeError, args=("'RecurrentThread' object has no attribute 'Stop'",)
+[RecurrentThread] target func raise exception: name=AttributeError, args=("'RecurrentThread' object has no attribute 'Stop'",)

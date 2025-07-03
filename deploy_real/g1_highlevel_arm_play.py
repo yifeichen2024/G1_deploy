@@ -8,7 +8,9 @@ from unitree_sdk2py.idl.default import unitree_hg_msg_dds__LowCmd_, unitree_hg_m
 from unitree_sdk2py.idl.unitree_hg.msg.dds_ import LowCmd_, LowState_
 from unitree_sdk2py.utils.crc import CRC
 from unitree_sdk2py.utils.thread import RecurrentThread
-
+# TODO RecurrentThread 的报错修复
+# TODO 功能按键绑定
+# TODO 执行多个任务
 # ------------------- G1 Joint Map (same as official) -------------------- #
 class G1JointIndex:
     LeftHipPitch = 0
@@ -100,7 +102,7 @@ class Config:
         0.2, -0.2, 0.0, 0.9, 0.0, 0.0, 0.0,
         0.0, 0.0, 0.0,
     ])
-
+    
 cfg = Config()
 
 # ---------------------------- Player Class ----------------------------- #

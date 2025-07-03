@@ -105,9 +105,10 @@ class Config:
         5, 5, 5,
     ])
 
+    # TODO 腰部的Kp Kd 单独缩减stiffness, arm 关节可以设置很小力矩，若设置0力矩要设定返回动作是插值连续的，而不是突然的。
     # record PD (10 % stiff)
-    kps_record = 0.5 * kps_play
-    kds_record = 0.5 * kds_play
+    kps_record = 0.1 * kps_play
+    kds_record = 0.1 * kds_play
 
     # default pose (17 DOF order)
     default_angles = np.array([
@@ -254,7 +255,7 @@ class CustomRecorder:
         # 3. Save
         traj_path = input("Enter file path to save (.npz): ").strip()
         if traj_path == "":
-            traj_path = "upper_body_traj.npz"
+            traj_path = "deploy_real/high_level_traj/upper_body_traj.npz"
         np.savez_compressed(traj_path,
                             t=np.array(self.record_buffer_t),
                             q=np.vstack(self.record_buffer_q))

@@ -134,7 +134,7 @@ class G1JointIndex:
 # cfg = Config()
 
 class Config: pass
-def load_cfg(yaml_path="deploy_real/config_high_level.yaml") -> Config:
+def load_cfg(yaml_path="deploy_real/configs/config_high_level.yaml") -> Config:
     with open(yaml_path, 'r') as f:
         d = yaml.safe_load(f)
     cfg = Config()

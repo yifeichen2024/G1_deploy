@@ -2,6 +2,7 @@ import time
 import sys
 import select
 import numpy as np
+import yaml
 
 from unitree_sdk2py.core.channel import ChannelPublisher, ChannelSubscriber, ChannelFactoryInitialize
 from unitree_sdk2py.idl.default import unitree_hg_msg_dds__LowCmd_, unitree_hg_msg_dds__LowState_
@@ -53,84 +54,99 @@ class G1JointIndex:
 # Configuration (17 DOF record, per‑joint PD, fixed wrists)
 # -----------------------------------------------------------------------------
 
-class Config:
-    control_dt = 0.02  # 20 ms
+# class Config:
+#     control_dt = 0.02  # 20 ms
 
-    # action joints (17 DOF: arms + waist)
-    action_joints = [
-        # left arm 7
-        G1JointIndex.LeftShoulderPitch,
-        G1JointIndex.LeftShoulderRoll,
-        G1JointIndex.LeftShoulderYaw,
-        G1JointIndex.LeftElbow,
-        # G1JointIndex.LeftWristRoll,
-        # G1JointIndex.LeftWristPitch,
-        # G1JointIndex.LeftWristYaw,
+#     # action joints (17 DOF: arms + waist)
+#     action_joints = [
+#         # left arm 7
+#         G1JointIndex.LeftShoulderPitch,
+#         G1JointIndex.LeftShoulderRoll,
+#         G1JointIndex.LeftShoulderYaw,
+#         G1JointIndex.LeftElbow,
+#         # G1JointIndex.LeftWristRoll,
+#         # G1JointIndex.LeftWristPitch,
+#         # G1JointIndex.LeftWristYaw,
 
 
-        # right arm 7
-        G1JointIndex.RightShoulderPitch,
-        G1JointIndex.RightShoulderRoll,
-        G1JointIndex.RightShoulderYaw,
-        G1JointIndex.RightElbow,
-        # G1JointIndex.RightWristRoll,
-        # G1JointIndex.RightWristPitch,
-        # G1JointIndex.RightWristYaw,
-        # waist 3
-        G1JointIndex.WaistYaw,
-        G1JointIndex.WaistRoll,
-        G1JointIndex.WaistPitch,
+#         # right arm 7
+#         G1JointIndex.RightShoulderPitch,
+#         G1JointIndex.RightShoulderRoll,
+#         G1JointIndex.RightShoulderYaw,
+#         G1JointIndex.RightElbow,
+#         # G1JointIndex.RightWristRoll,
+#         # G1JointIndex.RightWristPitch,
+#         # G1JointIndex.RightWristYaw,
+#         # waist 3
+#         G1JointIndex.WaistYaw,
+#         G1JointIndex.WaistRoll,
+#         G1JointIndex.WaistPitch,
 
-    ]
+#     ]
 
-    # joints to lock during record (wrists)
-    fixed_joints = [
-        G1JointIndex.LeftWristRoll,
-        G1JointIndex.LeftWristPitch,
-        G1JointIndex.LeftWristYaw,
-        G1JointIndex.RightWristRoll,
-        G1JointIndex.RightWristPitch,
-        G1JointIndex.RightWristYaw,
-    ]
-    fixed_target = np.array([-0.05, 0.12, -0.03, -0.16, 0.12, -0.02])
-    fixed_kps = np.array([60, 60, 60, 60, 60, 60])
-    fixed_kds = np.array([1, 1, 1, 1, 1, 1])
+#     # joints to lock during record (wrists)
+#     fixed_joints = [
+#         G1JointIndex.LeftWristRoll,
+#         G1JointIndex.LeftWristPitch,
+#         G1JointIndex.LeftWristYaw,
+#         G1JointIndex.RightWristRoll,
+#         G1JointIndex.RightWristPitch,
+#         G1JointIndex.RightWristYaw,
+#     ]
+#     fixed_target = np.array([-0.05, 0.12, -0.03, -0.16, 0.12, -0.02])
+#     fixed_kps = np.array([60, 60, 60, 60, 60, 60])
+#     fixed_kds = np.array([1, 1, 1, 1, 1, 1])
 
-    # fixed_target = np.array([-0.05      , -0.03, -0.16,       -0.02])
-    # fixed_kps = np.array([60,     60, 60,     60])
-    # fixed_kds = np.array([1,    1, 1,    1])
+#     # fixed_target = np.array([-0.05      , -0.03, -0.16,       -0.02])
+#     # fixed_kps = np.array([60,     60, 60,     60])
+#     # fixed_kds = np.array([1,    1, 1,    1])
 
-    # per‑joint PD (play/default) 17 DOF
-    kps_play = np.array([
-        100, 100, 50, 50, # 60, 60, 60,
-        100, 100, 50, 50, # 60, 60, 60,
-        400, 400, 400,
-        # 60, 60, # wrist roll
-    ])
-    kds_play = np.array([
-        2, 2, 2, 2, # 1, 1, 1,
-        2, 2, 2, 2, # 1, 1, 1,
-        5, 5, 5,
-        # 1, 1, # wrist roll 
-    ])
+#     # per‑joint PD (play/default) 17 DOF
+#     kps_play = np.array([
+#         100, 100, 50, 50, # 60, 60, 60,
+#         100, 100, 50, 50, # 60, 60, 60,
+#         400, 400, 400,
+#         # 60, 60, # wrist roll
+#     ])
+#     kds_play = np.array([
+#         2, 2, 2, 2, # 1, 1, 1,
+#         2, 2, 2, 2, # 1, 1, 1,
+#         5, 5, 5,
+#         # 1, 1, # wrist roll 
+#     ])
 
-    # TODO 腰部的Kp Kd 单独缩减stiffness, arm 关节可以设置很小力矩，若设置0力矩要设定返回动作是插值连续的，而不是突然的。
-    # record PD (10 % stiff)
-    kps_record = 0.1 * kps_play
-    kds_record = 0.1 * kds_play
+#     # TODO 腰部的Kp Kd 单独缩减stiffness, arm 关节可以设置很小力矩，若设置0力矩要设定返回动作是插值连续的，而不是突然的。
+#     # record PD (10 % stiff)
+#     kps_record = 0.1 * kps_play
+#     kds_record = 0.1 * kds_play
 
-    stiffness_factor = 0.01
-    stiffness_factor_waist_rp = 0.5  # for waist roll and pitch
+#     stiffness_factor = 0.05
+#     stiffness_factor_waist_rp = 0.5  # for waist roll and pitch
     
-    # default pose (17 DOF order)
-    default_angles = np.array([
-        0.2, 0.2, 0.0, 0.9,  # 0.0, 0.0, 0.0,
-        0.2, -0.2, 0.0, 0.9, # 0.0, 0.0, 0.0,
-        0.0, 0.0, 0.0,
-        # 0.12, 0.12, # wrist pitch
-    ])
+#     # default pose (17 DOF order)
+#     default_angles = np.array([
+#         0.2, 0.2, 0.0, 0.9,  # 0.0, 0.0, 0.0,
+#         0.2, -0.2, 0.0, 0.9, # 0.0, 0.0, 0.0,
+#         0.0, 0.0, 0.0,
+#         # 0.12, 0.12, # wrist pitch
+#     ])
 
-cfg = Config()
+# cfg = Config()
+
+class Config: pass
+def load_cfg(yaml_path="deploy_real/config_high_level.yaml") -> Config:
+    with open(yaml_path, 'r') as f:
+        d = yaml.safe_load(f)
+    cfg = Config()
+    for k, v in d.items():
+        # 列表自动转 np.array 方便后续数学运算
+        setattr(cfg, k, np.array(v) if isinstance(v, list) else v)
+    # 衍生量
+    cfg.kps_record = cfg.kps_play * 0.1
+    cfg.kds_record = cfg.kds_play * 0.1
+    return cfg
+
+cfg = load_cfg()            # 全局唯一实例
 
 # -----------------------------------------------------------------------------
 # Custom recording class (follow official SDK skeleton)

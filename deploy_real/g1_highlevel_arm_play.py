@@ -2,6 +2,7 @@ import time
 import sys
 from pathlib import Path
 import numpy as np
+import select 
 
 from unitree_sdk2py.core.channel import ChannelPublisher, ChannelSubscriber, ChannelFactoryInitialize
 from unitree_sdk2py.idl.default import unitree_hg_msg_dds__LowCmd_, unitree_hg_msg_dds__LowState_
@@ -143,13 +144,23 @@ class CustomPlayer:
     # ---------------- Control loop ---------------- #
     def ControlLoop(self):
         elapsed = time.time() - self.start_time
+
+        if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+            if sys.stdin.readline().strip() == "":
+                print("[PLAY] Interrupted by user, returning to default pose.")
+                # self.publish_default()
+                self.move_to_default()
+                return
+
+
         # advance index
         while self.idx < len(self.t_arr) and self.t_arr[self.idx] <= elapsed:
             self.idx += 1
         if self.idx >= len(self.t_arr):
             # finished → hold default pose & disable thread
-            self.publish_default()
-            self.thread.Stop()
+            # self.publish_default()
+            self.move_to_default()
+            # self.thread.Stop()
             print('[PLAY] Trajectory finished.')
             return
         q_target = self.q_arr[self.idx]
@@ -173,6 +184,31 @@ class CustomPlayer:
         self.pub.Write(self.low_cmd)
 
     # ---------------- Helper to publish default pose ---------------- #
+    def move_to_default(self, duration=5.0):
+        current_q = np.array([
+            self.low_state.motor_state[m].q for m in cfg.action_joints
+        ])
+        steps = int(duration / cfg.control_dt)
+        for step in range(steps):
+            ratio = (step + 1) / steps
+            q_cmd = (1 - ratio) * current_q + ratio * cfg.default_angles
+            for k, m in enumerate(cfg.action_joints):
+                self.low_cmd.motor_cmd[m].q = float(q_cmd[k])
+                self.low_cmd.motor_cmd[m].dq = 0.0
+                self.low_cmd.motor_cmd[m].kp = float(cfg.kps[k])
+                self.low_cmd.motor_cmd[m].kd = float(cfg.kds[k])
+                self.low_cmd.motor_cmd[m].tau = 0.0
+            for i, m in enumerate(cfg.fixed_joints):
+                self.low_cmd.motor_cmd[m].q = float(cfg.fixed_target[i])
+                self.low_cmd.motor_cmd[m].dq = 0.0
+                self.low_cmd.motor_cmd[m].kp = float(cfg.fixed_kps[i])
+                self.low_cmd.motor_cmd[m].kd = float(cfg.fixed_kds[i])
+                self.low_cmd.motor_cmd[m].tau = 0.0
+            self.low_cmd.motor_cmd[G1JointIndex.kNotUsedJoint].q = 1
+            self.low_cmd.crc = self.crc.Crc(self.low_cmd)
+            self.pub.Write(self.low_cmd)
+            time.sleep(cfg.control_dt)
+    
     def publish_default(self):
         for k, m in enumerate(cfg.action_joints):
             self.low_cmd.motor_cmd[m].q = float(cfg.default_angles[k])

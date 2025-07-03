@@ -110,6 +110,9 @@ class Config:
     kps_record = 0.1 * kps_play
     kds_record = 0.1 * kds_play
 
+    stiffness_factor = 0.01
+    stiffness_factor_waist_rp = 0.5  # for waist roll and pitch
+    
     # default pose (17 DOF order)
     default_angles = np.array([
         0.2, 0.2, 0.0, 0.9, 0.0, 0.0, 0.0,
@@ -172,9 +175,19 @@ class CustomRecorder:
         if self.low_state is None:
             return
 
+        kps_record: list[float] = []
+        kds_record: list[float] = []
+        for idx, joint in enumerate(cfg.action_joints):
+            if joint in [G1JointIndex.WaistRoll, G1JointIndex.WaistPitch]:
+                kps_record.append(cfg.kps_play[idx] * cfg.stiffness_factor_waist_rp)
+                kds_record.append(cfg.kds_play[idx] * cfg.stiffness_factor_waist_rp)
+            else:
+                kps_record.append(cfg.kps_play[idx] * cfg.stiffness_factor)
+                kds_record.append(cfg.kds_play[idx] * cfg.stiffness_factor)
         # build command each cycle
         if self.recording:
-            kp_arr, kd_arr = cfg.kps_record, cfg.kds_record
+            kp_arr, kd_arr = kps_record, kds_record
+
         else:
             kp_arr, kd_arr = cfg.kps_play, cfg.kds_play
 
@@ -212,7 +225,7 @@ class CustomRecorder:
     # -----------------------------------------------------------------
     # Utilities
     # -----------------------------------------------------------------
-    def move_to_default(self, duration=3.0):
+    def move_to_default(self, duration=5.0):
         # interpolate from current to default
         current_q = np.array([
             self.low_state.motor_state[m].q for m in cfg.action_joints
@@ -260,7 +273,8 @@ class CustomRecorder:
                             t=np.array(self.record_buffer_t),
                             q=np.vstack(self.record_buffer_q))
         print(f"[RECORD] Saved {len(self.record_buffer_t)} frames to {traj_path}")
-
+        
+        time.sleep(0.05)
         # 4. Return to default (stiff)
         self.current_target_q = cfg.default_angles.copy()
         self.move_to_default()

@@ -319,7 +319,7 @@ class Controller:
         target_dof_pos = self.config.default_angles + self.action * self.config.action_scale
 
         # Target_position clip 
-        # target_dof_pos = np.clip(target_dof_pos, self.config.dof_pos_lower_limit, self.config.dof_pos_upper_limit)
+        target_dof_pos = np.clip(target_dof_pos, self.config.dof_pos_lower_limit, self.config.dof_pos_upper_limit)
 
         # Build low cmd
         for i in range(len(self.config.action_joint2motor_idx)):

@@ -284,7 +284,35 @@ class Controller:
             self.ref_motion_phase = 0.0
             self.counter = 0
             return False  # 保持继续运行
+        
+        # === Safety: Check for NaN in action ===
+        if np.isnan(self.action).any():
+            print("[ERROR] Detected NaN in action output! Aborting for safety.")
+            create_damping_cmd(self.low_cmd)
+            self.send_cmd(self.low_cmd)
+            time.sleep(self.config.control_dt)
+            return True
         # return True  # keep
+
+        dqj_abs = np.abs(self.dqj)
+        if np.any(np.abs(self.dqj) > self.config.dof_vel_limit):
+            print(f"[ERROR] Velocity exceeds limit | dqj_max={np.max(np.abs(self.dqj)):.3f}")
+
+        for i, motor_idx in enumerate(self.config.action_joint2motor_idx):
+            measured_tau = self.low_state.motor_state[motor_idx].tau_est  
+            if np.abs(measured_tau) > self.config.dof_effort_limit[i]:
+                print(f"[ERROR] Torque overload | motor={motor_idx}  tau={measured_tau:.3f} > limit={self.config.dof_effort_limit[i]}")
+                if measured_tau > self.config.dof_effort_limit[i] + 10:
+                    # send damping mode for protection
+                    create_damping_cmd(self.low_cmd)
+                    self.send_cmd(self.low_cmd)
+                    time.sleep(self.config.control_dt)
+
+                    # Directly return
+                    return True
+
+        self.send_cmd(self.low_cmd)
+        time.sleep(self.config.control_dt)
 
     # ------------- (YOUR original helper bodies copied verbatim) -------------
     def _build_observation(self) -> np.ndarray:
@@ -347,10 +375,11 @@ class Controller:
 
     def _post_process_and_send(self):
         """Wrapped original action clipping, PD mapping & safety checks."""
+        
+        
         # Warning for the action threshold
         if np.any(np.abs(self.action) > self.config.action_clip_warn_threshold):
             print(f"[WARN] Action exceeds threshold | max={np.max(np.abs(self.action)):.3f}")
-
 
         # action clipping
         # self.action = np.clip(self.action, -self.config.action_clip, self.config.action_clip)
@@ -378,25 +407,7 @@ class Controller:
             self.low_cmd.motor_cmd[motor_idx].kd = self.config.fixed_kds[i]
             self.low_cmd.motor_cmd[motor_idx].tau = 0
 
-        dqj_abs = np.abs(self.dqj)
-        if np.any(np.abs(self.dqj) > self.config.dof_vel_limit):
-            print(f"[ERROR] Velocity exceeds limit | dqj_max={np.max(np.abs(self.dqj)):.3f}")
-
-        for i, motor_idx in enumerate(self.config.action_joint2motor_idx):
-            measured_tau = self.low_state.motor_state[motor_idx].tau_est  
-            if np.abs(measured_tau) > self.config.dof_effort_limit[i]:
-                print(f"[ERROR] Torque overload | motor={motor_idx}  tau={measured_tau:.3f} > limit={self.config.dof_effort_limit[i]}")
-                # # send damping mode for protection
-                # create_damping_cmd(self.low_cmd)
-                # self.send_cmd(self.low_cmd)
-                # time.sleep(self.config.control_dt)
-
-                # # Directly return
-                # return True
-
-        self.send_cmd(self.low_cmd)
-        time.sleep(self.config.control_dt)
-
+        
 
 # ─────────────────────────────────────────────
 # Main entry (retains full CLI & logging logic)

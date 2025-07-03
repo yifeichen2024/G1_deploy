@@ -94,6 +94,16 @@ class Player:
         self.low_state: LowState_ | None = None
         self.first_state = False
         self.crc = CRC()
+        self.remote = RemoteController()
+        self.btn2motion = {                       # 映射表
+            KeyMap.up   : '1',
+            KeyMap.right: '2',
+            KeyMap.down : '3',
+            KeyMap.left : '4',
+            KeyMap.Y :    '5',
+            KeyMap.B :    '6',
+        }
+        self.pending_key = None
 
     # -------- DDS --------
     def init_dds(self):
@@ -101,32 +111,69 @@ class Player:
         self.sub = ChannelSubscriber("rt/lowstate", LowState_); self.sub.Init(self.cb, 10)
         while not self.first_state:
             time.sleep(0.1)
-        print("[DDS] Ready & in default pose. Ender the number of the motion you want to play and press ENTER。")
-
+        # print("[DDS] Ready & in default pose. Ender the number of the motion you want to play and press ENTER。")
+        print("[DDS] Ready & in default pose.")
+        print("Direction/Y/B play directly; keyboard number press A to play; X to stop\n")
     def cb(self, msg: LowState_):
         self.low_state = msg
         self.first_state = True
+        # Remote controller
+        self.remote.set(msg.wireless_remote)
 
     # -------- Thread loop --------
     def start_thread(self):
         self.thread = RecurrentThread(interval=cfg.control_dt, target=self.loop, name="control")
         self.thread.Start()
 
+    def _start_motion(self, motion_id: str):
+        if motion_id not in self.bank:
+            print(f"[WARN] Motion {motion_id} not loaded.")
+            return
+        print(f"[PLAY] Start motion {motion_id}: {self.bank[motion_id]['name']}")
+        self.current_key = motion_id
+        self.start_time = time.time()
+        self.idx = 0
+
     def loop(self):
         # keep default motion
-        if self.current_key is None:
+        if self.current_key is None:                        # ---- idle (default) ----
             self.send_pose(cfg.default_angles)
-            # check for action input 
+
+            # --------- 2-a 手柄 6 个键直接触发 ---------
+            for btn, motion_id in self.btn2motion.items():
+                if self.remote.button[btn] == 1:
+                    self._start_motion(motion_id)
+                    return                                  # 本帧结束
+
+            # --------- 2-b 键盘输入数字 -------------
             if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
                 key = sys.stdin.readline().strip()
                 if key in self.bank:
-                    print(f"[PLAY] Start motion {key}: {self.bank[key]['name']}")
-                    self.current_key = key
-                    self.start_time = time.time()
-                    self.idx = 0
-                    return
-            return  # idle frame
+                    self.pending_key = key
+                    print(f"[INPUT] Select {key} : {self.bank[key]['name']}, press A to confirm.")
+                else:
+                    print(f"[WARN] Invalid number {key}")
 
+            # --------- 2-c  A 键确认播放 -------------
+            if (self.pending_key is not None) and (self.remote.button[KeyMap.A] == 1):
+                self._start_motion(self.pending_key)
+                self.pending_key = None
+                return
+
+            # --------- 2-d  X 键重置 -------------
+            if self.remote.button[KeyMap.X] == 1:
+                print("[PLAY] Reset to default pose")
+                self.move_to_default()
+            return
+
+        # ---- playing ----
+        if self.remote.button[KeyMap.X] == 1:               
+            print("[PLAY] Emergency stop!")
+            self.move_to_default()
+            self.current_key = None
+            self.pending_key = None
+            return
+        
         # currently playing.
         motion = self.bank[self.current_key]
         t_arr = motion["t"] / self.speed
@@ -175,7 +222,7 @@ class Player:
 # ------------------- MAIN -------------------- #
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python g1_arm_play.py <traj1.npz> <traj2.npz> ... [--ip IP] [--speed S]")
+        print("Usage: python g1_highlevel_motion_controller.py <traj1.npz> <traj2.npz> ... [--ip IP] [--speed S]")
         sys.exit(0)
 
     speed = 1.0

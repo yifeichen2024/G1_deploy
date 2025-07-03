@@ -10,7 +10,7 @@ and logging.
    are loaded at start‑up and stored in `self.ort_sessions`.
 2.  `self.policy_idx` tracks the active policy. Helper `switch_policy()` wraps
    bounds checking & status print‑out.
-3.  Remote controller buttons **LB / RB** (or keyboard `[` / `]` as fallback)
+3.  Remote controller buttons **L1 / R1** (or keyboard `[` / `]` as fallback)
    increment / decrement `policy_idx`. Behaviour is identical in zero‑torque,
    default‑pose and running states.
 4.  Action inference line now selects the correct ONNX session via

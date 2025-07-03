@@ -16,6 +16,8 @@ from unitree_sdk2py.utils.thread import RecurrentThread
 class G1JointIndex:
     LeftHipPitch = 0
     LeftHipRoll = 1
+
+    
     LeftHipYaw = 2 
     LeftKnee = 3
     LeftAnklePitch = 4

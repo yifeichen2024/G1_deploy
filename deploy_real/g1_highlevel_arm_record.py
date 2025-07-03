@@ -63,21 +63,24 @@ class Config:
         G1JointIndex.LeftShoulderRoll,
         G1JointIndex.LeftShoulderYaw,
         G1JointIndex.LeftElbow,
-        G1JointIndex.LeftWristRoll,
-        G1JointIndex.LeftWristPitch,
-        G1JointIndex.LeftWristYaw,
+        # G1JointIndex.LeftWristRoll,
+        # G1JointIndex.LeftWristPitch,
+        # G1JointIndex.LeftWristYaw,
+
+
         # right arm 7
         G1JointIndex.RightShoulderPitch,
         G1JointIndex.RightShoulderRoll,
         G1JointIndex.RightShoulderYaw,
         G1JointIndex.RightElbow,
-        G1JointIndex.RightWristRoll,
-        G1JointIndex.RightWristPitch,
-        G1JointIndex.RightWristYaw,
+        # G1JointIndex.RightWristRoll,
+        # G1JointIndex.RightWristPitch,
+        # G1JointIndex.RightWristYaw,
         # waist 3
         G1JointIndex.WaistYaw,
         G1JointIndex.WaistRoll,
         G1JointIndex.WaistPitch,
+
     ]
 
     # joints to lock during record (wrists)
@@ -93,16 +96,22 @@ class Config:
     fixed_kps = np.array([60, 60, 60, 60, 60, 60])
     fixed_kds = np.array([1, 1, 1, 1, 1, 1])
 
+    # fixed_target = np.array([-0.05      , -0.03, -0.16,       -0.02])
+    # fixed_kps = np.array([60,     60, 60,     60])
+    # fixed_kds = np.array([1,    1, 1,    1])
+
     # per‑joint PD (play/default) 17 DOF
     kps_play = np.array([
-        100, 100, 50, 50, 100, 100, 50,
-        100, 100, 50, 50, 100, 100, 50,
+        100, 100, 50, 50, # 60, 60, 60,
+        100, 100, 50, 50, # 60, 60, 60,
         400, 400, 400,
+        # 60, 60, # wrist roll
     ])
     kds_play = np.array([
-        2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2,
+        2, 2, 2, 2, # 1, 1, 1,
+        2, 2, 2, 2, # 1, 1, 1,
         5, 5, 5,
+        # 1, 1, # wrist roll 
     ])
 
     # TODO 腰部的Kp Kd 单独缩减stiffness, arm 关节可以设置很小力矩，若设置0力矩要设定返回动作是插值连续的，而不是突然的。
@@ -115,9 +124,10 @@ class Config:
     
     # default pose (17 DOF order)
     default_angles = np.array([
-        0.2, 0.2, 0.0, 0.9, 0.0, 0.0, 0.0,
-        0.2, -0.2, 0.0, 0.9, 0.0, 0.0, 0.0,
+        0.2, 0.2, 0.0, 0.9,  # 0.0, 0.0, 0.0,
+        0.2, -0.2, 0.0, 0.9, # 0.0, 0.0, 0.0,
         0.0, 0.0, 0.0,
+        # 0.12, 0.12, # wrist pitch
     ])
 
 cfg = Config()

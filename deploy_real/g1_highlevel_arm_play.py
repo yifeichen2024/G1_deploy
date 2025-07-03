@@ -16,7 +16,7 @@ class G1JointIndex:
     LeftHipPitch = 0
     LeftHipRoll = 1
 
-    
+
     LeftHipYaw = 2 
     LeftKnee = 3
     LeftAnklePitch = 4
@@ -51,60 +51,137 @@ class G1JointIndex:
     kNotUsedJoint = 29
 
 # ---------------------------- Config ----------------------------------- #
+# class Config:
+#     control_dt = 0.02  # 20 ms
+
+#     action_joints = [
+#         G1JointIndex.LeftShoulderPitch, 
+#         G1JointIndex.LeftShoulderRoll, 
+#         G1JointIndex.LeftShoulderYaw,
+#         G1JointIndex.LeftElbow, 
+#         G1JointIndex.LeftWristRoll, 
+#         G1JointIndex.LeftWristPitch, 
+#         G1JointIndex.LeftWristYaw,
+
+#         G1JointIndex.RightShoulderPitch, 
+#         G1JointIndex.RightShoulderRoll, 
+#         G1JointIndex.RightShoulderYaw,
+#         G1JointIndex.RightElbow, 
+#         G1JointIndex.RightWristRoll, 
+#         G1JointIndex.RightWristPitch, 
+#         G1JointIndex.RightWristYaw,
+
+#         G1JointIndex.WaistYaw, 
+#         G1JointIndex.WaistRoll, 
+#         G1JointIndex.WaistPitch,
+#     ]
+
+#     # fixed wrists (lock during play)
+#     fixed_joints = [
+#         G1JointIndex.LeftWristRoll, 
+#         G1JointIndex.LeftWristPitch, 
+#         G1JointIndex.LeftWristYaw,
+
+#         G1JointIndex.RightWristRoll, 
+#         G1JointIndex.RightWristPitch, 
+#         G1JointIndex.RightWristYaw,
+#     ]
+#     fixed_target = np.array([-0.05, 0.12, -0.03, -0.16, 0.12, -0.02])
+#     fixed_kps = np.array([60, 60, 60, 60, 60, 60])
+#     fixed_kds = np.array([1, 1, 1, 1, 1, 1])
+
+#     # PD for play (17 DOF)
+#     kps = np.array([100, 100, 50, 50, 100, 100, 50, 
+#                     100, 100, 50, 50, 100, 100, 50, 
+#                     400, 400, 400])
+    
+#     kds = np.array([2, 2, 2, 2, 2, 2, 2, 
+#                     2, 2, 2, 2, 2, 2, 2,
+#                     5, 5, 5])
+
+#     default_angles = np.array([
+#         0.2, 0.2, 0.0, 0.9, 0.0, 0.0, 0.0,
+#         0.2, -0.2, 0.0, 0.9, 0.0, 0.0, 0.0,
+#         0.0, 0.0, 0.0,
+#     ])
 class Config:
-    control_dt = 0.02  # 20 ms
+    control_dt = 0.02  # 20 ms
 
+    # action joints (17 DOF: arms + waist)
     action_joints = [
-        G1JointIndex.LeftShoulderPitch, 
-        G1JointIndex.LeftShoulderRoll, 
+        # left arm 7
+        G1JointIndex.LeftShoulderPitch,
+        G1JointIndex.LeftShoulderRoll,
         G1JointIndex.LeftShoulderYaw,
-        G1JointIndex.LeftElbow, 
-        G1JointIndex.LeftWristRoll, 
-        G1JointIndex.LeftWristPitch, 
-        G1JointIndex.LeftWristYaw,
+        G1JointIndex.LeftElbow,
+        # G1JointIndex.LeftWristRoll,
+        # G1JointIndex.LeftWristPitch,
+        # G1JointIndex.LeftWristYaw,
 
-        G1JointIndex.RightShoulderPitch, 
-        G1JointIndex.RightShoulderRoll, 
+
+        # right arm 7
+        G1JointIndex.RightShoulderPitch,
+        G1JointIndex.RightShoulderRoll,
         G1JointIndex.RightShoulderYaw,
-        G1JointIndex.RightElbow, 
-        G1JointIndex.RightWristRoll, 
-        G1JointIndex.RightWristPitch, 
-        G1JointIndex.RightWristYaw,
-
-        G1JointIndex.WaistYaw, 
-        G1JointIndex.WaistRoll, 
+        G1JointIndex.RightElbow,
+        # G1JointIndex.RightWristRoll,
+        # G1JointIndex.RightWristPitch,
+        # G1JointIndex.RightWristYaw,
+        # waist 3
+        G1JointIndex.WaistYaw,
+        G1JointIndex.WaistRoll,
         G1JointIndex.WaistPitch,
+
     ]
 
-    # fixed wrists (lock during play)
+    # joints to lock during record (wrists)
     fixed_joints = [
-        G1JointIndex.LeftWristRoll, 
-        G1JointIndex.LeftWristPitch, 
+        G1JointIndex.LeftWristRoll,
+        G1JointIndex.LeftWristPitch,
         G1JointIndex.LeftWristYaw,
-
-        G1JointIndex.RightWristRoll, 
-        G1JointIndex.RightWristPitch, 
+        G1JointIndex.RightWristRoll,
+        G1JointIndex.RightWristPitch,
         G1JointIndex.RightWristYaw,
     ]
     fixed_target = np.array([-0.05, 0.12, -0.03, -0.16, 0.12, -0.02])
     fixed_kps = np.array([60, 60, 60, 60, 60, 60])
     fixed_kds = np.array([1, 1, 1, 1, 1, 1])
 
-    # PD for play (17 DOF)
-    kps = np.array([100, 100, 50, 50, 100, 100, 50, 
-                    100, 100, 50, 50, 100, 100, 50, 
-                    400, 400, 400])
-    
-    kds = np.array([2, 2, 2, 2, 2, 2, 2, 
-                    2, 2, 2, 2, 2, 2, 2,
-                    5, 5, 5])
+    # fixed_target = np.array([-0.05      , -0.03, -0.16,       -0.02])
+    # fixed_kps = np.array([60,     60, 60,     60])
+    # fixed_kds = np.array([1,    1, 1,    1])
 
-    default_angles = np.array([
-        0.2, 0.2, 0.0, 0.9, 0.0, 0.0, 0.0,
-        0.2, -0.2, 0.0, 0.9, 0.0, 0.0, 0.0,
-        0.0, 0.0, 0.0,
+    # per‑joint PD (play/default) 17 DOF
+    kps_play = np.array([
+        100, 100, 50, 50, # 60, 60, 60,
+        100, 100, 50, 50, # 60, 60, 60,
+        400, 400, 400,
+        # 60, 60, # wrist roll
     ])
+    kds_play = np.array([
+        2, 2, 2, 2, # 1, 1, 1,
+        2, 2, 2, 2, # 1, 1, 1,
+        5, 5, 5,
+        # 1, 1, # wrist roll 
+    ])
+
+    # TODO 腰部的Kp Kd 单独缩减stiffness, arm 关节可以设置很小力矩，若设置0力矩要设定返回动作是插值连续的，而不是突然的。
+    # record PD (10 % stiff)
+    kps_record = 0.1 * kps_play
+    kds_record = 0.1 * kds_play
+
+    stiffness_factor = 0.01
+    stiffness_factor_waist_rp = 0.5  # for waist roll and pitch
     
+    # default pose (17 DOF order)
+    default_angles = np.array([
+        0.2, 0.2, 0.0, 0.9,  # 0.0, 0.0, 0.0,
+        0.2, -0.2, 0.0, 0.9, # 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0,
+        # 0.12, 0.12, # wrist pitch
+    ])
+
+
 cfg = Config()
 
 # ---------------------------- Player Class ----------------------------- #
@@ -169,8 +246,8 @@ class CustomPlayer:
         for k, m in enumerate(cfg.action_joints):
             self.low_cmd.motor_cmd[m].q = float(q_target[k])
             self.low_cmd.motor_cmd[m].dq = 0.0
-            self.low_cmd.motor_cmd[m].kp = float(cfg.kps[k])
-            self.low_cmd.motor_cmd[m].kd = float(cfg.kds[k])
+            self.low_cmd.motor_cmd[m].kp = float(cfg.kps_play[k])
+            self.low_cmd.motor_cmd[m].kd = float(cfg.kds_play[k])
             self.low_cmd.motor_cmd[m].tau = 0.0
         # lock wrists
         for i, m in enumerate(cfg.fixed_joints):
@@ -196,8 +273,8 @@ class CustomPlayer:
             for k, m in enumerate(cfg.action_joints):
                 self.low_cmd.motor_cmd[m].q = float(q_cmd[k])
                 self.low_cmd.motor_cmd[m].dq = 0.0
-                self.low_cmd.motor_cmd[m].kp = float(cfg.kps[k])
-                self.low_cmd.motor_cmd[m].kd = float(cfg.kds[k])
+                self.low_cmd.motor_cmd[m].kp = float(cfg.kps_play[k])
+                self.low_cmd.motor_cmd[m].kd = float(cfg.kds_play[k])
                 self.low_cmd.motor_cmd[m].tau = 0.0
             for i, m in enumerate(cfg.fixed_joints):
                 self.low_cmd.motor_cmd[m].q = float(cfg.fixed_target[i])
@@ -214,8 +291,8 @@ class CustomPlayer:
         for k, m in enumerate(cfg.action_joints):
             self.low_cmd.motor_cmd[m].q = float(cfg.default_angles[k])
             self.low_cmd.motor_cmd[m].dq = 0.0
-            self.low_cmd.motor_cmd[m].kp = float(cfg.kps[k])
-            self.low_cmd.motor_cmd[m].kd = float(cfg.kds[k])
+            self.low_cmd.motor_cmd[m].kp = float(cfg.kps_play[k])
+            self.low_cmd.motor_cmd[m].kd = float(cfg.kds_play[k])
             self.low_cmd.motor_cmd[m].tau = 0.0
         for i, m in enumerate(cfg.fixed_joints):
             self.low_cmd.motor_cmd[m].q = float(cfg.fixed_target[i])

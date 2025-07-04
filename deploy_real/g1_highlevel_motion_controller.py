@@ -1,5 +1,5 @@
 import time
-import sys
+import os, sys, signal
 import select
 from pathlib import Path
 from typing import Dict, List
@@ -105,6 +105,8 @@ class Player:
         }
         self.pending_key = None
 
+        self.stop_flag = False 
+
     # -------- DDS --------
     def init_dds(self):
         self.pub = ChannelPublisher("rt/arm_sdk", LowCmd_); self.pub.Init()
@@ -125,6 +127,30 @@ class Player:
         self.thread = RecurrentThread(interval=cfg.control_dt, target=self.loop, name="control")
         self.thread.Start()
 
+
+    def stop(self, exit_code: int = 0):
+        """平滑复位 -> 停线程 -> 关闭 DDS -> 退出进程"""
+        if not self.stop_flag:      
+            self.stop_flag = True
+            print("[STOP] move to default & clean up ...")
+            self.move_to_default(3.0)
+
+            # Shut the threading 
+            # try:
+            #     self.thread.Stop()       
+            # except AttributeError:
+            #     pass                     
+            if hasattr(self.thread, 'Stop'):
+                self.thread.Stop()
+            else:
+                print("[WARN] RecurrentThread.Stop() not found, force exit")
+            # SHUT DDS publisher / subscriber 
+            #    self.pub   = None
+            #    self.sub   = None
+
+            # SHUT python；os._exit kill all back threads
+            os._exit(exit_code)
+
     def _start_motion(self, motion_id: str):
         if motion_id not in self.bank:
             print(f"[WARN] Motion {motion_id} not loaded.")
@@ -135,6 +161,9 @@ class Player:
         self.idx = 0
 
     def loop(self):
+
+        if self.stop_flag:
+            return               # SHUT the thread
         # keep default motion
         if self.current_key is None:                        # ---- idle (default) ----
             self.send_pose(cfg.default_angles)
@@ -159,11 +188,16 @@ class Player:
                 self._start_motion(self.pending_key)
                 self.pending_key = None
                 return
-
+            
             # --------- 2-d  X 键重置 -------------
             if self.remote.button[KeyMap.X] == 1:
                 print("[PLAY] Reset to default pose")
                 self.move_to_default()
+        
+             # --- “Select 键全局退出” ---
+            if self.remote.button[KeyMap.select] == 1:
+                self.stop(0)
+                return
             return
 
         # ---- playing ----
@@ -260,5 +294,7 @@ if __name__ == "__main__":
             time.sleep(1)
     except KeyboardInterrupt:
         print("KeyboardInterrupt, moving to default…")
-        player.move_to_default(3.0)
+        player.stop(0)
+        # player.move_to_default(3.0)
         print("Exit.")
+        

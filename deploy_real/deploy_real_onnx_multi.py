@@ -258,9 +258,9 @@ class Controller:
         """Call in any loop to poll remote for policy switch keys."""
         cur = self.remote_controller.button
 
-        if cur[KeyMap.L1] == 1 and self.last_button_state[KeyMap.L1] == 0:  # previous policy
+        if cur[KeyMap.down] == 1 and self.last_button_state[KeyMap.down] == 0:  # previous policy
             self.switch_policy(-1)
-        if cur[KeyMap.R1] == 1 and self.last_button_state[KeyMap.R1] == 0:  # next policy
+        if cur[KeyMap.up] == 1 and self.last_button_state[KeyMap.up] == 0:  # next policy
             self.switch_policy(+1)
 
     # ─────────────────────────────────────────

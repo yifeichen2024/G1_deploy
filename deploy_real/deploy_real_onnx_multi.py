@@ -93,6 +93,7 @@ class Controller:
         self.action_buf = np.zeros(config.num_actions * config.history_length, dtype=np.float32)
         self.ref_motion_phase_buf = np.zeros(config.history_length, dtype=np.float32)
 
+        self.last_button_state = np.zeros(16, dtype=np.int32) # Store the state for safe cut.
         # -------------------------------
         # 3.  DDS init (identical to original)
         # -------------------------------
@@ -255,9 +256,11 @@ class Controller:
     # ─────────────────────────────────────────
     def _check_hotkeys(self):
         """Call in any loop to poll remote for policy switch keys."""
-        if self.remote_controller.button[KeyMap.L1] == 1:  # previous policy
+        cur = self.remote_controller.button
+
+        if cur[KeyMap.L1] == 1 and self.last_button_state[KeyMap.L1] == 0:  # previous policy
             self.switch_policy(-1)
-        if self.remote_controller.button[KeyMap.R1] == 1:  # next policy
+        if cur[KeyMap.R1] == 1 and self.last_button_state[KeyMap.R1] == 0:  # next policy
             self.switch_policy(+1)
 
     # ─────────────────────────────────────────

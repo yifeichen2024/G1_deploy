@@ -6,7 +6,7 @@
 # Learnd onnx policy 
 policy_paths:
   -  "/home/meetup/g1_deploy/pretrain/stance/stance_3_model_6000.onnx" 
-  -  "/home/meetup/g1_deploy/pretrain/wait/wait2_model_21000.onnx"
+  -  "/home/meetup/g1_deploy/pretrain/wait/model_7000.onnx"
   -  "/home/meetup/g1_deploy/pretrain/wait/wait_1_model_22000.onnx"
   -  "/home/meetup/g1_deploy/pretrain/horsestance/Horsestance_model_119000.onnx"
   # -  "/home/meetup/g1_deploy/pretrain/dance_model_170000.onnx"

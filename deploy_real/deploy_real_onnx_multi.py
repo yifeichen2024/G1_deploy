@@ -94,6 +94,8 @@ class Controller:
         self.ref_motion_phase_buf = np.zeros(config.history_length, dtype=np.float32)
 
         self.last_button_state = np.zeros(16, dtype=np.int32) # Store the state for safe cut.
+        self.last_switch_time = time.time()  # last time press 
+        self.cooldown_time = 0.5  # cooldown time
         # -------------------------------
         # 3.  DDS init (identical to original)
         # -------------------------------
@@ -258,11 +260,27 @@ class Controller:
         """Call in any loop to poll remote for policy switch keys."""
         cur = self.remote_controller.button
 
-        if cur[KeyMap.down] == 1 and self.last_button_state[KeyMap.down] == 0:  # previous policy
-            self.switch_policy(-1)
-        if cur[KeyMap.up] == 1 and self.last_button_state[KeyMap.up] == 0:  # next policy
-            self.switch_policy(+1)
+        # if cur[KeyMap.L1] == 1 and self.last_button_state[KeyMap.L1] == 0:  # previous policy
+        #     self.switch_policy(-1)
+        # if cur[KeyMap.R1] == 1 and self.last_button_state[KeyMap.R1] == 0:  # next policy
+        #     self.switch_policy(+1)
 
+        current_time = time.time()
+
+        # button changed or after cooling time.
+        if cur[KeyMap.L1] == 1 and self.last_button_state[KeyMap.L1] == 0:  # L1 按钮上升沿
+            if current_time - self.last_switch_time > self.cooldown_time:  # 判断冷却时间
+                self.switch_policy(-1)  # 切换到上一个策略
+                self.last_switch_time = current_time  # 更新上次切换时间
+
+        if cur[KeyMap.R1] == 1 and self.last_button_state[KeyMap.R1] == 0:  # R1 按钮上升沿
+            if current_time - self.last_switch_time > self.cooldown_time:  # 判断冷却时间
+                self.switch_policy(+1)  # 切换到下一个策略
+                self.last_switch_time = current_time  # 更新上次切换时间
+
+        # 记录当前按钮状态
+        self.last_button_state = cur.copy()
+        
     # ─────────────────────────────────────────
     # Main control loop (only inference section modified)
     # ─────────────────────────────────────────

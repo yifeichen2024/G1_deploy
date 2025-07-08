@@ -16,9 +16,16 @@ class Config:
 
             if "motion_path" in config:
                 self.policy_path = config["motion_path"]    
-                
-            self.msg_type = config["msg_type"]
-            self.imu_type = config["imu_type"]
+            
+            if "msg_type" in config:
+                self.msg_type = config["msg_type"]
+            else:
+                self.msg_type = "hg"
+            # self.msg_type = config["msg_type"]
+            
+            if "imu_type" in config:
+                self.imu_type = config["imu_type"]
+            # self.imu_type = config["imu_type"]
 
             self.weak_motor = []
             if "weak_motor" in config:
@@ -47,13 +54,32 @@ class Config:
             self.action_joint2motor_idx = config["action_joint2motor_idx"]
             self.kps = config["kps"]
             self.kds = config["kds"]
+            
             self.default_angles = np.array(config["default_angles"], dtype=np.float32)
+            
+            if "fixed_joint2motor_idx" in config:
+                self.fixed_joint2motor_idx = config["fixed_joint2motor_idx"]
+            else:
+                self.fixed_joint2motor_idx = []
+            # self.fixed_joint2motor_idx = config["fixed_joint2motor_idx"]
+            if "fixed_kps" in config:
+                self.fixed_kps = config["fixed_kps"]
+            else:
+                self.fixed_kps = []
+            
+            # self.fixed_kps = config["fixed_kps"]
 
-            self.fixed_joint2motor_idx = config["fixed_joint2motor_idx"]
-            self.fixed_kps = config["fixed_kps"]
-            self.fixed_kds = config["fixed_kds"]
-            self.fixed_target = np.array(config["fixed_target"], dtype=np.float32)
+            if "fixed_kds" in config:
+                self.fixed_kds = config["fixed_kds"]
+            else:
+                self.fixed_kds = []
+            # self.fixed_kds = config["fixed_kds"]
 
+            if "fxied_target" in config:
+                self.fixed_target = np.array(config["fixed_target"], dtype=np.float32)
+            else:
+                self.fixed_target = np.zeros(self.num_actions, dtype=np.float32)
+            
             self.ang_vel_scale = config["ang_vel_scale"]
             self.dof_pos_scale = config["dof_pos_scale"]
             self.dof_vel_scale = config["dof_vel_scale"]
@@ -64,14 +90,18 @@ class Config:
             self.num_actions = config["num_actions"]
             self.num_obs = config["num_obs"]
             
-
-            self.history_length = config["history_length"]
-            self.ref_motion_phase = config["ref_motion_phase"]
+            if "history_length" in config:
+                self.history_length = config["history_length"]
+            if "ref_motion_phase" in config:
+                self.ref_motion_phase = config["ref_motion_phase"]
+            # self.history_length = config["history_length"]
+            # self.ref_motion_phase = config["ref_motion_phase"]
 
             # safty check part
             self.action_clip = config["action_clip"]
             self.action_scale = config["action_scale"]
-            self.debut = config["debug"]
+            # self.debut = config["debug"]
+            
             self.action_clip_warn_threshold = config["action_clip_warn_threshold"]
 
             self.dof_pos_lower_limit = config["dof_pos_lower_limit"]

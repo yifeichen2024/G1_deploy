@@ -164,6 +164,7 @@ class Controller:
         while not self.remote.is_button_pressed(KeyMap.start):
             create_zero_cmd(self.low_cmd)
             self._send_cmd()
+            # print("[DEBUG]", self.low_cmd)
             time.sleep(self.dt)
 
     def move_to_default_pos(self):
@@ -290,9 +291,9 @@ if __name__ == "__main__":
 
     # DDS 初始化
     ChannelFactoryInitialize(0, args.net)
-
+    cfg_path = f"deploy_real/configs/{args.config}"
     # YAML 绝对路径直接传入 Config
-    cfg = Config(args.config)
+    cfg = Config(cfg_path)
 
     ctrl = Controller(cfg)
 

@@ -33,7 +33,8 @@ class Config:
 
             self.lowcmd_topic = config["lowcmd_topic"]
             self.lowstate_topic = config["lowstate_topic"]
-            
+            if "cmd_range" in config:
+                self.cmd_range = config["cmd_range"]
             # --------- 1. 支持多 / 单 policy 两种写法 ----------
             if "policy_paths" in config:                  # 多策略
                 raw_paths = config["policy_paths"]

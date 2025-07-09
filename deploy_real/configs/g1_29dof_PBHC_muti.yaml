@@ -6,11 +6,10 @@
 # Learnd onnx policy 
 policy_paths:
   -  "/home/meetup/g1_deploy/pretrain/stance/stance_3_model_6000.onnx" 
-  # -  "/home/meetup/g1_deploy/pretrain/dance/model_77000.onnx"
-  # -  "/home/meetup/g1_deploy/pretrain/wait/model_8000.onnx"
-  -  "/home/meetup/g1_deploy/pretrain/wait/wait_1_model_22000.onnx"
+  # -  "/home/meetup/g1_deploy/pretrain/wait/model_7000.onnx"
+  # -  "/home/meetup/g1_deploy/pretrain/wait/wait_1_model_22000.onnx"
   # -  "/home/meetup/g1_deploy/pretrain/horsestance/Horsestance_model_119000.onnx"
-  # -  "/home/meetup/g1_deploy/pretrain/dance_model_170000.onnx"
+  -  "/home/meetup/g1_deploy/pretrain/dance/model_77000.onnx"
   
 
 # policy_path: "/home/meetup/g1_deploy/pretrain/Stance_2_model_10000.onnx"  
@@ -21,19 +20,16 @@ xml_path: "/home/meetup/g1_deploy/g1_29dof.xml"
 control_dt: 0.02
 motion_lens: 
   - 9999.0 # Stand
-  # - 20.2 # dance
   # - 16.2 # wait2
-  - 28 # wait1 
+  # - 28 # wait1 
   # - 12.0 # Horse stance
-  # - 16.2 # wait2
-  # - 20.2 # dance s
+  - 21.2 # dance 
 policy_names:
   - "Stance"
   # - "wait2"
-  - "wait1"
+  # - "wait1"
   # - "Horsestance_punch"
-  # - "wait2"
-  # - "dance"
+  - "dance"
   
 msg_type: "hg" # "hg" for g1, "go" for h1 
 imu_type: "pelvis" # "torso" or "pelvis"

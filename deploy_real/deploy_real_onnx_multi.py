@@ -336,6 +336,7 @@ class Controller:
         self.send_cmd(self.low_cmd)
         time.sleep(self.config.control_dt)
 
+    # ------------- (YOUR original helper bodies copied verbatim) -------------
     def _build_observation(self) -> np.ndarray:
         """Wrapped original obs construction code."""
         # (place the exact logic you had inside `run` here)

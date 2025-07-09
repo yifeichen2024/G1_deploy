@@ -15,7 +15,7 @@ class Config:
                 self.policy_names = config["policy_names"]
 
             if "motion_path" in config:
-                self.policy_path = config["motion_path"]    
+                self.motion_path = config["motion_path"]    
             
             if "msg_type" in config:
                 self.msg_type = config["msg_type"]
@@ -33,8 +33,14 @@ class Config:
 
             self.lowcmd_topic = config["lowcmd_topic"]
             self.lowstate_topic = config["lowstate_topic"]
+            # if "cmd_range" in config:
+            #     self.cmd_range = config["cmd_range"]
+
             if "cmd_range" in config:
                 self.cmd_range = config["cmd_range"]
+                # self.range_velx = np.array(self.cmd_range['lin_vel_x'], dtype=np.float32)
+                # self.range_vely = np.array(self.cmd_range['lin_vel_y'], dtype=np.float32)
+                # self.range_velz = np.array(self.cmd_range['ang_vel_z'], dtype=np.float32)
             # --------- 1. 支持多 / 单 policy 两种写法 ----------
             if "policy_paths" in config:                  # 多策略
                 raw_paths = config["policy_paths"]
@@ -48,9 +54,7 @@ class Config:
             elif "policy_path" in config:                                         # 兼容旧写法
                 raw_paths = [config["policy_path"]]
                 self.policy_path = config["policy_path"].replace("{LEGGED_GYM_ROOT_DIR}", LEGGED_GYM_ROOT_DIR)
-            
-            if "motion_path" in config:
-                self.motion_path = config["motion_path"]
+
 
             self.action_joint2motor_idx = config["action_joint2motor_idx"]
             self.kps = config["kps"]

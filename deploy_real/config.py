@@ -35,7 +35,8 @@ class Config:
             self.lowstate_topic = config["lowstate_topic"]
             # if "cmd_range" in config:
             #     self.cmd_range = config["cmd_range"]
-
+            if "cmd_init" in config:
+                self.cmd_init = config["cmd_init"]
             if "cmd_range" in config:
                 self.cmd_range = config["cmd_range"]
                 # self.range_velx = np.array(self.cmd_range['lin_vel_x'], dtype=np.float32)

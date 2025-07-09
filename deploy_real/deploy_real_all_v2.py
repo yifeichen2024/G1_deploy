@@ -145,7 +145,7 @@ class Controller:
         # ---------- Loco-policy ----------
         self.loco_policy = LocoTorchPolicy(loco_yaml, config)
         self.mode = "motion"       # {"motion", "loco"}
-
+        self.mode_machine_ = 0
         # ---------- 运行时缓存（保持不变） ----------
         na, hl = config.num_actions, config.history_length
         self.qj  = np.zeros(na, np.float32)
@@ -181,6 +181,7 @@ class Controller:
     # -----------------------------------------------------------------
     def _lowstate_cb(self, msg: LowStateHG):
         self.low_state = msg
+        self.mode_machine_ = self.low_state.mode_machine
         self.remote_controller.set(msg.wireless_remote)
 
     def _wait_for_low_state(self):

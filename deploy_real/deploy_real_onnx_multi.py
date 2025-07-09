@@ -110,6 +110,7 @@ class Controller:
 
             self.lowstate_subscriber = ChannelSubscriber(config.lowstate_topic, LowStateHG)
             self.lowstate_subscriber.Init(self.LowStateHgHandler, 10)
+            
         elif config.msg_type == "go":
             self.low_cmd = unitree_go_msg_dds__LowCmd_()
             self.low_state = unitree_go_msg_dds__LowState_()

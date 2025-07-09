@@ -117,6 +117,7 @@ class Controller:
         kps = self.config.kps
         kds = self.config.kds
         default_pos = self.config.default_angles
+        dof_size = len(joint_idxs)
 
         init_dof_pos = np.zeros(len(joint_idxs), dtype=np.float32)
         for i in range(len(joint_idxs)):
@@ -126,11 +127,34 @@ class Controller:
             alpha = i / num_step
             for j in range(len(joint_idxs)):
                 idx = joint_idxs[j]
+
                 self.low_cmd.motor_cmd[idx].q = init_dof_pos[j] * (1 - alpha) + default_pos[j]
                 self.low_cmd.motor_cmd[idx].qd = 0
                 self.low_cmd.motor_cmd[idx].kp = kps[j]
                 self.low_cmd.motor_cmd[idx].kd = kds[j]
                 self.low_cmd.motor_cmd[idx].tau = 0
+
+        self.send_cmd(self.low_cmd)
+        time.sleep(self.config.control_dt)
+
+    def default_pos_state(self):
+        print("Enter default pos state.")
+        print("Waiting for the Button A signal...")
+        while self.remote_controller.button[KeyMap.A] != 1:
+            for i in range(len(self.config.action_joint2motor_idx)):
+                motor_idx = self.config.action_joint2motor_idx[i]
+                self.low_cmd.motor_cmd[motor_idx].q = self.config.default_angles[i]
+                self.low_cmd.motor_cmd[motor_idx].qd = 0
+                self.low_cmd.motor_cmd[motor_idx].kp = self.config.kps[i]
+                self.low_cmd.motor_cmd[motor_idx].kd = self.config.kds[i]
+                self.low_cmd.motor_cmd[motor_idx].tau = 0
+            for i in range(len(self.config.fixed_joint2motor_idx)):
+                motor_idx = self.config.fixed_joint2motor_idx[i]
+                self.low_cmd.motor_cmd[motor_idx].q = self.config.fixed_target[i]
+                self.low_cmd.motor_cmd[motor_idx].qd = 0
+                self.low_cmd.motor_cmd[motor_idx].kp = self.config.fixed_kps[i]
+                self.low_cmd.motor_cmd[motor_idx].kd = self.config.fixed_kds[i]
+                self.low_cmd.motor_cmd[motor_idx].tau = 0
             self.send_cmd(self.low_cmd)
             time.sleep(self.config.control_dt)
 
@@ -166,18 +190,17 @@ class Controller:
         obs_tensor = torch.from_numpy(self.obs.reshape(1, -1).astype(np.float32))
         self.action = self.policy(obs_tensor).detach().numpy().squeeze()
 
-        target_pos = self.action * self.config.action_scale + self.config.default_angles[:self.config.num_actions]
-        action_reorder = self.config.default_angles.copy()
-        for i in range(self.config.num_actions):
-            motor_idx = self.config.action_joint2motor_idx[i]
-            action_reorder[motor_idx] = target_pos[i]
-
-        for motor_idx in range(len(self.low_cmd.motor_cmd)):
-            self.low_cmd.motor_cmd[motor_idx].q = action_reorder[motor_idx]
-            self.low_cmd.motor_cmd[motor_idx].qd = 0
-            self.low_cmd.motor_cmd[motor_idx].kp = self.config.kps[motor_idx]
-            self.low_cmd.motor_cmd[motor_idx].kd = self.config.kds[motor_idx]
-            self.low_cmd.motor_cmd[motor_idx].tau = 0
+        target_pos = self.action * self.config.action_scale + self.config.default_angles # 从 action 转换到目标位置
+        print(f"[DEBUG] target_pos shape: {len(target_pos)}")
+        # action_reorder = self.config.default_angles.copy()
+        for i in range(len(self.config.action_joint2motor_idx)):
+                motor_idx = self.config.action_joint2motor_idx[i]
+                self.low_cmd.motor_cmd[motor_idx].q = target_pos[i]
+                self.low_cmd.motor_cmd[motor_idx].qd = 0
+                self.low_cmd.motor_cmd[motor_idx].kp = self.config.kps[i]
+                self.low_cmd.motor_cmd[motor_idx].kd = self.config.kds[i]
+                self.low_cmd.motor_cmd[motor_idx].tau = 0
+                print(f"[MOTOR] idx={motor_idx:02d}  target={target_pos[i]:+.3f}")
 
         self.send_cmd(self.low_cmd)
         time.sleep(self.config.control_dt)
@@ -198,7 +221,8 @@ if __name__ == "__main__":
     controller = Controller(config)
     controller.zero_torque_state()
     controller.move_to_default_pos()
-
+    controller.default_pos_state()
+    
     while True:
         try:
             controller.run()

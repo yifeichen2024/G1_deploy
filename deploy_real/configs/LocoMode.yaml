@@ -50,7 +50,9 @@ action_joint2motor_idx: [0, 6, 12,
                              19, 26, 
                              20, 27, 
                              21, 28]
-
+fixed_joint2motor_idx: []
+fixed_kps: []
+fixed_kds: []
 fixed_target: []
 
 cmd_scale: [1.0, 1.0, 1.0]
@@ -65,6 +67,9 @@ max_cmd: [0.8, 0.5, 1.57]
 cmd_range: {lin_vel_x: [-0.4, 0.7], lin_vel_y: [-0.4, 0.4], ang_vel_z: [-1.57, 1.57]}
 lowcmd_topic: "rt/lowcmd"
 lowstate_topic: "rt/lowstate"
+msg_type: "hg" # "hg" for g1, "go" for h1 
+imu_type: "pelvis" # "torso" or "pelvis"
+
 
 # === Safty check === 
 action_clip: 1.0               # single step clip

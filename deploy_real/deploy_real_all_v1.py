@@ -110,7 +110,7 @@ class Controller:
 
     def move_to_default_pos(self):
         print("Moving to default pos.")
-        total_time = 5
+        total_time = 8
         num_step = int(total_time / self.config.control_dt)
 
         joint_idxs = self.config.action_joint2motor_idx
@@ -191,7 +191,8 @@ class Controller:
         self.action = self.policy(obs_tensor).detach().numpy().squeeze()
 
         target_pos = self.action * self.config.action_scale + self.config.default_angles # 从 action 转换到目标位置
-        print(f"[DEBUG] target_pos shape: {len(target_pos)}")
+        
+        print(f"[DEBUG] target_pos shape: {len(target_pos)}, target_pos: {target_pos}")
         # action_reorder = self.config.default_angles.copy()
         for i in range(len(self.config.action_joint2motor_idx)):
                 motor_idx = self.config.action_joint2motor_idx[i]

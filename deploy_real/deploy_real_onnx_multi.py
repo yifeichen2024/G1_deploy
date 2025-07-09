@@ -307,7 +307,7 @@ class Controller:
             return False  # 保持继续运行
         
         # === Safety: Check for NaN in action ===
-        if np.isnan(self.action).any() or np.max(np.abs(self.action)) > 15:
+        if np.isnan(self.action).any() or np.max(np.abs(self.action)) > 8:
             print("[ERROR] Detected NaN or large action output! Aborting for safety.")
             create_damping_cmd(self.low_cmd)
             self.send_cmd(self.low_cmd)
@@ -332,6 +332,7 @@ class Controller:
                     # Directly return
                     return True
 
+        # DEBUG deactivate frist: send action 
         self.send_cmd(self.low_cmd)
         time.sleep(self.config.control_dt)
 

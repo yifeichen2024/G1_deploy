@@ -74,11 +74,12 @@ class Config:
             else:
                 self.fixed_kds = []
             # self.fixed_kds = config["fixed_kds"]
-
-            if "fxied_target" in config:
-                self.fixed_target = np.array(config["fixed_target"], dtype=np.float32)
-            else:
-                self.fixed_target = np.zeros(self.num_actions, dtype=np.float32)
+            
+            self.fixed_target = np.array(config["fixed_target"], dtype=np.float32)
+            # if "fxied_target" in config:
+            #     self.fixed_target = np.array(config["fixed_target"], dtype=np.float32)
+            # else:
+            #     self.fixed_target = np.zeros(self.fixed_target, dtype=np.float32)
             
             self.ang_vel_scale = config["ang_vel_scale"]
             self.dof_pos_scale = config["dof_pos_scale"]

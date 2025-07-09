@@ -132,7 +132,7 @@ class LocoTorchPolicy:
             cfg = yaml.safe_load(f)
         self.cfg = cfg
         self.nj = full_joints
-        self.joint2motor = np.array(cfg["joint2motor_idx"], np.int32)
+        self.joint2motor = np.array(cfg["action_joint2motor_idx"], np.int32)
         self.na = cfg["num_actions"]
 
         # TS model（cfg["policy_path"] 现为绝对路径）
@@ -235,7 +235,7 @@ class Controller:
             )
         self.motion_indices = list(range(len(self.policies)))
         self.loco_idx = len(self.policies)
-        self.policies.append(LocoTorchPolicy(self.nj, loco_yaml))
+        self.policies.append(LocoTorchPolicy(29, loco_yaml)) # self.nj
 
         self.idx = 0  # start with stance
         self.state = _State(self.nj)
@@ -370,10 +370,11 @@ if __name__ == "__main__":
     sys.stdout = _Tee(log_f)
 
     ChannelFactoryInitialize(0, args.net)
-
-    motion_cfg = Config(args.motion_yaml)
-    loco_cfg = Config(args.loco_yaml)
-    ctrl = Controller(motion_cfg, args.loco_yaml)
+    cfg_motion_path = f"deploy_real/configs/{args.motion_yaml}"
+    cfg_loco_path = f"deploy_real/configs/{args.loco_yaml}"
+    motion_cfg = Config(cfg_motion_path)
+    # loco_cfg = Config(cfg_loco_path)
+    ctrl = Controller(motion_cfg, cfg_loco_path)
 
     # Boot sequence: zero-torque → default pose → wait for A → stance
     ctrl.zero_torque_state()

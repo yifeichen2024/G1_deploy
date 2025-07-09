@@ -6,9 +6,9 @@
 # Learnd onnx policy 
 policy_paths:
   -  "/home/meetup/g1_deploy/pretrain/stance/stance_3_model_6000.onnx" 
-  -  "/home/meetup/g1_deploy/pretrain/dance/model_97000.onnx"
+  # -  "/home/meetup/g1_deploy/pretrain/dance/model_77000.onnx"
   # -  "/home/meetup/g1_deploy/pretrain/wait/model_8000.onnx"
-  # -  "/home/meetup/g1_deploy/pretrain/wait/wait_1_model_22000.onnx"
+  -  "/home/meetup/g1_deploy/pretrain/wait/wait_1_model_22000.onnx"
   # -  "/home/meetup/g1_deploy/pretrain/horsestance/Horsestance_model_119000.onnx"
   # -  "/home/meetup/g1_deploy/pretrain/dance_model_170000.onnx"
   
@@ -21,17 +21,16 @@ xml_path: "/home/meetup/g1_deploy/g1_29dof.xml"
 control_dt: 0.02
 motion_lens: 
   - 9999.0 # Stand
-  - 25.0 # dance
-  # - 15 # wait2
-  # - 28 # wait1 
+  # - 20.2 # dance
+  # - 16.2 # wait2
+  - 28 # wait1 
   # - 12.0 # Horse stance
   # - 16.2 # wait2
   # - 20.2 # dance s
 policy_names:
   - "Stance"
-  - "dance"
   # - "wait2"
-  # - "wait1"
+  - "wait1"
   # - "Horsestance_punch"
   # - "wait2"
   # - "dance"

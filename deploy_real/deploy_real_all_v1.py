@@ -1,23 +1,19 @@
 #!/usr/bin/env python3
 """
-G1 deploy script – Motion-only
-==============================
+G1 locomotion-only deploy script (derived from deploy_real_multi_policy.py)
 
-• 多个 ONNX Motion 策略（L1 / R1 切换）
-• 启动序列: Zero-torque → Default pose → 等待 A → Stance
-• 热键:
-    L1 / R1 : 上 / 下一个动作
-    X       : 回到默认位姿
-    SELECT  : 退出脚本
+  • 仅 Locomotion-mode : TorchScript 行走策略
+  • Boot 流程、按键框架、日志等保持不变
+  • YAML 内提供绝对路径 policy_path 及 loco 专用参数
 """
 
 from __future__ import annotations
 from typing import List, Union
-import argparse, sys, os, time, datetime as _dt
+import argparse, sys, time, datetime as dt
 
 import numpy as np
-import onnxruntime as ort
-
+import torch
+import onnxruntime  # 仅为兼容 Config，实际未使用
 from unitree_sdk2py.core.channel import (
     ChannelFactoryInitialize,
     ChannelPublisher,
@@ -27,15 +23,12 @@ from unitree_sdk2py.idl.default import (
     unitree_hg_msg_dds__LowCmd_,
     unitree_hg_msg_dds__LowState_,
 )
-from unitree_sdk2py.idl.unitree_go.msg.dds_ import LowCmd_ as LowCmdGo
-from unitree_sdk2py.idl.default import unitree_go_msg_dds__LowCmd_, unitree_go_msg_dds__LowState_
 from unitree_sdk2py.idl.unitree_hg.msg.dds_ import LowCmd_ as LowCmdHG, LowState_ as LowStateHG
-from unitree_sdk2py.idl.unitree_go.msg.dds_ import LowState_ as LowStateGo
 from unitree_sdk2py.utils.crc import CRC
 
 from common.command_helper import (
-    create_zero_cmd,
     create_damping_cmd,
+    create_zero_cmd,
     init_cmd_hg,
     MotorMode,
 )
@@ -43,346 +36,280 @@ from common.rotation_helper import get_gravity_orientation
 from common.remote_controller import RemoteController, KeyMap
 from config import Config
 
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 # ════════════════════════════════════════════════════════════════
-# 1. Helper containers
+# Loco helper
 # ════════════════════════════════════════════════════════════════
-class PolicyOutput:
-    def __init__(self, nj: int):
-        self.actions = np.zeros(nj, np.float32)
-        self.kps     = np.zeros(nj, np.float32)
-        self.kds     = np.zeros(nj, np.float32)
+class LocoPolicy:
+    """TorchScript Locomotion policy wrapper."""
 
+    def __init__(self, cfg: Config):
+        self.cfg = cfg
+        self.nj  = cfg.num_actions
+        self.j2m = np.array(cfg.action_joint2motor_idx, np.int32)
 
-class _State:
-    __slots__ = ("q", "dq", "quat", "ang_vel", "gravity_ori")
-    def __init__(self, nj: int):
-        self.q           = np.zeros(nj, np.float32)
-        self.dq          = np.zeros(nj, np.float32)
-        self.quat        = np.zeros(4,  np.float32)
-        self.ang_vel     = np.zeros(3,  np.float32)
-        self.gravity_ori = np.zeros(3,  np.float32)
+        # ── TorchScript 模型 ───────────────────────────────
+        self.ts = torch.jit.load(cfg.policy_path)
+        self.ts.eval()
+        # warm-up
+        with torch.inference_mode():
+            self.ts(torch.zeros(1, cfg.num_obs, dtype=torch.float32))
 
-# ════════════════════════════════════════════════════════════════
-# 2.  ONNX Motion policy
-# ════════════════════════════════════════════════════════════════
-class ONNXMotionPolicy:
-    def __init__(self, cfg: Config, onnx_path: str, name: str, motion_len: float):
-        self.cfg   = cfg
-        self.name  = name
-        self.dt    = cfg.control_dt
-        self.nj    = cfg.num_actions
-        self.len_s = motion_len
-        self.step_counter = 0
+        # ── 常量缓存 ───────────────────────────────────────
+        self.kps = np.zeros(self.nj, np.float32)
+        self.kds = np.zeros(self.nj, np.float32)
+        self.def_ang = np.zeros(self.nj, np.float32)
+        for i, m in enumerate(self.j2m):
+            self.kps[i] = cfg.kps[i]
+            self.kds[i] = cfg.kds[i]
+            self.def_ang[i] = cfg.default_angles[i]
 
-        so = ort.SessionOptions()
-        so.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-        self.sess = ort.InferenceSession(onnx_path, so, providers=["CPUExecutionProvider"])
-        self.in_name = self.sess.get_inputs()[0].name
+        # buffers
+        self.action_prev = np.zeros(self.nj, np.float32)
+        self.obs         = np.zeros(cfg.num_obs, np.float32)
 
-        hl, na = cfg.history_length, cfg.num_actions
-        self.action    = np.zeros(na,    np.float32)
-        self.ang_buf   = np.zeros(3*hl,  np.float32)
-        self.g_buf     = np.zeros(3*hl,  np.float32)
-        self.pos_buf   = np.zeros(na*hl, np.float32)
-        self.vel_buf   = np.zeros(na*hl, np.float32)
-        self.act_buf   = np.zeros(na*hl, np.float32)
-        self.phase_buf = np.zeros(hl,    np.float32)
+        # joystick cmd ranges
+        self.r_lin_x = np.array(cfg.cmd_range["lin_vel_x"], np.float32)
+        self.r_lin_y = np.array(cfg.cmd_range["lin_vel_y"], np.float32)
+        self.r_ang_z = np.array(cfg.cmd_range["ang_vel_z"], np.float32)
 
-    def _build_obs(self, st: _State) -> np.ndarray:
+    # ── helper ────────────────────────────────────────────────
+    def _scale_cmd(self, raw: np.ndarray) -> np.ndarray:
+        out = np.zeros(3, np.float32)
+        for i, rg in enumerate((self.r_lin_x, self.r_lin_y, self.r_ang_z)):
+            a, b = rg
+            out[i] = (raw[i] - a) / (b - a) * 2 - 1       # → [-1,1]
+            out[i] = np.clip(out[i], -1, 1)
+        return out * self.cfg.cmd_scale
+
+    # ── policy forward ────────────────────────────────────────
+    def step(
+        self,
+        q: np.ndarray,
+        dq: np.ndarray,
+        ang_vel: np.ndarray,
+        g_ori: np.ndarray,
+        vel_cmd: np.ndarray,
+    ) -> np.ndarray:
+        na = self.nj
         cfg = self.cfg
-        ref_phase = 0.0 if self.len_s > 9000 else (self.step_counter * self.dt / self.len_s)
+        cmd_sc = self._scale_cmd(vel_cmd)
 
-        obs = np.concatenate(
-            (
-                self.action,
-                st.ang_vel             * cfg.ang_vel_scale,
-                st.q                   * cfg.dof_pos_scale,
-                st.dq                  * cfg.dof_vel_scale,
-                self.act_buf, self.ang_buf,
-                self.pos_buf, self.vel_buf,
-                self.g_buf,  self.phase_buf,
-                st.gravity_ori, [ref_phase],
-            ),
-            dtype=np.float32,
-        )
+        self.obs[0:3]          = ang_vel * cfg.ang_vel_scale
+        self.obs[3:6]          = g_ori
+        self.obs[6:9]          = cmd_sc
+        self.obs[9 : 9 + na]   = (q - cfg.default_angles) * cfg.dof_pos_scale
+        self.obs[9 + na : 9 + 2 * na] = dq * cfg.dof_vel_scale
+        self.obs[9 + 2 * na :] = self.action_prev
 
-        # 更新历史缓冲
-        na = cfg.num_actions
-        self.ang_buf   = np.concatenate((st.ang_vel * cfg.ang_vel_scale, self.ang_buf[:-3]))
-        self.g_buf     = np.concatenate((st.gravity_ori,                 self.g_buf[:-3]))
-        self.pos_buf   = np.concatenate((st.q * cfg.dof_pos_scale,       self.pos_buf[:-na]))
-        self.vel_buf   = np.concatenate((st.dq* cfg.dof_vel_scale,       self.vel_buf[:-na]))
-        self.act_buf   = np.concatenate((self.action,                    self.act_buf[:-na]))
-        self.phase_buf = np.concatenate(([ref_phase],                    self.phase_buf[:-1]))
-        return obs
-
-    def step(self, st: _State) -> PolicyOutput:
-        self.step_counter += 1
-        obs = self._build_obs(st)
-        self.action = np.squeeze(self.sess.run(None, {self.in_name: obs[None]})[0])
-
+        with torch.inference_mode():
+            act = (
+                self.ts(torch.from_numpy(self.obs).unsqueeze(0))
+                .clip(-100, 100)
+                .squeeze()
+                .cpu()
+                .numpy()
+            )
+        self.action_prev = act
         tgt = np.clip(
-            self.cfg.default_angles + self.action * self.cfg.action_scale,
-            self.cfg.dof_pos_lower_limit,
-            self.cfg.dof_pos_upper_limit,
+            self.def_ang + act * cfg.action_scale,
+            cfg.dof_pos_lower_limit,
+            cfg.dof_pos_upper_limit,
         )
-        po            = PolicyOutput(self.nj)
-        po.actions[:] = tgt
-        po.kps[:]     = self.cfg.kps
-        po.kds[:]     = self.cfg.kds
-        return po
+        return tgt
+
 
 # ════════════════════════════════════════════════════════════════
-# 3.  Controller (Motion-only)
+# Controller (外形保持不变)
 # ════════════════════════════════════════════════════════════════
 class Controller:
-    def __init__(self, cfg: Config):
-        self.cfg    = cfg
+    """Locomotion-only runtime controller."""
+
+    def __init__(self, config: Config) -> None:
+        self.config = config
+        self.dt     = config.control_dt
         self.remote = RemoteController()
-        self.dt     = cfg.control_dt
-        self.nj     = 29  # G1 全关节
 
-        # ── DDS init ───────────────────────────────────────────
-        # self.low_cmd   = unitree_hg_msg_dds__LowCmd_()
-        # self.low_state = unitree_hg_msg_dds__LowState_()
-        # self.pub = ChannelPublisher(cfg.lowcmd_topic, LowCmdHG); self.pub.Init()
-        # self.sub = ChannelSubscriber(cfg.lowstate_topic, LowStateHG)
-        # self.sub.Init(self._cb, 10)
-        if cfg.msg_type == "hg":
-            self.low_cmd = unitree_hg_msg_dds__LowCmd_()
-            self.low_state = unitree_hg_msg_dds__LowState_()
-            self.mode_pr_ = MotorMode.PR
-            self.mode_machine_ = 0
+        # ── Policy ──────────────────────────────────────────
+        self.policy = LocoPolicy(config)
 
-            self.lowcmd_publisher_ = ChannelPublisher(cfg.lowcmd_topic, LowCmdHG)
-            self.lowcmd_publisher_.Init()
-
-            self.lowstate_subscriber = ChannelSubscriber(cfg.lowstate_topic, LowStateHG)
-            self.lowstate_subscriber.Init(self.LowStateHgHandler, 10)
-        elif cfg.msg_type == "go":
-            self.low_cmd = unitree_go_msg_dds__LowCmd_()
-            self.low_state = unitree_go_msg_dds__LowState_()
-
-            self.lowcmd_publisher_ = ChannelPublisher(cfg.lowcmd_topic, LowCmdGo)
-            self.lowcmd_publisher_.Init()
-
-            self.lowstate_subscriber = ChannelSubscriber(cfg.lowstate_topic, LowStateGo)
-            self.lowstate_subscriber.Init(self.LowStateGoHandler, 10)
-        else:
-            raise ValueError("Invalid msg_type")
+        # ── DDS init ───────────────────────────────────────
+        self.low_cmd   = unitree_hg_msg_dds__LowCmd_()
+        self.low_state = unitree_hg_msg_dds__LowState_()
+        self.pub = ChannelPublisher(config.lowcmd_topic, LowCmdHG); self.pub.Init()
+        self.sub = ChannelSubscriber(config.lowstate_topic, LowStateHG)
+        self.sub.Init(self._cb_low_state, 10)
 
         init_cmd_hg(self.low_cmd, 0, MotorMode.PR)
-        print("[INFO] Waiting DDS …")
-        self._wait_for_low_state()
+        print("[INFO] Waiting for DDS …")
+        self._wait_for_state()
         print("[INFO] Connected!")
 
-        # ── 载入 ONNX 动作策略 ────────────────────────────────
-        self.policies: List[ONNXMotionPolicy] = []
-        for i, p in enumerate(cfg.policy_paths):
-            name = cfg.policy_names[i] if hasattr(cfg, "policy_names") else f"motion{i}"
-            self.policies.append(ONNXMotionPolicy(cfg, p, name, cfg.motion_lens[i]))
-        self.idx            = 0               # 当前策略编号
-        self.motion_indices = list(range(len(self.policies)))
+        # buffers (保留原接口字段，便于向下兼容)
+        self.qj  = np.zeros(config.num_actions, np.float32)
+        self.dqj = np.zeros(config.num_actions, np.float32)
 
-        # ── 运行时状态 ─────────────────────────────────────────
-        self.state        = _State(self.nj)
-        self.last_btn     = np.zeros(16, np.int32)
-        self.last_switch  = time.time()
-        self.cooldown_s   = 0.4
-
-    # ── DDS 回调 ───────────────────────────────────────────────
-    def _cb(self, msg: LowStateHG):
+    # ── DDS callback ───────────────────────────────────────────
+    def _cb_low_state(self, msg: LowStateHG):
         self.low_state = msg
         self.remote.set(msg.wireless_remote)
-    # ─────────────────────────────────────────
-    # DDS Callbacks (unchanged)
-    # ─────────────────────────────────────────
-    def LowStateHgHandler(self, msg: LowStateHG):
-        self.low_state = msg
-        self.mode_machine_ = self.low_state.mode_machine
-        self.remote_controller.set(self.low_state.wireless_remote)
 
-    def LowStateGoHandler(self, msg: LowStateGo):
-        self.low_state = msg
-        self.remote_controller.set(self.low_state.wireless_remote)
-    def _wait_for_low_state(self):
+    def _wait_for_state(self):
         while self.low_state.tick == 0:
             time.sleep(self.dt)
 
-    def send_cmd(self, cmd: Union[LowCmdGo, LowCmdHG]):
-            cmd.crc = CRC().Crc(cmd)
-            self.lowcmd_publisher_.Write(cmd)
-    # ── 热键处理 (只剩 L1/R1) ─────────────────────────────────
-    def _handle_buttons(self):
-        btn = self.remote.button
-        now = time.time()
-
-        if btn[KeyMap.L1] and not self.last_btn[KeyMap.L1] and now - self.last_switch > self.cooldown_s:
-            self.idx = (self.idx - 1) % len(self.motion_indices)
-            self.last_switch = now
-            print(f"< Motion #{self.idx} >")
-
-        if btn[KeyMap.R1] and not self.last_btn[KeyMap.R1] and now - self.last_switch > self.cooldown_s:
-            self.idx = (self.idx + 1) % len(self.motion_indices)
-            self.last_switch = now
-            print(f"< Motion #{self.idx} >")
-
-        self.last_btn = btn.copy()
-
-    # ── 状态采样 ───────────────────────────────────────────────
-    def _fill_state(self):
-        for i in range(self.nj):
-            self.state.q [i] = self.low_state.motor_state[i].q
-            self.state.dq[i] = self.low_state.motor_state[i].dq
-        self.state.quat[:]     = self.low_state.imu_state.quaternion
-        self.state.ang_vel[:]  = self.low_state.imu_state.gyroscope
-        self.state.gravity_ori = get_gravity_orientation(self.state.quat)
-
-    # ── 统一发送 ───────────────────────────────────────────────
-    def _send(self, po: PolicyOutput):
-        # 动作关节
-        for i, m in enumerate(self.cfg.action_joint2motor_idx):
-            mc = self.low_cmd.motor_cmd[m]
-            mc.q, mc.qd, mc.kp, mc.kd, mc.tau = po.actions[i], 0, po.kps[i], po.kds[i], 0
-        # 固定关节
-        for j, m in enumerate(self.cfg.fixed_joint2motor_idx):
-            mc = self.low_cmd.motor_cmd[m]
-            mc.q, mc.qd, mc.kp, mc.kd, mc.tau = (
-                self.cfg.fixed_target[j],
-                0,
-                self.cfg.fixed_kps[j],
-                self.cfg.fixed_kds[j],
-                0,
-            )
-        self.low_cmd.crc = CRC().Crc(self.low_cmd)
-        self.lowcmd_publisher_.Write(self.low_cmd)
-
-        
-    # ── 主循环一步 ─────────────────────────────────────────────
-    def loop_once(self) -> bool:
-        self._handle_buttons()
-
-        # 系统按键
-        if self.remote.button[KeyMap.select]:
-            return True
-        if self.remote.button[KeyMap.X]:
-            print("[STATE] Reset default pose …")
-            self.move_to_default_pos()
-            return False
-
-        self._fill_state()
-        po = self.policies[self.idx].step(self.state)
-
-        # 安全检查
-        if not np.isfinite(po.actions).all() or np.max(np.abs(po.actions)) > 15:
-            print("[SAFETY] Invalid action → damping")
-            create_damping_cmd(self.low_cmd)
-            self._send(po)
-            return True
-
-        self._send(po)
-
-        # 若非 stance 且动作播放完自动回 stance
-        if self.idx != 0:
-            pol = self.policies[self.idx]
-            if pol.step_counter * pol.dt >= pol.len_s:
-                print("[INFO] Motion finished → stance")
-                self.idx = 0
-                pol.step_counter = 0
-        return False
-
-    # ── Boot phases ────────────────────────────────────────────
+    # ── Boot phases: 与旧版完全一致 ───────────────────────────
     def zero_torque_state(self):
         print("[STATE] Zero torque – press START")
         while not self.remote.is_button_pressed(KeyMap.start):
             create_zero_cmd(self.low_cmd)
-            self.send_cmd(self.low_cmd)
-            self._send(PolicyOutput(self.nj))
+            self._send_cmd()
             time.sleep(self.dt)
 
     def move_to_default_pos(self):
         print("[STATE] Moving to default pose (5 s)")
         steps   = int(5 / self.dt)
-        dof_idx = self.cfg.action_joint2motor_idx + self.cfg.fixed_joint2motor_idx
-        kps     = self.cfg.kps + self.cfg.fixed_kps
-        kds     = self.cfg.kds + self.cfg.fixed_kds
-        tgt     = np.concatenate((self.cfg.default_angles, self.cfg.fixed_target))
+        dof_idx = self.config.action_joint2motor_idx + self.config.fixed_joint2motor_idx
+        kps     = self.config.kps + self.config.fixed_kps
+        kds     = self.config.kds + self.config.fixed_kds
+        tgt     = np.concatenate((self.config.default_angles, self.config.fixed_target))
         init    = np.array([self.low_state.motor_state[i].q for i in dof_idx])
-
         for s in range(steps):
             a = s / steps
             for j, m in enumerate(dof_idx):
                 qd = init[j] * (1 - a) + tgt[j] * a
                 mc = self.low_cmd.motor_cmd[m]
                 mc.q, mc.qd, mc.kp, mc.kd, mc.tau = qd, 0, kps[j], kds[j], 0
-            self._send(PolicyOutput(self.nj))
+            self._send_cmd()
             time.sleep(self.dt)
         print("[INFO] Default pose reached")
 
     def default_pos_state(self):
-        print("[STATE] Holding default pose – press A for stance")
+        print("[STATE] Holding default pose – press A to start loco")
         while not self.remote.is_button_pressed(KeyMap.A):
-            for i, m in enumerate(self.cfg.action_joint2motor_idx):
+            for i, m in enumerate(self.config.action_joint2motor_idx):
                 mc = self.low_cmd.motor_cmd[m]
                 mc.q, mc.qd, mc.kp, mc.kd, mc.tau = (
-                    self.cfg.default_angles[i],
+                    self.config.default_angles[i],
                     0,
-                    self.cfg.kps[i],
-                    self.cfg.kds[i],
+                    self.config.kps[i],
+                    self.config.kds[i],
                     0,
                 )
-            for i, m in enumerate(self.cfg.fixed_joint2motor_idx):
+            for i, m in enumerate(self.config.fixed_joint2motor_idx):
                 mc = self.low_cmd.motor_cmd[m]
                 mc.q, mc.qd, mc.kp, mc.kd, mc.tau = (
-                    self.cfg.fixed_target[i],
+                    self.config.fixed_target[i],
                     0,
-                    self.cfg.fixed_kps[i],
-                    self.cfg.fixed_kds[i],
+                    self.config.fixed_kps[i],
+                    self.config.fixed_kds[i],
                     0,
                 )
-            self._send(PolicyOutput(self.nj))
+            self._send_cmd()
             time.sleep(self.dt)
 
+    # ── 主循环一步 ───────────────────────────────────────────
+    def run(self) -> bool:
+        """返回 True → 需要退出"""
+        # 系统按键
+        if self.remote.button[KeyMap.select]:
+            return True
+        if self.remote.button[KeyMap.X]:
+            print("[STATE] Reset → default pose")
+            self.move_to_default_pos()
+            return False
+
+        # ── 填充状态 ────────────────────────────────────
+        for i in range(self.config.num_actions):
+            self.qj[i]  = self.low_state.motor_state[self.config.action_joint2motor_idx[i]].q
+            self.dqj[i] = self.low_state.motor_state[self.config.action_joint2motor_idx[i]].dq
+
+        quat      = self.low_state.imu_state.quaternion
+        ang_vel   = np.array(self.low_state.imu_state.gyroscope, np.float32)
+        gravity_o = get_gravity_orientation(quat)
+        # 左摇杆 XY, 右摇杆 X
+        vel_cmd   = np.array([self.remote.ly, -self.remote.lx, -self.remote.rx], np.float32)
+
+        # ── 策略前向 ────────────────────────────────────
+        tgt = self.policy.step(
+            q=self.qj,
+            dq=self.dqj,
+            ang_vel=ang_vel,
+            g_ori=gravity_o,
+            vel_cmd=vel_cmd,
+        )
+
+        # ── 安全检查 ────────────────────────────────────
+        if not np.isfinite(tgt).all() or np.max(np.abs(tgt)) > 15:
+            print("[SAFETY] invalid tgt → damping")
+            create_damping_cmd(self.low_cmd)
+            self._send_cmd()
+            return True
+
+        # ── 写指令 & 发送 ───────────────────────────────
+        for i, m in enumerate(self.config.action_joint2motor_idx):
+            mc = self.low_cmd.motor_cmd[m]
+            mc.q, mc.qd, mc.kp, mc.kd, mc.tau = tgt[i], 0, self.policy.kps[i], self.policy.kds[i], 0
+        for j, m in enumerate(self.config.fixed_joint2motor_idx):
+            mc = self.low_cmd.motor_cmd[m]
+            mc.q, mc.qd, mc.kp, mc.kd, mc.tau = (
+                self.config.fixed_target[j],
+                0,
+                self.config.fixed_kps[j],
+                self.config.fixed_kds[j],
+                0,
+            )
+        self._send_cmd()
+        return False
+
+    # ── 内部统一发送 ───────────────────────────────────────
+    def _send_cmd(self):
+        self.low_cmd.crc = CRC().Crc(self.low_cmd)
+        self.pub.Write(self.low_cmd)
+
+
 # ════════════════════════════════════════════════════════════════
-# 4. Logger + main
+# Main
 # ════════════════════════════════════════════════════════════════
-class _Tee:
-    def __init__(self, f: str):
+class _Logger:
+    def __init__(self, fname: str):
         self.term = sys.stdout
-        self.log  = open(f, "w", buffering=1)
+        self.log  = open(fname, "w", buffering=1)
     def write(self, m): self.term.write(m); self.log.write(m)
     def flush(self): self.term.flush(); self.log.flush()
 
+
 if __name__ == "__main__":
-    pa = argparse.ArgumentParser("Motion-only deploy")
-    pa.add_argument("net",         help="network interface (e.g. eth0)")
-    pa.add_argument("motion_yaml", help="absolute path of motion-mode YAML")
+    pa = argparse.ArgumentParser("G1 Loco-only deploy")
+    pa.add_argument("net",    help="network interface, e.g. eth0")
+    pa.add_argument("config", help="absolute path to Loco YAML")
     args = pa.parse_args()
 
-    log_f = os.path.join(PROJECT_ROOT, f"deploy_log_{_dt.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt")
-    sys.stdout = _Tee(log_f)
+    log_name = f"deploy_log_{dt.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    sys.stdout = _Logger(log_name)
 
+    # DDS 初始化
     ChannelFactoryInitialize(0, args.net)
-    cfg_motion_path = f"deploy_real/configs/{args.motion_yaml}"
-    motion_cfg = Config(cfg_motion_path)   # YAML 内提供绝对路径
-    ctrl       = Controller(motion_cfg)
 
-    # Boot sequence
+    # YAML 绝对路径直接传入 Config
+    cfg = Config(args.config)
+
+    ctrl = Controller(cfg)
+
+    # Boot phases
     ctrl.zero_torque_state()
     ctrl.move_to_default_pos()
     ctrl.default_pos_state()
 
-    print("[RUN]  L1/R1: switch motion | X reset | SELECT quit")
+    print("[RUN]  Left stick XY + Right-stick X 控制速度 | X reset | SELECT quit")
     try:
         while True:
-            if ctrl.loop_once():
+            if ctrl.run():
                 break
             time.sleep(ctrl.dt)
     except KeyboardInterrupt:
         pass
 
     create_damping_cmd(ctrl.low_cmd)
-    ctrl._send(PolicyOutput(ctrl.nj))
+    ctrl._send_cmd()
     print("Exit cleanly.")

@@ -90,6 +90,9 @@ class Player:
         self.start_time = None
         self.idx = 0
 
+        self.waiting_for_reset = False
+        self.last_q = None
+
         self.low_cmd = unitree_hg_msg_dds__LowCmd_()
         self.low_state: LowState_ | None = None
         self.first_state = False
@@ -113,6 +116,18 @@ class Player:
         self.thread.Start()
 
     def loop(self):
+
+        # ------------- Post-hold 状态 -------------
+        if self.waiting_for_reset:
+            if self.last_q is not None:
+                self.send_pose(self.last_q)  # 保持最后动作姿态
+            if self.remote.button[KeyMap.B] == 1:  # 用 B 键触发复位
+                print("[RESET] B pressed. Moving back to default pose.")
+                self.move_to_default()
+                self.waiting_for_reset = False
+                self.last_q = None
+            return
+        
         # keep default motion
         if self.current_key is None:
             self.send_pose(cfg.default_angles)
@@ -136,9 +151,12 @@ class Player:
         while self.idx < len(t_arr) and t_arr[self.idx] <= elapsed:
             self.idx += 1
         if self.idx >= len(t_arr):
-            print("[PLAY] Motion finished. Returning default…")
-            self.move_to_default()
+            print("[PLAY] Motion finished. Holding final pose. Press B to Returning default…")
+            self.last_q = q_arr[-1]
+            self.waiting_for_reset = True
             self.current_key = None
+            # self.move_to_default()
+            # self.current_key = None
             return
         self.send_pose(q_arr[self.idx])
 

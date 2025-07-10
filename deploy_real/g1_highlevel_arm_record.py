@@ -115,7 +115,6 @@ class G1JointIndex:
 #         # 1, 1, # wrist roll 
 #     ])
 
-#     # TODO 腰部的Kp Kd 单独缩减stiffness, arm 关节可以设置很小力矩，若设置0力矩要设定返回动作是插值连续的，而不是突然的。
 #     # record PD (10 % stiff)
 #     kps_record = 0.1 * kps_play
 #     kds_record = 0.1 * kds_play

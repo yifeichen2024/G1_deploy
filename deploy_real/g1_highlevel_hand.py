@@ -1,0 +1,131 @@
+import time
+import numpy as np
+from multiprocessing import Array
+from enum import IntEnum
+import threading
+
+from unitree_sdk2py.core.channel import ChannelPublisher, ChannelSubscriber, ChannelFactoryInitialize
+from unitree_sdk2py.idl.default import unitree_hg_msg_dds__HandCmd_
+from unitree_sdk2py.idl.unitree_hg.msg.dds_ import HandCmd_, HandState_
+
+Dex3_Num_Motors = 7
+kTopicDex3LeftCommand = "rt/dex3/left/cmd"
+kTopicDex3RightCommand = "rt/dex3/right/cmd"
+kTopicDex3LeftState = "rt/dex3/left/state"
+kTopicDex3RightState = "rt/dex3/right/state"
+
+class Dex3_1_Left_JointIndex(IntEnum):
+    kLeftHandThumb0 = 0
+    kLeftHandThumb1 = 1
+    kLeftHandThumb2 = 2
+    kLeftHandMiddle0 = 3
+    kLeftHandMiddle1 = 4
+    kLeftHandIndex0 = 5
+    kLeftHandIndex1 = 6
+
+class Dex3_1_Right_JointIndex(IntEnum):
+    kRightHandThumb0 = 0
+    kRightHandThumb1 = 1
+    kRightHandThumb2 = 2
+    kRightHandIndex0 = 3
+    kRightHandIndex1 = 4
+    kRightHandMiddle0 = 5
+    kRightHandMiddle1 = 6
+
+class Dex3_1_Controller:
+    def __init__(self, fps=100.0):
+        self.fps = fps
+        ChannelFactoryInitialize(0)
+
+        # Initialize DDS channels
+        self.left_pub = ChannelPublisher(kTopicDex3LeftCommand, HandCmd_)
+        self.right_pub = ChannelPublisher(kTopicDex3RightCommand, HandCmd_)
+        self.left_pub.Init()
+        self.right_pub.Init()
+
+        self.left_sub = ChannelSubscriber(kTopicDex3LeftState, HandState_)
+        self.right_sub = ChannelSubscriber(kTopicDex3RightState, HandState_)
+        self.left_sub.Init()
+        self.right_sub.Init()
+
+        self.left_state = Array('d', Dex3_Num_Motors, lock=True)
+        self.right_state = Array('d', Dex3_Num_Motors, lock=True)
+
+        self.target_left_q = np.zeros(Dex3_Num_Motors)
+        self.target_right_q = np.zeros(Dex3_Num_Motors)
+
+        # Create DDS messages
+        self.left_msg = unitree_hg_msg_dds__HandCmd_()
+        self.right_msg = unitree_hg_msg_dds__HandCmd_()
+        self._init_hand_msg()
+
+        # Start threads
+        threading.Thread(target=self._recv_state_loop, daemon=True).start()
+        threading.Thread(target=self._control_loop, daemon=True).start()
+
+        print("Dex3_1_Controller initialized.")
+
+    def _init_hand_msg(self):
+        for id in Dex3_1_Left_JointIndex:
+            self.left_msg.motor_cmd[id].mode = 0x01
+            self.left_msg.motor_cmd[id].kp = 1.5
+            self.left_msg.motor_cmd[id].kd = 0.2
+
+        for id in Dex3_1_Right_JointIndex:
+            self.right_msg.motor_cmd[id].mode = 0x01
+            self.right_msg.motor_cmd[id].kp = 1.5
+            self.right_msg.motor_cmd[id].kd = 0.2
+
+    def _recv_state_loop(self):
+        while True:
+            left_msg = self.left_sub.Read()
+            right_msg = self.right_sub.Read()
+            if left_msg:
+                for i, id in enumerate(Dex3_1_Left_JointIndex):
+                    self.left_state[i] = left_msg.motor_state[id].q
+            if right_msg:
+                for i, id in enumerate(Dex3_1_Right_JointIndex):
+                    self.right_state[i] = right_msg.motor_state[id].q
+            time.sleep(0.005)
+
+    def _control_loop(self):
+        while True:
+            for i, id in enumerate(Dex3_1_Left_JointIndex):
+                self.left_msg.motor_cmd[id].q = self.target_left_q[i]
+            for i, id in enumerate(Dex3_1_Right_JointIndex):
+                self.right_msg.motor_cmd[id].q = self.target_right_q[i]
+
+            self.left_pub.Write(self.left_msg)
+            self.right_pub.Write(self.right_msg)
+            time.sleep(1 / self.fps)
+
+    def set_target_q(self, left_q: np.ndarray, right_q: np.ndarray):
+        """外部接口：设置目标角度"""
+        assert left_q.shape[0] == Dex3_Num_Motors
+        assert right_q.shape[0] == Dex3_Num_Motors
+        self.target_left_q = left_q.copy()
+        self.target_right_q = right_q.copy()
+
+    def get_current_q(self):
+        """外部接口：获取当前关节角度状态"""
+        with self.left_state.get_lock(), self.right_state.get_lock():
+            return np.array(self.left_state[:]), np.array(self.right_state[:])
+
+
+if __name__ == "__main__":
+    import numpy as np
+
+    controller = Dex3_1_Controller()
+
+    print("Waiting for DDS state feedback...")
+    time.sleep(1)
+
+    print("Sending example target pose...")
+    while True:
+        left_q = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        right_q = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        controller.set_target_q(left_q, right_q)
+
+        lq, rq = controller.get_current_q()
+        print(f"Current Left Q: {lq.round(3)} \nCurrent Right Q: {rq.round(3)}")
+        time.sleep(0.5)

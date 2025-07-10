@@ -13,23 +13,32 @@ action_joints:              # 17 DOF（索引写数字）
   - 12  # WaistYaw
   - 13  # WaistRoll
   - 14  # WaistPitch
+  
+  - 19 # left_roll
+  - 26 # right_roll
 
 fixed_joints:               # 6 wrists to lock
-  - 19 
-  - 20 
-  - 21 
-  - 26 
-  - 27 
-  - 28
+  # - 19 # left_roll
+  - 20 # left_pitch
+  - 21 # left_yaw
+  # - 26 # right_roll
+  - 27 # right_pitch
+  - 28 # right_yaw
 
-fixed_target: [-0.05, 0.12, -0.03, -0.16, 0.12, -0.02]
-fixed_kps   : [60, 60, 60, 60, 60, 60]
-fixed_kds   : [1, 1, 1, 1, 1, 1]
+# fixed_target: [-0.05, 0.12, -0.03, -0.16, 0.12, -0.02]
+# fixed_kps   : [60, 60, 60, 60, 60, 60]
+# fixed_kds   : [1, 1, 1, 1, 1, 1]
+fixed_target: [0.12, -0.03, 0.12, -0.02]
+fixed_kps   : [60, 60, 60, 60]
+fixed_kds   : [1, 1, 1, 1]
 
-kps_play: [100,100,50,50, 100,100,50,50, 400,400,400]
-kds_play: [  2,  2, 2, 2,   2,  2, 2, 2,   5,  5,  5]
+kps_play: [100,100,50,50, 100,100,50,50, 400,400,400, 
+            60, 60]
+kds_play: [  2,  2, 2, 2,   2,  2, 2, 2,   5,  5,  5,
+            1, 1]
 
 stiffness_factor: 0.01
 stiffness_factor_waist_rp: 0.5
 
-default_angles: [0.2,0.2,0.0,0.9, 0.2,-0.2,0.0,0.9, 0.0,0.0,0.0]
+default_angles: [0.2,0.2,0.0,0.9, 0.2,-0.2,0.0,0.9, 0.0,0.0,0.0,
+                  -0.05, -0.16]

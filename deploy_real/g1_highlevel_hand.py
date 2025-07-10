@@ -42,7 +42,7 @@ class Dex3_1_Controller:
         self.right_pub = ChannelPublisher(kTopicDex3RightCommand, HandCmd_)
         self.left_pub.Init()
         self.right_pub.Init()
-
+        
         self.left_sub = ChannelSubscriber(kTopicDex3LeftState, HandState_)
         self.right_sub = ChannelSubscriber(kTopicDex3RightState, HandState_)
         self.left_sub.Init()
@@ -68,13 +68,13 @@ class Dex3_1_Controller:
     def _init_hand_msg(self):
         for id in Dex3_1_Left_JointIndex:
             self.left_msg.motor_cmd[id].mode = 0x01
-            self.left_msg.motor_cmd[id].kp = 1.5
+            self.left_msg.motor_cmd[id].kp = 1.0
             self.left_msg.motor_cmd[id].kd = 0.2
 
         for id in Dex3_1_Right_JointIndex:
             self.right_msg.motor_cmd[id].mode = 0x01
-            self.right_msg.motor_cmd[id].kp = 1.5
-            self.right_msg.motor_cmd[id].kd = 0.2
+            self.right_msg.motor_cmd[id].kp = 0.0
+            self.right_msg.motor_cmd[id].kd = 0.0
 
     def _recv_state_loop(self):
         while True:
@@ -92,13 +92,33 @@ class Dex3_1_Controller:
         while True:
             for i, id in enumerate(Dex3_1_Left_JointIndex):
                 self.left_msg.motor_cmd[id].q = self.target_left_q[i]
+                self.left_msg.motor_cmd[id].kp = 1.0
+                self.left_msg.motor_cmd[id].kd = 0.2
             for i, id in enumerate(Dex3_1_Right_JointIndex):
                 self.right_msg.motor_cmd[id].q = self.target_right_q[i]
+                self.left_msg.motor_cmd[id].kp = 1.0
+                self.left_msg.motor_cmd[id].kd = 0.2
 
-            self.left_pub.Write(self.left_msg)
-            self.right_pub.Write(self.right_msg)
+            self.send_cmd()
             time.sleep(1 / self.fps)
 
+    def zero_torque(self):
+        for id in Dex3_1_Left_JointIndex:
+            self.left_msg.motor_cmd[id].mode = 0x01
+            self.left_msg.motor_cmd[id].kp = 0.0
+            self.left_msg.motor_cmd[id].kd = 0.0
+
+        for id in Dex3_1_Right_JointIndex:
+            self.right_msg.motor_cmd[id].mode = 0x01
+            self.right_msg.motor_cmd[id].kp = 0.0
+            self.right_msg.motor_cmd[id].kd = 0.0
+        
+        self.send_cmd()
+
+    def send_cmd(self):
+        self.left_pub.Write(self.left_msg)
+        self.right_pub.Write(self.right_msg)
+        
     def set_target_q(self, left_q: np.ndarray, right_q: np.ndarray):
         """外部接口：设置目标角度"""
         assert left_q.shape[0] == Dex3_Num_Motors
@@ -121,11 +141,17 @@ if __name__ == "__main__":
     time.sleep(1)
 
     print("Sending example target pose...")
-    while True:
-        left_q = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-        right_q = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-        controller.set_target_q(left_q, right_q)
+    # TODO record and play and hold
+    try:
+        while True:
+            left_q = np.array([-0.2, 0.2, 0.2, -1.0, -0.3, -1.0, -0.3])
+            right_q = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+            controller.set_target_q(left_q, right_q)
 
-        lq, rq = controller.get_current_q()
-        print(f"Current Left Q: {lq.round(3)} \nCurrent Right Q: {rq.round(3)}")
-        time.sleep(0.5)
+            lq, rq = controller.get_current_q()
+            print(f"Current Left Q: {lq.round(3)} \nCurrent Right Q: {rq.round(3)}")
+            time.sleep(0.5)
+    except KeyboardInterrupt:
+        controller.zero_torque()
+    
+    

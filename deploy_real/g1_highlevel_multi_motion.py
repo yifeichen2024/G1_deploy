@@ -116,11 +116,11 @@ class Player:
         self.thread.Start()
 
     def loop(self):
-
         # ------------- Post-hold 状态 -------------
         if self.waiting_for_reset:
             if self.last_q is not None:
                 self.send_pose(self.last_q)  # 保持最后动作姿态
+            # TODO Hold 逻辑没有成功
             if self.remote.button[KeyMap.B] == 1:  # 用 B 键触发复位
                 print("[RESET] B pressed. Moving back to default pose.")
                 self.move_to_default()

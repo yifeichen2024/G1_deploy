@@ -8,7 +8,7 @@ from unitree_sdk2py.idl.default import unitree_hg_msg_dds__LowCmd_, unitree_hg_m
 from unitree_sdk2py.idl.unitree_hg.msg.dds_ import LowCmd_, LowState_
 from unitree_sdk2py.utils.crc import CRC
 from unitree_sdk2py.utils.thread import RecurrentThread
-
+from common.remote_controller import RemoteController, KeyMap
 # -----------------------------------------------------------------------------
 # G1 Joint Index
 # -----------------------------------------------------------------------------
@@ -43,10 +43,11 @@ def load_cfg(yaml_path="deploy_real/configs/config_high_level.yaml") -> Config:
     cfg = Config()
     for k, v in d.items():
         setattr(cfg, k, np.array(v) if isinstance(v, list) else v)
-    cfg.kps_record = cfg.kps_play * 0.1
-    cfg.kds_record = cfg.kds_play * 0.1
+    cfg.kps_record = cfg.kps_play * 0.01
+    cfg.kds_record = cfg.kds_play * 0.01
     return cfg
-
+# TODO Waist pitch and roll strongger PD
+# TODO wrist roll open for action  
 cfg = load_cfg()
 
 # -----------------------------------------------------------------------------
@@ -58,6 +59,7 @@ class CustomRecorder:
         self.first_state = False
         self.low_cmd = unitree_hg_msg_dds__LowCmd_()
         self.current_target_q = cfg.default_angles.copy()
+        self.remote = RemoteController()
 
     def Init(self):
         self.arm_pub = ChannelPublisher("rt/arm_sdk", LowCmd_); self.arm_pub.Init()
@@ -67,6 +69,8 @@ class CustomRecorder:
         self.low_state = msg
         if not self.first_state:
             self.first_state = True
+        self.remote.set(msg.wireless_remote)
+
 
     def Start(self):
         self.thread = RecurrentThread(interval=cfg.control_dt, target=self.Loop, name="control")
@@ -118,14 +122,14 @@ class CustomRecorder:
 
         while True:
             key = self.low_state.wireless_remote[2]
-            if not self.recording and (key & (1 << 8)):  # A
+            if not self.recording and self.remote.button[KeyMap.A] == 1:  # A
                 self.recording = True
                 self.t_record_start = time.time()
                 self.record_buffer_t = []
                 self.record_buffer_q = []
                 print(f"[RECORD] ▶ Start segment {seg_id}")
 
-            elif self.recording and (key & (1 << 9)):  # B
+            elif self.recording and self.remote.button[KeyMap.B] == 1:  # B
                 self.recording = False
                 self.current_target_q = self.record_buffer_q[-1]
                 np.savez_compressed(f"segment_{seg_id:02d}.npz",
@@ -134,7 +138,7 @@ class CustomRecorder:
                 print(f"[SAVE] segment_{seg_id:02d}.npz saved")
                 seg_id += 1
 
-            elif (key & (1 << 11)):  # Y
+            elif (self.remote.button[KeyMap.Y] == 1):  # Y
                 print("[RECORD] Finish and enter damping mode")
                 for i in cfg.action_joints:
                     self.low_cmd.motor_cmd[i].kp = 0
@@ -144,7 +148,7 @@ class CustomRecorder:
                 print("Press X to return to default")
                 while True:
                     key = self.low_state.wireless_remote[2]
-                    if key & (1 << 10):  # X
+                    if self.remote.button[KeyMap.X] == 1:  # X
                         self.move_to_default(6.0)
                         print("[RECORD] Done. Ctrl+C to exit.")
                         return

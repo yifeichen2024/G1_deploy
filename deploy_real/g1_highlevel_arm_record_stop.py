@@ -74,13 +74,29 @@ class CustomRecorder:
 
     def Start(self):
         self.thread = RecurrentThread(interval=cfg.control_dt, target=self.Loop, name="control")
-        while not self.first_state: time.sleep(0.1)
+        while not self.first_state: 
+            time.sleep(0.1)
         self.thread.Start()
 
     def Loop(self):
-        if self.low_state is None: return
-        kp_arr = cfg.kps_record if self.recording else cfg.kps_play
-        kd_arr = cfg.kds_record if self.recording else cfg.kds_play
+        if self.low_state is None: 
+            return
+        
+        kps_record: list[float] = []
+        kds_record: list[float] = []
+        for idx, joint in enumerate(cfg.action_joints):
+            if joint in [G1JointIndex.WaistRoll, G1JointIndex.WaistPitch]:
+                kps_record.append(cfg.kps_play[idx] * cfg.stiffness_factor_waist_rp)
+                kds_record.append(cfg.kds_play[idx] * cfg.stiffness_factor_waist_rp)
+            else:
+                kps_record.append(cfg.kps_play[idx] * cfg.stiffness_factor)
+                kds_record.append(cfg.kds_play[idx] * cfg.stiffness_factor)
+
+        # build command each cycle
+        if self.recording:
+            kp_arr, kd_arr = kps_record, kds_record
+        else:
+            kp_arr, kd_arr = cfg.kps_play, cfg.kds_play
 
         for i, m in enumerate(cfg.action_joints):
             self.low_cmd.motor_cmd[m].q = float(self.current_target_q[i])

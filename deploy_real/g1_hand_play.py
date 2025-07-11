@@ -37,7 +37,7 @@ def main():
     #     ChannelFactoryInitialize(0, ip)
     # else:
     #     ChannelFactoryInitialize(0)
-    ctrl.move_to_default(duration=2.0)
+    # ctrl.move_to_default(duration=2.0)
     # 加载轨迹
     trajs = []
     for p in traj_paths:
@@ -62,7 +62,6 @@ def main():
     segment = 0
     try:
         while segment < len(trajs):
-            # 切换到录制模式：零扭矩
             ctrl.recording = False
             input(f"[SEG {segment+1}] 按 ENTER 开始播放 “{trajs[segment]['name']}”…")
             print(f"[SEG {segment+1}] Start playing…")
@@ -102,11 +101,13 @@ def main():
 
     # ---------------- 阻尼 & 平滑复位 ----------------
     input("输入任意键并 ENTER 进入阻尼（零扭矩）模式…")
-    ctrl.zero_torque()
+    ctrl.damping()
+    # ctrl.zero_torque()
     print("[DAMPING] 手部保持零扭矩中…")
 
     input("再次 ENTER 平滑回默认手势…")
     ctrl.move_to_default(duration=2.0)
+    ctrl.damping()
     print("已恢复默认，退出。")
 
 if __name__ == "__main__":

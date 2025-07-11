@@ -43,8 +43,8 @@ def load_cfg(yaml_path="deploy_real/configs/config_high_level.yaml") -> Config:
     cfg = Config()
     for k, v in d.items():
         setattr(cfg, k, np.array(v) if isinstance(v, list) else v)
-    cfg.kps_record = cfg.kps_play * 0.2
-    cfg.kds_record = cfg.kds_play * 0.2
+    cfg.kps_record = cfg.kps_play * 1
+    cfg.kds_record = cfg.kds_play * 1
     return cfg
 
 cfg = load_cfg()
@@ -59,6 +59,9 @@ class CustomRecorder:
         self.low_cmd = unitree_hg_msg_dds__LowCmd_()
         self.current_target_q = cfg.default_angles.copy()
         self.remote = RemoteController()
+        self.t_record_start = time.time()
+        self.record_buffer_t = []
+        self.record_buffer_q = []
 
     def Init(self):
         self.arm_pub = ChannelPublisher("rt/arm_sdk", LowCmd_); self.arm_pub.Init()
@@ -92,10 +95,10 @@ class CustomRecorder:
         if self.low_state is None: 
             return
         
-        # —— 1) 如果在录制模式，就把目标设成当前真实角度，使 PD 锁当前位置 —— #
-        actual_q = np.array([self.low_state.motor_state[m].q for m in cfg.action_joints])
-        if self.recording:
-            self.current_target_q = actual_q.copy()
+        # # —— 1) 如果在录制模式，就把目标设成当前真实角度，使 PD 锁当前位置 —— #
+        # actual_q = np.array([self.low_state.motor_state[m].q for m in cfg.action_joints])
+        # if self.recording:
+        #     self.current_target_q = actual_q.copy()
 
         kps_record: list[float] = []
         kds_record: list[float] = []

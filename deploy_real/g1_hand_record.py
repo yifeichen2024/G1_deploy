@@ -42,13 +42,17 @@ def main():
                 left_q, right_q = ctrl.get_current_q()
                 left_q = left_q.round(3)
                 right_q = right_q.round(3)
-                # print(f"Current Left Q: {left_q} \nCurrent Right Q: {right_q}")
+                print(f"Current Left Q: {left_q} \nCurrent Right Q: {right_q}")
                 t_buf.append(time.time() - t0)
                 q_buf.append(np.concatenate([left_q, right_q]))
                 time.sleep(1.0 / ctrl.fps)
 
             # 停止录制
             ctrl.recording = False
+            left_q, right_q = ctrl.get_current_q()
+            ctrl.target_left_q = left_q.copy()
+            ctrl.target_right_q = right_q.copy()
+
             print(f"[SEG {segment_idx}] 录制停止，存盘…")
 
             # 保存
@@ -69,14 +73,16 @@ def main():
         print("\n[!] KeyboardInterrupt，中断录制。")
 
     # 阻尼(零扭矩)
-    input("输入任意键并 ENTER 进入阻尼（零扭矩）模式…")
-    ctrl.zero_torque()
-    print("[DAMPING] 手部零扭矩保持中…")
+    input("输入任意键并 ENTER 进入阻尼模式…")
+    ctrl.damping()
+    # ctrl.zero_torque()
+    print("[ZERO] 手部零扭矩保持中…")
 
     # 平滑回默认手势
     input("再次 ENTER 平滑回默认手势…")
     ctrl.move_to_default(duration=2.0)
-    print("已恢复默认手势，退出。")
+    ctrl.damping()
+    print("已恢复默认手势, 进入damping. Excit")
 
 if __name__ == '__main__':
     # # 如果需要指定 IP 就放在 argv[1]

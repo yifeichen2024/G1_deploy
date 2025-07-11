@@ -15,7 +15,7 @@ from unitree_sdk2py.utils.crc import CRC
 from unitree_sdk2py.utils.thread import RecurrentThread
 
 from common.remote_controller import RemoteController, KeyMap
-
+# TODO 插值不够平滑,开启时刻插值不够平滑，会导致连接断开等问题。
 # ------------------- G1 Joint Map (官方) -------------------- #
 class G1JointIndex:
     LeftHipPitch = 0; LeftHipRoll = 1; LeftHipYaw = 2; LeftKnee = 3
@@ -42,7 +42,7 @@ def load_cfg(yaml_path="deploy_real/configs/config_high_level.yaml") -> Config:
     cfg.kps_record = cfg.kps_play * 0.1
     cfg.kds_record = cfg.kds_play * 0.1
     # 新增：过渡用时（秒），可根据需要调整或从 yaml 配置读取
-    cfg.transition_duration = 0.5
+    cfg.transition_duration = 2
     return cfg
 
 cfg = load_cfg()
@@ -87,12 +87,16 @@ class Player:
         self.sub = ChannelSubscriber("rt/lowstate", LowState_); self.sub.Init(self.cb, 10)
         # 等待首帧状态
         while not self.first_state:
-            time.sleep(0.1)
+            time.sleep(0.5)
         # 首次平滑过渡到默认姿态
+        # TODO 从当前状态平滑过渡到default状态非常不平滑，会震动DDS报错连接错误等问题。这个插值还是有问题。需要换方法。减少acc和jerk
+        # TODO 中间动作是连续的插值还比较平滑，就是程序启动到default状态的时候会有震动的问题。进而会导致整个dds连接有问题。
+        # 1752263190.284963 [0]     python: ddsi_udp_conn_write to udp/239.255.0.1:7401 failed with retcode -1
+        # 1752263190.291338 [0]     python: ddsi_udp_conn_write to udp/239.255.0.1:7401 failed with retcode -1
         print("[INIT] 平滑过渡到默认姿态…")
         self._start_transition(
             target_q=cfg.default_angles,
-            duration=5,
+            duration=cfg.transition_duration,
             on_complete=lambda: print("[DDS] Ready & in default pose. 输入动作编号并回车开始播放。")
         )
 
@@ -138,6 +142,7 @@ class Player:
             #     ).start()
             #     return
             #                  
+            # TODO Button B is not working.
             if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
                 inp = sys.stdin.readline().strip()
                 if self.remote.button[KeyMap.B] == 1 or inp.lower() == "b":
@@ -217,7 +222,7 @@ class Player:
                 r = (s + 1) / steps
                 q_cmd = (1 - r) * cur_q + r * target_q
                 self.send_pose(q_cmd)
-                time.sleep(cfg.control_dt)
+                time.sleep(cfg.control_dt*5)
             on_complete()
 
         threading.Thread(target=_worker, daemon=True).start()

@@ -92,14 +92,21 @@ class Dex3_1_Controller:
 
     def _control_loop(self):
         while True:
+            if self.recording:
+                kp_left, kd_left = 0.0, 0.0
+                kp_right, kd_right = 0.0, 0.0
+            else:
+                kp_left, kd_left = 1.0, 0.2
+                kp_right, kd_right = 1.0, 0.2
+
             for i, id in enumerate(Dex3_1_Left_JointIndex):
                 self.left_msg.motor_cmd[id].q = self.target_left_q[i]
-                self.left_msg.motor_cmd[id].kp = 1.0
-                self.left_msg.motor_cmd[id].kd = 0.2
+                self.left_msg.motor_cmd[id].kp = kp_left
+                self.left_msg.motor_cmd[id].kd = kd_left
             for i, id in enumerate(Dex3_1_Right_JointIndex):
                 self.right_msg.motor_cmd[id].q = self.target_right_q[i]
-                self.left_msg.motor_cmd[id].kp = 1.0
-                self.left_msg.motor_cmd[id].kd = 0.2
+                self.left_msg.motor_cmd[id].kp = kp_right
+                self.left_msg.motor_cmd[id].kd = kd_right
             
             # load the message first comment out this one 
             self.send_cmd()
@@ -117,7 +124,6 @@ class Dex3_1_Controller:
             self.right_msg.motor_cmd[id].kd = 0.0
         
         self.send_cmd()
-
 
     def _interpolate_motion(self, target_left_q, target_right_q, duration=2.0):
         """平滑插值从当前状态到目标状态"""

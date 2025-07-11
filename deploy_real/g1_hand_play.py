@@ -9,6 +9,11 @@ from unitree_sdk2py.core.channel import ChannelFactoryInitialize
 from g1_highlevel_hand import Dex3_1_Controller
 
 def main():
+     # ---------------- 控制器 & 状态订阅 ----------------
+    ctrl = Dex3_1_Controller(fps=100.0)
+    time.sleep(0.5)  # 等几帧，让状态订阅稳定
+    # 切换到录制模式：零扭矩
+    ctrl.recording = False
     # ---------------- 参数解析 ----------------
     # 用法: python hand_player.py [--ip IP] [--speed S] hand_segment_01.npz hand_segment_02.npz ...
     args = sys.argv[1:]
@@ -28,11 +33,11 @@ def main():
         sys.exit(1)
 
     # 初始化 DDS
-    if ip:
-        ChannelFactoryInitialize(0, ip)
-    else:
-        ChannelFactoryInitialize(0)
-
+    # if ip:
+    #     ChannelFactoryInitialize(0, ip)
+    # else:
+    #     ChannelFactoryInitialize(0)
+    ctrl.move_to_default(duration=2.0)
     # 加载轨迹
     trajs = []
     for p in traj_paths:
@@ -52,13 +57,13 @@ def main():
     print("按 ENTER 开始第 1 段播放；播放过程中按 Ctrl-C 可紧急退出。")
     print("播放完毕后可继续 ENTER 播放下一个，输入 Y+ENTER 提前退出。\n")
 
-    # ---------------- 控制器 & 状态订阅 ----------------
-    ctrl = Dex3_1_Controller(fps=100.0)
-    time.sleep(0.5)  # 等几帧，让状态订阅稳定
+   
 
     segment = 0
     try:
         while segment < len(trajs):
+            # 切换到录制模式：零扭矩
+            ctrl.recording = False
             input(f"[SEG {segment+1}] 按 ENTER 开始播放 “{trajs[segment]['name']}”…")
             print(f"[SEG {segment+1}] Start playing…")
             t_arr = trajs[segment]["t"] / speed

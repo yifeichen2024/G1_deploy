@@ -182,19 +182,20 @@ class Dex3_1_Controller:
             return np.array(self.left_state[:]), np.array(self.right_state[:])
 
     def move_to_default(self, duration=2.0):
-        """从当前状态移动到默认手势（如张开）"""
+        """TODO setup the a good default position """
         default_left_q = np.array([-0.2, -1.5, -0.2, -0.5, -0.3, -0.5, -0.3])
         default_right_q = np.array([-0.2, -1.5, -0.2, -0.5, -0.3, -0.5, -0.3])
         self._interpolate_motion(default_left_q, default_right_q, duration)
 
     def release_motion(self, duration=2.0):
-        """释放动作（张开手）"""
+        """TODO open hand motion"""
+
         release_left_q = np.array([-0.2, 0.2, 0.2, -1.0, -0.3, -1.0, -0.3])
         release_right_q = np.array([-0.2, 0.2, 0.2, -1.0, -0.3, -1.0, -0.3])
         self._interpolate_motion(release_left_q, release_right_q, duration)
 
     def grip_motion(self, duration=2.0):
-        """抓握动作（目标姿态）"""
+        """TODO grasp hand motion"""
         grip_left_q = np.array([-0.2, 0.2, 0.2, -1.0, -0.3, -1.0, -0.3])
         grip_right_q = np.array([-0.2, 0.2, 0.2, -1.0, -0.3, -1.0, -0.3])
         self._interpolate_motion(grip_left_q, grip_right_q, duration)

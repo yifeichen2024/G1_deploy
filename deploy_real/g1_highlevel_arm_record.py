@@ -1,328 +1,221 @@
+#!/usr/bin/env python3
+# G1 Workspace Motion Recorder with IK Conversion
+
 import time
 import sys
-import select
 import numpy as np
 import yaml
-
 from unitree_sdk2py.core.channel import ChannelPublisher, ChannelSubscriber, ChannelFactoryInitialize
 from unitree_sdk2py.idl.default import unitree_hg_msg_dds__LowCmd_, unitree_hg_msg_dds__LowState_
 from unitree_sdk2py.idl.unitree_hg.msg.dds_ import LowCmd_, LowState_
 from unitree_sdk2py.utils.crc import CRC
 from unitree_sdk2py.utils.thread import RecurrentThread
+from common.remote_controller import RemoteController, KeyMap
+
+import pinocchio as pin
+from g1_arm_IK import G1_29_ArmIK
 
 # -----------------------------------------------------------------------------
-# G1 Joint Index (official mapping)
+# G1 Joint Index (copy from your CustomRecorder)
 # -----------------------------------------------------------------------------
 class G1JointIndex:
-    LeftHipPitch = 0
-    LeftHipRoll = 1
-    LeftHipYaw = 2
-    LeftKnee = 3
-    LeftAnklePitch = 4
-    LeftAnkleRoll = 5
-
-    RightHipPitch = 6
-    RightHipRoll = 7
-    RightHipYaw = 8
-    RightKnee = 9
-    RightAnklePitch = 10
-    RightAnkleRoll = 11
-
-    WaistYaw = 12
-    WaistRoll = 13
-    WaistPitch = 14
-
     LeftShoulderPitch = 15
     LeftShoulderRoll = 16
     LeftShoulderYaw = 17
     LeftElbow = 18
-    LeftWristRoll = 19
-    LeftWristPitch = 20
-    LeftWristYaw = 21
-
     RightShoulderPitch = 22
     RightShoulderRoll = 23
     RightShoulderYaw = 24
     RightElbow = 25
+    WaistYaw = 12
+    WaistRoll = 13
+    WaistPitch = 14
+    LeftWristRoll = 19
+    LeftWristPitch = 20
+    LeftWristYaw = 21
     RightWristRoll = 26
     RightWristPitch = 27
     RightWristYaw = 28
-
     kNotUsedJoint = 29
 
 # -----------------------------------------------------------------------------
-# Configuration (17 DOF record, per‑joint PD, fixed wrists)
+# Config loader (reuse your existing)
 # -----------------------------------------------------------------------------
-
-# class Config:
-#     control_dt = 0.02  # 20 ms
-
-#     # action joints (17 DOF: arms + waist)
-#     action_joints = [
-#         # left arm 7
-#         G1JointIndex.LeftShoulderPitch,
-#         G1JointIndex.LeftShoulderRoll,
-#         G1JointIndex.LeftShoulderYaw,
-#         G1JointIndex.LeftElbow,
-#         # G1JointIndex.LeftWristRoll,
-#         # G1JointIndex.LeftWristPitch,
-#         # G1JointIndex.LeftWristYaw,
-
-
-#         # right arm 7
-#         G1JointIndex.RightShoulderPitch,
-#         G1JointIndex.RightShoulderRoll,
-#         G1JointIndex.RightShoulderYaw,
-#         G1JointIndex.RightElbow,
-#         # G1JointIndex.RightWristRoll,
-#         # G1JointIndex.RightWristPitch,
-#         # G1JointIndex.RightWristYaw,
-#         # waist 3
-#         G1JointIndex.WaistYaw,
-#         G1JointIndex.WaistRoll,
-#         G1JointIndex.WaistPitch,
-
-#     ]
-
-#     # joints to lock during record (wrists)
-#     fixed_joints = [
-#         G1JointIndex.LeftWristRoll,
-#         G1JointIndex.LeftWristPitch,
-#         G1JointIndex.LeftWristYaw,
-#         G1JointIndex.RightWristRoll,
-#         G1JointIndex.RightWristPitch,
-#         G1JointIndex.RightWristYaw,
-#     ]
-#     fixed_target = np.array([-0.05, 0.12, -0.03, -0.16, 0.12, -0.02])
-#     fixed_kps = np.array([60, 60, 60, 60, 60, 60])
-#     fixed_kds = np.array([1, 1, 1, 1, 1, 1])
-
-#     # fixed_target = np.array([-0.05      , -0.03, -0.16,       -0.02])
-#     # fixed_kps = np.array([60,     60, 60,     60])
-#     # fixed_kds = np.array([1,    1, 1,    1])
-
-#     # per‑joint PD (play/default) 17 DOF
-#     kps_play = np.array([
-#         100, 100, 50, 50, # 60, 60, 60,
-#         100, 100, 50, 50, # 60, 60, 60,
-#         400, 400, 400,
-#         # 60, 60, # wrist roll
-#     ])
-#     kds_play = np.array([
-#         2, 2, 2, 2, # 1, 1, 1,
-#         2, 2, 2, 2, # 1, 1, 1,
-#         5, 5, 5,
-#         # 1, 1, # wrist roll 
-#     ])
-
-#     # record PD (10 % stiff)
-#     kps_record = 0.1 * kps_play
-#     kds_record = 0.1 * kds_play
-
-#     stiffness_factor = 0.05
-#     stiffness_factor_waist_rp = 0.5  # for waist roll and pitch
-    
-#     # default pose (17 DOF order)
-#     default_angles = np.array([
-#         0.2, 0.2, 0.0, 0.9,  # 0.0, 0.0, 0.0,
-#         0.2, -0.2, 0.0, 0.9, # 0.0, 0.0, 0.0,
-#         0.0, 0.0, 0.0,
-#         # 0.12, 0.12, # wrist pitch
-#     ])
-
-# cfg = Config()
-
 class Config: pass
+
 def load_cfg(yaml_path="deploy_real/configs/config_high_level.yaml") -> Config:
     with open(yaml_path, 'r') as f:
         d = yaml.safe_load(f)
     cfg = Config()
     for k, v in d.items():
-        # 列表自动转 np.array 方便后续数学运算
         setattr(cfg, k, np.array(v) if isinstance(v, list) else v)
-    # 衍生量
-    cfg.kps_record = cfg.kps_play * 0.1
-    cfg.kds_record = cfg.kds_play * 0.1
+    cfg.kps_record = cfg.kps_play * 1
+    cfg.kds_record = cfg.kds_play * 1
     return cfg
 
-cfg = load_cfg()            # 全局唯一实例
+cfg = load_cfg()
 
 # -----------------------------------------------------------------------------
-# Custom recording class (follow official SDK skeleton)
+# Workspace Recorder using Arm IK for conversion
 # -----------------------------------------------------------------------------
-
-class CustomRecorder:
+class WorkspaceRecorder:
     def __init__(self):
-        # timing
-        self.time_ = 0.0
         self.recording = False
-        self.record_buffer_t = []  # timestamps
-        self.record_buffer_q = []  # ndarray 17
-
-        # SDK objects
-        self.low_cmd = unitree_hg_msg_dds__LowCmd_()
         self.low_state = None
-        self.first_state = False
         self.crc = CRC()
+        self.first_state = False
+        self.low_cmd = unitree_hg_msg_dds__LowCmd_()
+        self.current_target_q = cfg.default_angles.copy()
+        self.remote = RemoteController()
+        self.t_record_start = time.time()
+        self.record_times = []
+        self.record_qs = []
+        self.record_Mf_L = []
+        self.record_Mf_R = []
 
-        # publishers/subscribers init later
+        # IK solver instance
+        self.arm_ik = G1_29_ArmIK(Unit_Test=False, Visualization=False)
 
-    # -----------------------------------------------------------------
-    # DDS init (exactly same pattern as template)
-    # -----------------------------------------------------------------
     def Init(self):
-        self.arm_pub = ChannelPublisher("rt/arm_sdk", LowCmd_)
-        self.arm_pub.Init()
+        self.arm_pub = ChannelPublisher("rt/arm_sdk", LowCmd_); self.arm_pub.Init()
+        self.state_sub = ChannelSubscriber("rt/lowstate", LowState_); self.state_sub.Init(self.cb, 10)
 
-        self.state_sub = ChannelSubscriber("rt/lowstate", LowState_)
-        self.state_sub.Init(self.LowStateHandler, 10)
-
-    def Start(self):
-        # control loop thread
-        self.thread = RecurrentThread(interval=cfg.control_dt, target=self.Loop, name="control")
-        while not self.first_state:
-            time.sleep(0.1)
-        self.thread.Start()
-
-    # -----------------------------------------------------------------
-    # State callback
-    # -----------------------------------------------------------------
-    def LowStateHandler(self, msg: LowState_):
+    def cb(self, msg: LowState_):
         self.low_state = msg
         if not self.first_state:
             self.first_state = True
+        self.remote.set(msg.wireless_remote)
 
-    # -----------------------------------------------------------------
-    # Main loop (send PD & optionally log)
-    # -----------------------------------------------------------------
+    def move_to_default(self, duration=5.0):
+        cur = np.array([self.low_state.motor_state[m].q for m in cfg.action_joints])
+        steps = int(duration / cfg.control_dt)
+        for i in range(steps):
+            r = (i + 1) / steps
+            self.current_target_q = (1 - r) * cur + r * cfg.default_angles
+            time.sleep(cfg.control_dt)
+        self.current_target_q = cfg.default_angles.copy()
+
+
+
+    def forward_kin(self, q: np.ndarray):
+        # Numeric forward kinematics to get end-effector transforms
+        pin.forwardKinematics(self.arm_ik.reduced_robot.model, self.arm_ik.reduced_robot.data, q)
+        pin.updateFramePlacements(self.arm_ik.reduced_robot.model, self.arm_ik.reduced_robot.data)
+        Mf_L = self.arm_ik.reduced_robot.data.oMf[self.arm_ik.L_hand_id]
+        Mf_R = self.arm_ik.reduced_robot.data.oMf[self.arm_ik.R_hand_id]
+        return Mf_L, Mf_R
+
     def Loop(self):
-        # if robot state missing, skip
         if self.low_state is None:
             return
 
-        kps_record: list[float] = []
-        kds_record: list[float] = []
+        # Build stiffness arrays
+        kps_record, kds_record = [], []
         for idx, joint in enumerate(cfg.action_joints):
-            if joint in [G1JointIndex.WaistRoll, G1JointIndex.WaistPitch]:
-                kps_record.append(cfg.kps_play[idx] * cfg.stiffness_factor_waist_rp)
-                kds_record.append(cfg.kds_play[idx] * cfg.stiffness_factor_waist_rp)
-            else:
-                kps_record.append(cfg.kps_play[idx] * cfg.stiffness_factor)
-                kds_record.append(cfg.kds_play[idx] * cfg.stiffness_factor)
-        # build command each cycle
-        if self.recording:
-            kp_arr, kd_arr = kps_record, kds_record
+            factor = cfg.stiffness_factor_waist_rp if joint in [G1JointIndex.WaistRoll, G1JointIndex.WaistPitch] else cfg.stiffness_factor
+            kps_record.append(cfg.kps_play[idx] * factor)
+            kds_record.append(cfg.kds_play[idx] * factor)
 
-        else:
-            kp_arr, kd_arr = cfg.kps_play, cfg.kds_play
+        kp_arr, kd_arr = (kps_record, kds_record) if self.recording else (cfg.kps_play, cfg.kds_play)
 
-        # set action‑joint commands
-        for idx, motor in enumerate(cfg.action_joints):
-            target_q = self.current_target_q[idx]
-            self.low_cmd.motor_cmd[motor].q = float(target_q)
-            self.low_cmd.motor_cmd[motor].dq = 0.0
-            self.low_cmd.motor_cmd[motor].kp = float(kp_arr[idx])
-            self.low_cmd.motor_cmd[motor].kd = float(kd_arr[idx])
-            self.low_cmd.motor_cmd[motor].tau = 0.0
+        # Send LowCmd
+        for i, m in enumerate(cfg.action_joints):
+            self.low_cmd.motor_cmd[m].q = float(self.current_target_q[i])
+            self.low_cmd.motor_cmd[m].dq = 0.0
+            self.low_cmd.motor_cmd[m].kp = float(kp_arr[i])
+            self.low_cmd.motor_cmd[m].kd = float(kd_arr[i])
+            self.low_cmd.motor_cmd[m].tau = 0.0
+        for i, m in enumerate(cfg.fixed_joints):
+            self.low_cmd.motor_cmd[m].q = float(cfg.fixed_target[i])
+            self.low_cmd.motor_cmd[m].dq = 0.0
+            self.low_cmd.motor_cmd[m].kp = float(cfg.fixed_kps[i])
+            self.low_cmd.motor_cmd[m].kd = float(cfg.fixed_kds[i])
+            self.low_cmd.motor_cmd[m].tau = 0.0
 
-        # lock fixed joints
-        for i, motor in enumerate(cfg.fixed_joints):
-            self.low_cmd.motor_cmd[motor].q = float(cfg.fixed_target[i])
-            self.low_cmd.motor_cmd[motor].dq = 0.0
-            self.low_cmd.motor_cmd[motor].kp = float(cfg.fixed_kps[i])
-            self.low_cmd.motor_cmd[motor].kd = float(cfg.fixed_kds[i])
-            self.low_cmd.motor_cmd[motor].tau = 0.0
-
-        # enable SDK
         self.low_cmd.motor_cmd[G1JointIndex.kNotUsedJoint].q = 1
         self.low_cmd.crc = self.crc.Crc(self.low_cmd)
         self.arm_pub.Write(self.low_cmd)
 
-        # log if recording
+        # Record workspace poses
         if self.recording:
-            t_now = time.time() - self.t_record_start
-            q_snapshot = np.array([
-                self.low_state.motor_state[m].q for m in cfg.action_joints
-            ])
-            self.record_buffer_t.append(t_now)
-            self.record_buffer_q.append(q_snapshot)
+            t = time.time() - self.t_record_start
+            q = np.array([self.low_state.motor_state[m].q for m in cfg.action_joints])
+            Mf_L, Mf_R = self.forward_kin(q)
+            self.record_times.append(t)
+            self.record_qs.append(q.copy())
+            self.record_Mf_L.append(Mf_L.homogeneous.copy())
+            self.record_Mf_R.append(Mf_R.homogeneous.copy())
 
-    # -----------------------------------------------------------------
-    # Utilities
-    # -----------------------------------------------------------------
-    def move_to_default(self, duration=5.0):
-        # interpolate from current to default
-        current_q = np.array([
-            self.low_state.motor_state[m].q for m in cfg.action_joints
-        ])
-        steps = int(duration / cfg.control_dt)
-        for step in range(steps):
-            ratio = (step + 1) / steps
-            self.current_target_q = (1 - ratio) * current_q + ratio * cfg.default_angles
-            time.sleep(cfg.control_dt)
-        # hold default afterwards
-        self.current_target_q = cfg.default_angles.copy()
+    def Start(self):
+        # self.thread = RecurrentThread(interval=cfg.control_dt, target=self.Loop, name="control")
+        # while not self.first_state: 
+        #     time.sleep(0.1)
+        # self.thread.Start()
 
-    # -----------------------------------------------------------------
-    # Public workflow
-    # -----------------------------------------------------------------
-    def Run(self):
-        # 1. Go to default (stiff)
-        self.current_target_q = cfg.default_angles.copy()
-        self.move_to_default()
+        self.thread = RecurrentThread(interval=cfg.control_dt, target=self.Loop, name="control")
+        while not self.first_state: 
+            time.sleep(0.1)
+        self.thread.Start()
 
-        # 2. Wait user start
-        print("[RECORD] Press ENTER to start recording waypoints; ENTER again to stop.")
-        input()
+        # —— 启动后先做一次平滑过渡到默认姿态 —— #
+        print("[INIT] 平滑过渡到默认姿态…")
+        # 临时进入“录制”模式，使用低增益
         self.recording = True
-        self.t_record_start = time.time()
-        print("[RECORD] Recording... (ENTER to stop)")
-
-        # Wait for ENTER or Ctrl-C
-        try:
-            while True:
-                if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
-                    if sys.stdin.readline().strip() == "":
-                        break
-                time.sleep(0.1)
-        except KeyboardInterrupt:
-            pass
-
+        self.move_to_default(duration=3.0)
         self.recording = False
-        print("[RECORD] Stopped. Saving file…")
-        # 3. Save
-        traj_path = input("Enter file path to save (.npz): ").strip()
-        if traj_path == "":
-            traj_path = "deploy_real/high_level_traj/upper_body_traj.npz"
-        np.savez_compressed(traj_path,
-                            t=np.array(self.record_buffer_t),
-                            q=np.vstack(self.record_buffer_q))
-        print(f"[RECORD] Saved {len(self.record_buffer_t)} frames to {traj_path}")
-        
-        time.sleep(0.05)
-        # 4. Return to default (stiff)
-        self.current_target_q = cfg.default_angles.copy()
-        self.move_to_default(duration=10) # Add more time because the end of the record action may be larger, and the PD gain switch is sudden.
-        print("Done. Ctrl‑C to exit.")
 
-# -----------------------------------------------------------------------------
-# Main entry
-# -----------------------------------------------------------------------------
+
+    def Run(self):
+        # self.thread = RecurrentThread(interval=cfg.control_dt, target=self.Loop, name="control")
+        # while not self.first_state:
+        #     time.sleep(0.1)
+        # self.thread.Start()
+        self.move_to_default()
+        print("[RECORD] Press A to start, B to stop/save, Y to finish, X to reset")
+        seg_id = 1
+        while True:
+            if not self.recording and self.remote.button[KeyMap.A] == 1:
+                self.recording = True
+                self.t_record_start = time.time()
+                self.record_times.clear()
+                self.record_qs.clear()
+                self.record_Mf_L.clear()
+                self.record_Mf_R.clear()
+                print(f"[RECORD] ▶ Start segment {seg_id}")
+
+            elif self.recording and self.remote.button[KeyMap.B] == 1:
+                self.recording = False
+                # Save segment with both joint and workspace data
+                np.savez_compressed(
+                    f"segment_ws_{seg_id:02d}.npz",
+                    t=np.array(self.record_times),
+                    q=np.vstack(self.record_qs),
+                    Mf_L=np.stack(self.record_Mf_L),
+                    Mf_R=np.stack(self.record_Mf_R)
+                )
+                print(f"[SAVE] segment_ws_{seg_id:02d}.npz saved")
+                seg_id += 1
+
+            elif self.remote.button[KeyMap.Y] == 1:
+                print("[RECORD] Finish and enter damping mode")
+                for i in cfg.action_joints:
+                    self.low_cmd.motor_cmd[i].kp = 0
+                    self.low_cmd.motor_cmd[i].kd = 1
+                self.arm_pub.Write(self.low_cmd)
+
+                print("Press X to return to default")
+                while True:
+                    key = self.low_state.wireless_remote[2]
+                    if self.remote.button[KeyMap.X] == 1:  # X
+                        self.move_to_default(6.0)
+                        print("[RECORD] Done. Ctrl+C to exit.")
+                        return
+
+            time.sleep(0.05)
+
 if __name__ == "__main__":
-    print("WARNING: Ensure no obstacles around the robot. Press ENTER to continue …")
-    input()
-
-    # If user passes robot IP as argv[1]
-    if len(sys.argv) > 1:
-        ChannelFactoryInitialize(0, sys.argv[1])
-    else:
-        ChannelFactoryInitialize(0)
-
-    recorder = CustomRecorder()
+    ChannelFactoryInitialize(0, sys.argv[1] if len(sys.argv) > 1 else None)
+    recorder = WorkspaceRecorder()
     recorder.Init()
     recorder.Start()
     recorder.Run()
-
-    # keep main thread alive
-    while True:
-        time.sleep(1)

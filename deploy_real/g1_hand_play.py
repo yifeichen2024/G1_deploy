@@ -12,14 +12,14 @@ def main():
     p = argparse.ArgumentParser(description="Dex3 Hand Playback")
     p.add_argument("traj", type=str, help="Trajectory file (.npz)")
     p.add_argument("--speed", "-s", type=float, default=1.0, help="Playback speed (1.0=原速)")
-    p.add_argument("--ip",        type=str, default=None, help="Robot 网络接口（可选）")
+    p.add_argument("--ip",        type=str, default="enp2s0", help="Robot 网络接口（可选）")
     args = p.parse_args()
 
-    # DDS 初始化
-    if args.ip:
-        ChannelFactoryInitialize(0, args.ip)
-    else:
-        ChannelFactoryInitialize(0)
+    # # DDS 初始化
+    # if args.ip:
+    #     ChannelFactoryInitialize(0, args.ip)
+    # else:
+    #     ChannelFactoryInitialize(0)
 
     # 创建控制器
     ctrl = Dex3_1_Controller(fps=100.0)
@@ -33,7 +33,7 @@ def main():
         sys.exit(1)
     data = np.load(traj_path)
     t_arr = (data["t"] - data["t"][0]) / args.speed   # 时间归一化 + 速度缩放
-    q_arr = data["q"]                                 # 每帧 14 维：[3 left | 3 right]
+    q_arr = data["q"]                                 # 每帧 6 维：[3 left | 3 right]
 
     print(f"[INFO] Loaded '{traj_path.name}'  共 {len(t_arr)} 帧，播放速度={args.speed}×")
     print("按 ENTER 开始播放…")
@@ -49,10 +49,12 @@ def main():
 
     # 3) 回放
     for i, ti in enumerate(t_arr):
-        left_q  = q_arr[i, :3]
-        right_q = q_arr[i, 3:]
+        left_q  = q_arr[i, :7]
+        right_q = q_arr[i, 7:]
+        print(f"[DEBUG] left: {left_q}, right: {right_q}")
         ctrl.set_target_q(left_q, right_q)
-
+        ctrl.send_cmd()
+        
         # 计算到下一帧的 sleep
         if i < len(t_arr)-1:
             next_t = t_arr[i+1]

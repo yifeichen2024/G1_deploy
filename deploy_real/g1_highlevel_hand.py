@@ -55,7 +55,7 @@ class Dex3_1_Controller:
 
         self.target_left_q = np.zeros(Dex3_Num_Motors)
         self.target_right_q = np.zeros(Dex3_Num_Motors)
-
+        self.recording = True
         # Create DDS messages
         self.left_msg = unitree_hg_msg_dds__HandCmd_()
         self.right_msg = unitree_hg_msg_dds__HandCmd_()
@@ -171,61 +171,61 @@ class Dex3_1_Controller:
         grip_right_q = np.array([-0.2, 0.2, 0.2, -1.0, -0.3, -1.0, -0.3])
         self._interpolate_motion(grip_left_q, grip_right_q, duration)
 
-# if __name__ == "__main__":
-#     import numpy as np
-
-#     controller = Dex3_1_Controller()
-
-#     print("Waiting for DDS state feedback...")
-#     time.sleep(1)
-
-#     print("Sending example target pose...")
-#     # TODO record and play and hold
-#     try:
-#         while True:
-#             left_q = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-#             right_q = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-#             controller.set_target_q(left_q, right_q)
-
-#             lq, rq = controller.get_current_q()
-#             print(f"Current Left Q: {lq.round(3)} \nCurrent Right Q: {rq.round(3)}")
-#             time.sleep(0.5)
-#     except KeyboardInterrupt:
-#         controller.zero_torque()
-    
-
 if __name__ == "__main__":
-    import time
     import numpy as np
 
     controller = Dex3_1_Controller()
+
     print("Waiting for DDS state feedback...")
-    time.sleep(1.0)
+    time.sleep(1)
 
-    # 1. 定义动作序列：描述 + 对应方法
-    sequence = [
-        # ("Move to default position", controller.move_to_default(duration=3.0)),
-        # ("Grip motion", controller.grip_motion(1.0)),
-        # ("Release motion", controller.release_motion(1.0)),
-        ("Zero torque and exit", controller.zero_torque)
-    ]
+    print("Sending example target pose...")
+    # TODO record and play and hold
+    try:
+        while True:
+            left_q = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+            right_q = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+            controller.set_target_q(left_q, right_q)
 
-    print("Action sequence loaded. 按 Enter 执行下一步，输入 'q' + Enter 提前退出。")
-
-    for desc, action in sequence:
-        user_input = input(f"\n即将执行：{desc} -> 按 Enter 开始; 或输入 q + Enter 退出：")
-        if user_input.lower() == 'q':
-            print("提前退出，启用 zero_torque 并结束。")
-            controller.zero_torque()
-            break
-
-        print(f"--- {desc} ---")
-        # 如果动作有持续时间参数，也可以在这里传入，比如 move_to_default(2.0)
+            lq, rq = controller.get_current_q()
+            print(f"Current Left Q: {lq.round(3)} \nCurrent Right Q: {rq.round(3)}")
+            time.sleep(0.5)
+    except KeyboardInterrupt:
         controller.zero_torque()
-        # action()
-        # 等待动作执行完毕（根据你的动作内部默认 duration）
-        # 如果需要打印当前关节状态，可以：
-        lq, rq = controller.get_current_q()
-        print(f"当前关节状态：\n  Left:  {lq.round(3)}\n  Right: {rq.round(3)}")
+    
 
-    print("动作序列结束。")
+# if __name__ == "__main__":
+#     import time
+#     import numpy as np
+
+#     controller = Dex3_1_Controller()
+#     print("Waiting for DDS state feedback...")
+#     time.sleep(1.0)
+
+#     # 1. 定义动作序列：描述 + 对应方法
+#     sequence = [
+#         # ("Move to default position", controller.move_to_default(duration=3.0)),
+#         # ("Grip motion", controller.grip_motion(1.0)),
+#         # ("Release motion", controller.release_motion(1.0)),
+#         ("Zero torque and exit", controller.zero_torque)
+#     ]
+
+#     print("Action sequence loaded. 按 Enter 执行下一步，输入 'q' + Enter 提前退出。")
+
+#     for desc, action in sequence:
+#         user_input = input(f"\n即将执行：{desc} -> 按 Enter 开始; 或输入 q + Enter 退出：")
+#         if user_input.lower() == 'q':
+#             print("提前退出，启用 zero_torque 并结束。")
+#             controller.zero_torque()
+#             break
+
+#         print(f"--- {desc} ---")
+#         # 如果动作有持续时间参数，也可以在这里传入，比如 move_to_default(2.0)
+#         controller.zero_torque()
+#         # action()
+#         # 等待动作执行完毕（根据你的动作内部默认 duration）
+#         # 如果需要打印当前关节状态，可以：
+#         lq, rq = controller.get_current_q()
+#         print(f"当前关节状态：\n  Left:  {lq.round(3)}\n  Right: {rq.round(3)}")
+
+#     print("动作序列结束。")

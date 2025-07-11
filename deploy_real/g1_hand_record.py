@@ -40,6 +40,9 @@ def main():
                     if sys.stdin.readline():
                         break
                 left_q, right_q = ctrl.get_current_q()
+                left_q = left_q.round(3)
+                right_q = right_q.round(3)
+                print(f"Current Left Q: {left_q} \nCurrent Right Q: {right_q}")
                 t_buf.append(time.time() - t0)
                 q_buf.append(np.concatenate([left_q, right_q]))
                 time.sleep(1.0 / ctrl.fps)
@@ -76,12 +79,12 @@ def main():
     print("已恢复默认手势，退出。")
 
 if __name__ == '__main__':
-    # 如果需要指定 IP 就放在 argv[1]
-    # e.g. python hand_recorder.py enp2s0
-    from unitree_sdk2py.core.channel import ChannelFactoryInitialize
-    if len(sys.argv) > 1:
-        ChannelFactoryInitialize(0, sys.argv[1])
-    else:
-        ChannelFactoryInitialize(0)
+    # # 如果需要指定 IP 就放在 argv[1]
+    # # e.g. python hand_recorder.py enp2s0
+    # from unitree_sdk2py.core.channel import ChannelFactoryInitialize
+    # if len(sys.argv) > 1:
+    #     ChannelFactoryInitialize(0, sys.argv[1])
+    # else:
+    #     ChannelFactoryInitialize(0)
 
     main()

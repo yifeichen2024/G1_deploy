@@ -43,11 +43,10 @@ def load_cfg(yaml_path="deploy_real/configs/config_high_level.yaml") -> Config:
     cfg = Config()
     for k, v in d.items():
         setattr(cfg, k, np.array(v) if isinstance(v, list) else v)
-    cfg.kps_record = cfg.kps_play * 0.01
-    cfg.kds_record = cfg.kds_play * 0.01
+    cfg.kps_record = cfg.kps_play * 0.2
+    cfg.kds_record = cfg.kds_play * 0.2
     return cfg
-# TODO Waist pitch and roll strongger PD
-# TODO wrist roll open for action  
+
 cfg = load_cfg()
 
 # -----------------------------------------------------------------------------
@@ -73,15 +72,31 @@ class CustomRecorder:
 
 
     def Start(self):
+        # self.thread = RecurrentThread(interval=cfg.control_dt, target=self.Loop, name="control")
+        # while not self.first_state: 
+        #     time.sleep(0.1)
+        # self.thread.Start()
+
         self.thread = RecurrentThread(interval=cfg.control_dt, target=self.Loop, name="control")
         while not self.first_state: 
             time.sleep(0.1)
         self.thread.Start()
 
+        # —— 启动后先做一次平滑过渡到默认姿态 —— #
+        print("[INIT] 平滑过渡到默认姿态…")
+        # 临时进入“录制”模式，使用低增益
+        self.recording = True
+        self.move_to_default(duration=3.0)
+        self.recording = False
     def Loop(self):
         if self.low_state is None: 
             return
         
+        # —— 1) 如果在录制模式，就把目标设成当前真实角度，使 PD 锁当前位置 —— #
+        actual_q = np.array([self.low_state.motor_state[m].q for m in cfg.action_joints])
+        if self.recording:
+            self.current_target_q = actual_q.copy()
+
         kps_record: list[float] = []
         kds_record: list[float] = []
         for idx, joint in enumerate(cfg.action_joints):

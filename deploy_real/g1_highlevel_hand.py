@@ -56,6 +56,12 @@ class Dex3_1_Controller:
         self.target_left_q = np.zeros(Dex3_Num_Motors)
         self.target_right_q = np.zeros(Dex3_Num_Motors)
         self.recording = True
+
+        self.kps = 1.0
+        self.kds = 0.2
+        self.kps_record = 0.0
+        self.kds_record = 0.0
+
         # Create DDS messages
         self.left_msg = unitree_hg_msg_dds__HandCmd_()
         self.right_msg = unitree_hg_msg_dds__HandCmd_()
@@ -75,8 +81,8 @@ class Dex3_1_Controller:
 
         for id in Dex3_1_Right_JointIndex:
             self.right_msg.motor_cmd[id].mode = 0x01
-            self.right_msg.motor_cmd[id].kp = 0.0
-            self.right_msg.motor_cmd[id].kd = 0.0
+            self.right_msg.motor_cmd[id].kp = 1.0
+            self.right_msg.motor_cmd[id].kd = 0.2
 
     def _recv_state_loop(self):
         while True:
@@ -91,10 +97,19 @@ class Dex3_1_Controller:
             time.sleep(0.005)
 
     def _control_loop(self):
+       
+
         while True:
+             # —— 1) 如果在录制模式，就把目标设成当前真实角度，使 PD 锁当前位置 —— #
+            left_q, right_q = self.get_current_q()
             if self.recording:
-                kp_left, kd_left = 0.0, 0.0
-                kp_right, kd_right = 0.0, 0.0
+                self.target_left_q = left_q.copy()
+                self.target_right_q = right_q.copy()
+
+
+            if self.recording:
+                kp_left, kd_left = self.kps, self.kds
+                kp_right, kd_right = self.kps, self.kds
             else:
                 kp_left, kd_left = 1.0, 0.2
                 kp_right, kd_right = 1.0, 0.2
@@ -105,8 +120,8 @@ class Dex3_1_Controller:
                 self.left_msg.motor_cmd[id].kd = kd_left
             for i, id in enumerate(Dex3_1_Right_JointIndex):
                 self.right_msg.motor_cmd[id].q = self.target_right_q[i]
-                self.left_msg.motor_cmd[id].kp = kp_right
-                self.left_msg.motor_cmd[id].kd = kd_right
+                self.right_msg.motor_cmd[id].kp = kp_right
+                self.right_msg.motor_cmd[id].kd = kd_right
             
             # load the message first comment out this one 
             self.send_cmd()

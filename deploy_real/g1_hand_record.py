@@ -42,7 +42,7 @@ def main():
                 left_q, right_q = ctrl.get_current_q()
                 left_q = left_q.round(3)
                 right_q = right_q.round(3)
-                print(f"Current Left Q: {left_q} \nCurrent Right Q: {right_q}")
+                # print(f"Current Left Q: {left_q} \nCurrent Right Q: {right_q}")
                 t_buf.append(time.time() - t0)
                 q_buf.append(np.concatenate([left_q, right_q]))
                 time.sleep(1.0 / ctrl.fps)

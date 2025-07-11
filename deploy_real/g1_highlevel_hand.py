@@ -118,6 +118,7 @@ class Dex3_1_Controller:
         
         self.send_cmd()
 
+
     def _interpolate_motion(self, target_left_q, target_right_q, duration=2.0):
         """平滑插值从当前状态到目标状态"""
         current_left_q, current_right_q = self.get_current_q()
@@ -197,9 +198,9 @@ if __name__ == "__main__":
 
     # 1. 定义动作序列：描述 + 对应方法
     sequence = [
-        ("Move to default position", controller.move_to_default(duration=3.0)),
-        ("Grip motion", controller.grip_motion(1.0)),
-        ("Release motion", controller.release_motion(1.0)),
+        # ("Move to default position", controller.move_to_default(duration=3.0)),
+        # ("Grip motion", controller.grip_motion(1.0)),
+        # ("Release motion", controller.release_motion(1.0)),
         ("Zero torque and exit", controller.zero_torque)
     ]
 

@@ -13,7 +13,7 @@ def main():
     # 1) 初始化手部控制器
     ctrl = Dex3_1_Controller(fps=100.0)
     time.sleep(0.5)  # 等几帧，让订阅器先跑起来
-    
+    ctrl.zero_torque()
     print("=== Hand Recorder ===")
     print("按 ENTER 开始/停止每段录制。")
     print("录制完一段后会自动保存为 hand_segment_XX.npz。")
@@ -31,6 +31,7 @@ def main():
             q_buf = []
             # 连续采样
             while True:
+                # ctrl.zero_torque()
                 # 检查键盘
                 if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
                     if sys.stdin.readline():
@@ -65,6 +66,8 @@ def main():
     input("阻尼中…输入任意键并 ENTER 平滑回默认手势…")
     print("[DEFAULT] moving to default hand pose")
     ctrl.move_to_default(duration=2.0)
+    
+    ctrl.zero_torque()
 
     print("Done. 退出。")
 

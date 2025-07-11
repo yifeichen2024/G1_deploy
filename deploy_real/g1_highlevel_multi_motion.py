@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict, List
 import numpy as np
 import yaml
+import os
 
 from unitree_sdk2py.core.channel import ChannelPublisher, ChannelSubscriber, ChannelFactoryInitialize
 from unitree_sdk2py.idl.default import unitree_hg_msg_dds__LowCmd_, unitree_hg_msg_dds__LowState_
@@ -86,7 +87,7 @@ class Player:
         self.bank = motion_bank
         self.speed = speed
 
-        # 状态机：IDLE, PLAYING, HOLDING
+        # 状态机：IDLE, PLAYING, HOLDING, RETURNING
         self.state = "IDLE"
         self.current_key = None
         self.start_time = None
@@ -113,6 +114,7 @@ class Player:
     def cb(self, msg: LowState_):
         self.low_state = msg
         self.first_state = True
+        self.remote.set(msg.wireless_remote)
 
     # -------- 启动控制循环线程 --------
     def start_thread(self):
@@ -121,19 +123,36 @@ class Player:
 
     # -------- 主循环 --------
     def loop(self):
-        # 先更新遥控器状态
-        self.remote.update()
+        # —— 1. 任何时候按 SELECT 键就锁定当前位置并退出 —— #
+        if self.remote.button[KeyMap.select] == 1:
+            print("[LOOP] SELECT pressed → lock position and exit")
+            # 根据当前状态拿到 q_target
+            if self.state == "PLAYING":
+                motion = self.bank[self.current_key]
+                idx = min(self.idx, len(motion["q"]) - 1)
+                q_target = motion["q"][idx]
+            elif self.state == "HOLDING" and self.last_q is not None:
+                q_target = self.last_q
+            else:
+                q_target = cfg.default_angles
+            # 发送一次锁定姿态
+            self.send_pose(q_target)
+            # 直接退出整个进程
+            os._exit(0)
 
+
+        # 如果正在归位，跳过所有 send_pose
+        if self.state == "RETURNING":
+            return
+
+        # HOLDING：保持最后一帧，等待 B 或数字键
         if self.state == "HOLDING":
-            # 保持最后一帧姿态
             self.send_pose(self.last_q)
-            # 按 B 键归位
             if self.remote.button[KeyMap.B] == 1:
-                print("[HOLD] B pressed -> 返回 default")
+                print("[HOLD] B pressed -> 归位中…")
+                self.state = "RETURNING"
                 threading.Thread(target=self._async_return_default, daemon=True).start()
-                self.state = "IDLE"
                 return
-            # 支持直接按数字键跳下一个动作
             for k in self.bank:
                 map_attr = f"NUM_{k}"
                 if hasattr(KeyMap, map_attr) and self.remote.button[getattr(KeyMap, map_attr)] == 1:
@@ -142,21 +161,20 @@ class Player:
                     return
             return
 
+        # IDLE：保持 default，等待数字键或标准输入
         if self.state == "IDLE":
-            # 保持 default
             self.send_pose(cfg.default_angles)
-            # 标准输入也可触发
             if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
                 key = sys.stdin.readline().strip()
                 if key in self.bank:
                     self._start_motion(key)
             return
 
+        # PLAYING：播放动作帧
         if self.state == "PLAYING":
             motion = self.bank[self.current_key]
             t_arr = motion["t"] / self.speed
             q_arr = motion["q"]
-
             elapsed = time.time() - self.start_time
             while self.idx < len(t_arr) and t_arr[self.idx] <= elapsed:
                 self.idx += 1
@@ -179,6 +197,7 @@ class Player:
     # -------- 异步归位到 default --------
     def _async_return_default(self, duration: float = 3.0):
         if self.low_state is None:
+            self.state = "IDLE"
             return
         cur = np.array([self.low_state.motor_state[m].q for m in cfg.action_joints])
         steps = int(duration / cfg.control_dt)
@@ -186,7 +205,12 @@ class Player:
             r = (s + 1) / steps
             q_cmd = (1 - r) * cur + r * cfg.default_angles
             self.send_pose(q_cmd)
-            time.sleep(cfg.control_dt)
+            try:
+                time.sleep(cfg.control_dt)
+            except KeyboardInterrupt:
+                break
+        # 归位完毕，切回 IDLE
+        self.state = "IDLE"
 
     # -------- 发送关节指令 --------
     def send_pose(self, q_target: np.ndarray):
@@ -216,7 +240,7 @@ if __name__ == "__main__":
 
     speed = 1.0
     ip = None
-    traj_paths = []
+    traj_paths: List[str] = []
     for arg in sys.argv[1:]:
         if arg.startswith("--speed"):
             speed = float(arg.split("=", 1)[-1])
@@ -246,8 +270,15 @@ if __name__ == "__main__":
 
     try:
         while True:
-            time.sleep(1)
+            time.sleep(0.1)
     except KeyboardInterrupt:
         print("KeyboardInterrupt, moving to default…")
-        player._async_return_default(3.0)
+        # 切到 RETURNING，暂停 loop 中的 send_pose
+        player.state = "RETURNING"
+        try:
+            player._async_return_default(5.0)
+        except KeyboardInterrupt:
+            pass
         print("Exit.")
+
+

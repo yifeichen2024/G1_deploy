@@ -96,17 +96,19 @@ class G1_29_ArmIK:
         # Creating Casadi models and data for symbolic computing
         self.cmodel = cpin.Model(self.reduced_robot.model)
         self.cdata = self.cmodel.createData()
+        # !!! unitree sb： After adding the frames, reduced_robot.model also need to recreate.
+        self.reduced_robot.data = self.reduced_robot.model.createData()
 
         # Creating symbolic variables
         self.cq = casadi.SX.sym("q", self.reduced_robot.model.nq, 1) 
         self.cTf_l = casadi.SX.sym("tf_l", 4, 4)
         self.cTf_r = casadi.SX.sym("tf_r", 4, 4)
         cpin.framesForwardKinematics(self.cmodel, self.cdata, self.cq)
-
+        # print(f"[DEBUG] Frames Forward Kinematics: {self.cmodel}, kinematics data: {self.cdata}, q: {self.cq}, tf_l: {self.cTf_l}, tf_r: {self.cTf_r}")
         # Get the hand joint ID and define the error function
         self.L_hand_id = self.reduced_robot.model.getFrameId("L_ee")
         self.R_hand_id = self.reduced_robot.model.getFrameId("R_ee")
-
+        
         self.translational_error = casadi.Function(
             "translational_error",
             [self.cq, self.cTf_l, self.cTf_r],
@@ -159,7 +161,7 @@ class G1_29_ArmIK:
         self.opti.solver("ipopt", opts)
 
         self.init_data = np.zeros(self.reduced_robot.model.nq)
-        self.smooth_filter = WeightedMovingFilter(np.array([0.4, 0.3, 0.2, 0.1]), 14)
+        self.smooth_filter = WeightedMovingFilter(np.array([0.4, 0.3, 0.2, 0.1]), 12)
         self.vis = None
 
         if self.Visualization:
@@ -215,7 +217,7 @@ class G1_29_ArmIK:
         if self.Visualization:
             self.vis.viewer['L_ee_target'].set_transform(left_wrist)   # for visualization
             self.vis.viewer['R_ee_target'].set_transform(right_wrist)  # for visualization
-
+        
         self.opti.set_value(self.param_tf_l, left_wrist)
         self.opti.set_value(self.param_tf_r, right_wrist)
         self.opti.set_value(self.var_q_last, self.init_data) # for smooth
@@ -225,6 +227,7 @@ class G1_29_ArmIK:
             # sol = self.opti.solve_limited()
 
             sol_q = self.opti.value(self.var_q)
+            # print(f"[DEBUG] len: {len(sol_q)}, {sol_q}")
             self.smooth_filter.add_data(sol_q)
             sol_q = self.smooth_filter.filtered_data
 
@@ -264,7 +267,45 @@ class G1_29_ArmIK:
 
             # return sol_q, sol_tauff
             return current_lr_arm_motor_q, np.zeros(self.reduced_robot.model.nv)
-        
+    
+    def forward_kinematics(self, q, update_meshcat=False):
+        """
+        给定 reduced-model 关节角 q (len == model.nq == 12)，
+        返回左右手 EE 的 SE3 位姿 (pin.SE3)。
+        """
+        # q = np.asarray(q).reshape(-1)
+
+        # —— 安全检查：长度必须等于 model.nq (=12) ——
+        if q.size != self.reduced_robot.model.nq:
+            raise ValueError(
+                f"[FK] input length {q.size} != model.nq {self.reduced_robot.model.nq}"
+            )
+
+        # —— 正向运动学 ——  (universe joint 的 dof=0，不占位，所以直接用 q 即可)
+        pin.forwardKinematics(self.reduced_robot.model, self.reduced_robot.data, q)
+        pin.updateFramePlacements(self.reduced_robot.model, self.reduced_robot.data)
+        # print(f"End_effector: {self.reduced_robot.data.oMf[-1]}")
+        # for frame in self.reduced_robot.model.frames:
+        #     id = self.reduced_robot.model.getFrameId(frame.name)    
+        #     print(f"{frame.name}: {id}")
+            # if frame.name == "L_ee":
+            #     id = self.reduced_robot.model.getFrameId("L_ee")
+            #     print(id)
+            #     print(self.reduced_robot.data.oMf[id])
+        self.L_hand_id = self.reduced_robot.model.getFrameId("L_ee")
+        self.R_hand_id = self.reduced_robot.model.getFrameId("R_ee")
+        # print(f"{self.L_hand_id}, {self.R_hand_id}")
+        # print(f"{self.L_hand_id}, {self.reduced_robot.data.oMf[self.L_hand_id ]}")
+        # print(f"{self.R_hand_id}, {self.reduced_robot.data.oMf[self.L_hand_id ]}")
+        L_SE3 = self.reduced_robot.data.oMf[self.L_hand_id ].copy()
+        R_SE3 = self.reduced_robot.data.oMf[self.R_hand_id ].copy()
+
+        # # 可选：把姿态也刷到 Meshcat
+        # if update_meshcat and self.Visualization:
+        #     self.vis.display(q)
+
+        return L_SE3, R_SE3
+
 class G1_23_ArmIK:
     def __init__(self, Unit_Test = False, Visualization = False):
         np.set_printoptions(precision=5, suppress=True, linewidth=200)
@@ -328,7 +369,6 @@ class G1_23_ArmIK:
         self.cTf_l = casadi.SX.sym("tf_l", 4, 4)
         self.cTf_r = casadi.SX.sym("tf_r", 4, 4)
         cpin.framesForwardKinematics(self.cmodel, self.cdata, self.cq)
-
         # Get the hand joint ID and define the error function
         self.L_hand_id = self.reduced_robot.model.getFrameId("L_ee")
         self.R_hand_id = self.reduced_robot.model.getFrameId("R_ee")
@@ -385,7 +425,7 @@ class G1_23_ArmIK:
         self.opti.solver("ipopt", opts)
 
         self.init_data = np.zeros(self.reduced_robot.model.nq)
-        self.smooth_filter = WeightedMovingFilter(np.array([0.4, 0.3, 0.2, 0.1]), 10)
+        self.smooth_filter = WeightedMovingFilter(np.array([0.4, 0.3, 0.2, 0.1]), 12)
         self.vis = None
 
         if self.Visualization:
@@ -490,55 +530,89 @@ class G1_23_ArmIK:
 
             # return sol_q, sol_tauff
             return current_lr_arm_motor_q, np.zeros(self.reduced_robot.model.nv)
+    
+from math import sin, cos, tau   # tau = 2π
 
+def circular_offset(t, r=0.04, T=5.0):
+    """给定时间 t返回在 y-z 平面的小圆形偏移 (dy, dz)。"""
+    theta = (t % T) / T * tau      # 映射到 [0, 2π)
+    return np.array([0.0, r * cos(theta), r * sin(theta)])
 if __name__ == "__main__":
-    arm_ik = G1_29_ArmIK(Unit_Test = True, Visualization = True)
-    # arm_ik = H1_2_ArmIK(Unit_Test = True, Visualization = True)
-    # arm_ik = G1_23_ArmIK(Unit_Test = True, Visualization = True)
-    # arm_ik = H1_ArmIK(Unit_Test = True, Visualization = True)
+    ik = G1_29_ArmIK(Unit_Test=True, Visualization=True)
 
-    # initial positon
-    L_tf_target = pin.SE3(
-        pin.Quaternion(1, 0, 0, 0),
-        np.array([0.25, +0.25, 0.1]),
-    )
+    L_center = np.array([0.30, +0.20, 0.15])
+    R_center = np.array([0.30, -0.20, 0.15])
+    q_id = pin.Quaternion(1, 0, 0, 0)
 
-    R_tf_target = pin.SE3(
-        pin.Quaternion(1, 0, 0, 0),
-        np.array([0.25, -0.25, 0.1]),
-    )
-
-    rotation_speed = 0.005
-    noise_amplitude_translation = 0.001
-    noise_amplitude_rotation = 0.01
-
-    user_input = input("Please enter the start signal (enter 's' to start the subsequent program):\n")
-    if user_input.lower() == 's':
-        step = 0
+    t0 = time.time()
+    try:
         while True:
-            # Apply rotation noise with bias towards y and z axes
-            rotation_noise_L = pin.Quaternion(
-                np.cos(np.random.normal(0, noise_amplitude_rotation) / 2),0,np.random.normal(0, noise_amplitude_rotation / 2),0).normalized()  # y bias
+            t = time.time() - t0
+            offset = circular_offset(t)
 
-            rotation_noise_R = pin.Quaternion(
-                np.cos(np.random.normal(0, noise_amplitude_rotation) / 2),0,0,np.random.normal(0, noise_amplitude_rotation / 2)).normalized()  # z bias
+            L_target = pin.SE3(q_id, L_center + offset)
+            R_target = pin.SE3(q_id, R_center + offset)
+
+            # —— 逆运动学求解 —— 
+            q_sol, _ = ik.solve_ik(L_target.homogeneous, R_target.homogeneous)
+            # print(q_sol)
+
+            # —— 正向运动学验证 ——
+            L_fk, R_fk = ik.forward_kinematics(q_sol)
+            print(f"[{t:5.2f}s]  L pos {L_fk.translation.round(3)}, L_target {L_target.translation.round(3)}")
+            print(f"[{t:5.2f}s]  R pos {R_fk.translation.round(3)}, R_target {R_target.translation.round(3)}")
+
+            time.sleep(0.05)   # 20 Hz
+    except KeyboardInterrupt:
+        print("Stopped.")
+# if __name__ == "__main__":
+#     arm_ik = G1_29_ArmIK(Unit_Test = True, Visualization = True)
+#     # arm_ik = H1_2_ArmIK(Unit_Test = True, Visualization = True)
+#     # arm_ik = G1_23_ArmIK(Unit_Test = True, Visualization = True)
+#     # arm_ik = H1_ArmIK(Unit_Test = True, Visualization = True)
+
+#     # initial positon
+#     L_tf_target = pin.SE3(
+#         pin.Quaternion(1, 0, 0, 0),
+#         np.array([0.25, +0.25, 0.1]),
+#     )
+
+#     R_tf_target = pin.SE3(
+#         pin.Quaternion(1, 0, 0, 0),
+#         np.array([0.25, -0.25, 0.1]),
+#     )
+
+#     rotation_speed = 0.005
+#     noise_amplitude_translation = 0.001
+#     noise_amplitude_rotation = 0.01
+
+#     user_input = input("Please enter the start signal (enter 's' to start the subsequent program):\n")
+#     if user_input.lower() == 's':
+#         step = 0
+#         while True:
+#             # Apply rotation noise with bias towards y and z axes
+#             rotation_noise_L = pin.Quaternion(
+#                 np.cos(np.random.normal(0, noise_amplitude_rotation) / 2),0,np.random.normal(0, noise_amplitude_rotation / 2),0).normalized()  # y bias
+
+#             rotation_noise_R = pin.Quaternion(
+#                 np.cos(np.random.normal(0, noise_amplitude_rotation) / 2),0,0,np.random.normal(0, noise_amplitude_rotation / 2)).normalized()  # z bias
             
-            if step <= 120:
-                angle = rotation_speed * step
-                L_tf_target.rotation = (rotation_noise_L * pin.Quaternion(np.cos(angle / 2), 0, np.sin(angle / 2), 0)).toRotationMatrix()  # y axis
-                R_tf_target.rotation = (rotation_noise_R * pin.Quaternion(np.cos(angle / 2), 0, 0, np.sin(angle / 2))).toRotationMatrix()  # z axis
-                L_tf_target.translation += (np.array([0.001,  0.001, 0.001]) + np.random.normal(0, noise_amplitude_translation, 3))
-                R_tf_target.translation += (np.array([0.001, -0.001, 0.001]) + np.random.normal(0, noise_amplitude_translation, 3))
-            else:
-                angle = rotation_speed * (240 - step)
-                L_tf_target.rotation = (rotation_noise_L * pin.Quaternion(np.cos(angle / 2), 0, np.sin(angle / 2), 0)).toRotationMatrix()  # y axis
-                R_tf_target.rotation = (rotation_noise_R * pin.Quaternion(np.cos(angle / 2), 0, 0, np.sin(angle / 2))).toRotationMatrix()  # z axis
-                L_tf_target.translation -= (np.array([0.001,  0.001, 0.001]) + np.random.normal(0, noise_amplitude_translation, 3))
-                R_tf_target.translation -= (np.array([0.001, -0.001, 0.001]) + np.random.normal(0, noise_amplitude_translation, 3))
+#             if step <= 120:
+#                 angle = rotation_speed * step
+#                 L_tf_target.rotation = (rotation_noise_L * pin.Quaternion(np.cos(angle / 2), 0, np.sin(angle / 2), 0)).toRotationMatrix()  # y axis
+#                 R_tf_target.rotation = (rotation_noise_R * pin.Quaternion(np.cos(angle / 2), 0, 0, np.sin(angle / 2))).toRotationMatrix()  # z axis
+#                 L_tf_target.translation += (np.array([0.001,  0.001, 0.001]) + np.random.normal(0, noise_amplitude_translation, 3))
+#                 R_tf_target.translation += (np.array([0.001, -0.001, 0.001]) + np.random.normal(0, noise_amplitude_translation, 3))
+#             else:
+#                 angle = rotation_speed * (240 - step)
+#                 L_tf_target.rotation = (rotation_noise_L * pin.Quaternion(np.cos(angle / 2), 0, np.sin(angle / 2), 0)).toRotationMatrix()  # y axis
+#                 R_tf_target.rotation = (rotation_noise_R * pin.Quaternion(np.cos(angle / 2), 0, 0, np.sin(angle / 2))).toRotationMatrix()  # z axis
+#                 L_tf_target.translation -= (np.array([0.001,  0.001, 0.001]) + np.random.normal(0, noise_amplitude_translation, 3))
+#                 R_tf_target.translation -= (np.array([0.001, -0.001, 0.001]) + np.random.normal(0, noise_amplitude_translation, 3))
 
-            arm_ik.solve_ik(L_tf_target.homogeneous, R_tf_target.homogeneous)
+#             arm_ik.solve_ik(L_tf_target.homogeneous, R_tf_target.homogeneous)
 
-            step += 1
-            if step > 240:
-                step = 0
-            time.sleep(0.1)
+#             step += 1
+#             if step > 240:
+#                 step = 0
+#             time.sleep(0.1)

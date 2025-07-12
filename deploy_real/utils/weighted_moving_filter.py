@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 
 
 class WeightedMovingFilter:
-    def __init__(self, weights, data_size = 14):
+    def __init__(self, weights, data_size = 12):
+        # the datasize value need to be changed according to the number of action joints.
         self._window_size = len(weights)
         self._weights = np.array(weights)
         assert np.isclose(np.sum(self._weights), 1.0), "[WeightedMovingFilter] the sum of weights list must be 1.0!"
@@ -23,6 +24,7 @@ class WeightedMovingFilter:
         return temp_filtered_data
 
     def add_data(self, new_data):
+        # print(f"[DEBUG] {len(new_data)}, {self._data_size}")
         assert len(new_data) == self._data_size
 
         if len(self._data_queue) > 0 and np.array_equal(new_data, self._data_queue[-1]):

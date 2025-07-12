@@ -1,3 +1,5 @@
+# New problem with wrist.
+# Out of index 
 # 所有字段名字与 python 中保持一致
 control_dt: 0.02            # s
 
@@ -35,7 +37,7 @@ fixed_joints:               # 6 wrists to lock
 # fixed_kps   : [60, 60, 60, 60, 60, 60]
 # fixed_kds   : [1, 1, 1, 1, 1, 1]
 fixed_target: [0.12, 0.12, 
-               -0.2, 0.0, 0.9, ] 
+               0.0, 0.0, 0.0,] 
 
 fixed_kps   : [60, 60, 
               300, 300, 300,]
@@ -58,3 +60,50 @@ default_angles: [0.2, 0.2, 0.0, 0.9, 0.2, -0.2, 0.0, 0.9,
                   # 0.0,0.0,0.0,
                   -0.05, -0.16,
                   -0.03, -0.02,]
+
+
+# # old working file 
+# # 所有字段名字与 python 中保持一致
+# control_dt: 0.02            # s
+
+# action_joints:              # 17 DOF（索引写数字）
+#   - 15  # L-ShoulderPitch
+#   - 16  # L-ShoulderRoll
+#   - 17  # L-ShoulderYaw
+#   - 18  # L-Elbow
+#   - 22  # R-ShoulderPitch
+#   - 23  # R-ShoulderRoll
+#   - 24  # R-ShoulderYaw
+#   - 25  # R-Elbow
+#   - 12  # WaistYaw
+#   - 13  # WaistRoll
+#   - 14  # WaistPitch
+  
+#   - 19 # left_roll
+#   - 26 # right_roll
+
+# fixed_joints:               # 6 wrists to lock
+#   # - 19 # left_roll
+#   - 20 # left_pitch
+#   - 21 # left_yaw
+#   # - 26 # right_roll
+#   - 27 # right_pitch
+#   - 28 # right_yaw
+
+# # fixed_target: [-0.05, 0.12, -0.03, -0.16, 0.12, -0.02]
+# # fixed_kps   : [60, 60, 60, 60, 60, 60]
+# # fixed_kds   : [1, 1, 1, 1, 1, 1]
+# fixed_target: [0.12, -0.03, 0.12, -0.02]
+# fixed_kps   : [60, 60, 60, 60]
+# fixed_kds   : [1, 1, 1, 1]
+
+# kps_play: [100,100,50,50, 100,100,50,50, 300,300,300, 
+#             60, 60]
+# kds_play: [  2,  2, 2, 2,   2,  2, 2, 2,   5,  5,  5,
+#             1, 1]
+
+# stiffness_factor: 0.01
+# stiffness_factor_waist_rp: 0.5
+
+# default_angles: [0.2,0.2,0.0,0.9, 0.2,-0.2,0.0,0.9, 0.0,0.0,0.0,
+#                   -0.05, -0.16]

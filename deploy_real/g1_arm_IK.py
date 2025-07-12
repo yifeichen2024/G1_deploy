@@ -22,9 +22,9 @@ class G1_29_ArmIK:
         self.Visualization = Visualization
 
         if not self.Unit_Test:
-            self.robot = pin.RobotWrapper.BuildFromURDF('/home/meetup/G1_deploy/deploy_real/assets/g1_body29_hand14.urdf', '/home/meetup/G1_deploy/deploy_real/assets/')
+            self.robot = pin.RobotWrapper.BuildFromURDF('deploy_real/assets/g1_body29_hand14.urdf', 'deploy_real/assets/')
         else:
-            self.robot = pin.RobotWrapper.BuildFromURDF('/home/meetup/G1_deploy/deploy_real/assets/g1_body29_hand14.urdf', '/home/meetup/G1_deploy/deploy_real/assets/') # for test
+            self.robot = pin.RobotWrapper.BuildFromURDF('deploy_real/assets/g1_body29_hand14.urdf', 'deploy_real/assets/') # for test
 
         self.mixed_jointsToLockIDs = [
                                         "left_hip_pitch_joint" ,

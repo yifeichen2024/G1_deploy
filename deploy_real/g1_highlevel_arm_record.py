@@ -88,21 +88,26 @@ class WorkspaceRecorder:
 
     def move_to_default(self, duration=5.0):
         cur = np.array([self.low_state.motor_state[m].q for m in cfg.action_joints])
+        print(f"[DEBUG] len Cur joint: {len(cur)}, len default: {len(cfg.default_angles)}")
         steps = int(duration / cfg.control_dt)
         for i in range(steps):
             r = (i + 1) / steps
             self.current_target_q = (1 - r) * cur + r * cfg.default_angles
+            print(f"[DEBUG] len Cur joint: {len(self.current_target_q)}, len default: {len(cfg.default_angles)}")
             time.sleep(cfg.control_dt)
         self.current_target_q = cfg.default_angles.copy()
 
 
-
     def forward_kin(self, q: np.ndarray):
         # Numeric forward kinematics to get end-effector transforms
+        
         pin.forwardKinematics(self.arm_ik.reduced_robot.model, self.arm_ik.reduced_robot.data, q)
+        print(f"[DEBUG] Mf_L model: {self.arm_ik.reduced_robot.model}, data: {self.arm_ik.reduced_robot.data}")
         pin.updateFramePlacements(self.arm_ik.reduced_robot.model, self.arm_ik.reduced_robot.data)
+        print(f"[DEBUG] Mf_L model: {self.arm_ik.reduced_robot.model}, data: {self.arm_ik.reduced_robot.data}")
         Mf_L = self.arm_ik.reduced_robot.data.oMf[self.arm_ik.L_hand_id]
         Mf_R = self.arm_ik.reduced_robot.data.oMf[self.arm_ik.R_hand_id]
+        
         return Mf_L, Mf_R
 
     def Loop(self):
@@ -125,22 +130,25 @@ class WorkspaceRecorder:
             self.low_cmd.motor_cmd[m].kp = float(kp_arr[i])
             self.low_cmd.motor_cmd[m].kd = float(kd_arr[i])
             self.low_cmd.motor_cmd[m].tau = 0.0
+            # print(f"[DEBUG] Action joint: {i}, motor: {m}")
         for i, m in enumerate(cfg.fixed_joints):
             self.low_cmd.motor_cmd[m].q = float(cfg.fixed_target[i])
             self.low_cmd.motor_cmd[m].dq = 0.0
             self.low_cmd.motor_cmd[m].kp = float(cfg.fixed_kps[i])
             self.low_cmd.motor_cmd[m].kd = float(cfg.fixed_kds[i])
             self.low_cmd.motor_cmd[m].tau = 0.0
+            # print(f"[DEBUG] Fixed joint: {i}, motor: {m}")
 
         self.low_cmd.motor_cmd[G1JointIndex.kNotUsedJoint].q = 1
         self.low_cmd.crc = self.crc.Crc(self.low_cmd)
-        self.arm_pub.Write(self.low_cmd)
+        # self.arm_pub.Write(self.low_cmd)
 
         # Record workspace poses
         if self.recording:
             t = time.time() - self.t_record_start
             q = np.array([self.low_state.motor_state[m].q for m in cfg.action_joints])
             Mf_L, Mf_R = self.forward_kin(q)
+            print(f"[DEBUG] Mf_L: {len(Mf_L)}, Mf_R: {len(Mf_R)}")
             self.record_times.append(t)
             self.record_qs.append(q.copy())
             self.record_Mf_L.append(Mf_L.homogeneous.copy())
@@ -151,7 +159,7 @@ class WorkspaceRecorder:
         # while not self.first_state: 
         #     time.sleep(0.1)
         # self.thread.Start()
-
+        print("[DEBUG] control started")
         self.thread = RecurrentThread(interval=cfg.control_dt, target=self.Loop, name="control")
         while not self.first_state: 
             time.sleep(0.1)
@@ -201,7 +209,7 @@ class WorkspaceRecorder:
                 for i in cfg.action_joints:
                     self.low_cmd.motor_cmd[i].kp = 0
                     self.low_cmd.motor_cmd[i].kd = 1
-                self.arm_pub.Write(self.low_cmd)
+                # self.arm_pub.Write(self.low_cmd)
 
                 print("Press X to return to default")
                 while True:

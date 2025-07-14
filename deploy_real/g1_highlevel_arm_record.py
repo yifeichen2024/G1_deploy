@@ -113,7 +113,7 @@ class WorkspaceRecorder:
     def Loop(self):
         if self.low_state is None:
             return
-
+ 
         # Build stiffness arrays
         kps_record, kds_record = [], []
         for idx, joint in enumerate(cfg.action_joints):

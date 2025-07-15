@@ -99,6 +99,21 @@ class G1_29_ArmIK:
         # !!! unitree sb： After adding the frames, reduced_robot.model also need to recreate.
         self.reduced_robot.data = self.reduced_robot.model.createData()
 
+         # ------------------------------------------------------------
+        # 🔍 DEBUG: 打印关节映射（full model vs. reduced model）
+        # ------------------------------------------------------------
+        print("=========== FULL MODEL JOINTS ===========")
+        for idx, name in enumerate(self.robot.model.names):
+            # Pinocchio: jointId starts at 1 (0 是 universe)
+            joint_id = self.robot.model.getJointId(name)
+            print(f"[full] idx={idx:2d}  jointId={joint_id:2d}  name={name}")
+
+        print("=========== REDUCED MODEL JOINTS =========")
+        for idx, name in enumerate(self.reduced_robot.model.names):
+            joint_id = self.reduced_robot.model.getJointId(name)
+            print(f"[reduced] idx={idx:2d}  jointId={joint_id:2d}  name={name}")
+        
+        
         # Creating symbolic variables
         self.cq = casadi.SX.sym("q", self.reduced_robot.model.nq, 1) 
         self.cTf_l = casadi.SX.sym("tf_l", 4, 4)

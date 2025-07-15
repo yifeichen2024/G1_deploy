@@ -83,32 +83,14 @@ class FKIKTester:
         self.remote.set(msg.wireless_remote)
 
     def send_joint(self, q):
-        # for i, m in enumerate(cfg.action_joints):
-        #     cmd = self.low_cmd.motor_cmd[m]
-        #     cmd.q = float(q[i])
-        #     cmd.dq = 0.0
-        #     cmd.kp = float(cfg.kps_play[i])
-        #     cmd.kd = float(cfg.kds_play[i])
-        #     cmd.tau = 0.0
-        # print(f"[DEBUG] motor {m}, {q[i]}")
-        # for i, m in enumerate(cfg.fixed_joints):
-        #     cmd = self.low_cmd.motor_cmd[m]
-        #     cmd.q = float(cfg.fixed_target[i])
-        #     cmd.dq = 0.0
-        #     cmd.kp = float(cfg.fixed_kps[i])
-        #     cmd.kd = float(cfg.fixed_kds[i])
-        #     cmd.tau = 0.0
-        
-        # self.low_cmd.crc = self.crc.Crc(self.low_cmd)
-        # self.arm_pub.Write(self.low_cmd)
-
         for i, m in enumerate(cfg.action_joints):
+            # TODO 对应改成按照顺序来的.
             self.low_cmd.motor_cmd[m].q = float(q[i])
             self.low_cmd.motor_cmd[m].dq = 0.0
             self.low_cmd.motor_cmd[m].kp = float(cfg.kps_play[i])
             self.low_cmd.motor_cmd[m].kd = float(cfg.kds_play[i]) 
             self.low_cmd.motor_cmd[m].tau = 0.0
-
+            
         for i, m in enumerate(cfg.fixed_joints):
             self.low_cmd.motor_cmd[m].q = float(cfg.fixed_target[i])
             self.low_cmd.motor_cmd[m].dq = 0.0
@@ -333,7 +315,7 @@ class FKIKTester:
             #     print(f"[FK] Mf0_L translation: {Mf0_L.translation}, Mf0_R: {Mf0_R.translation}")
             #     time.sleep(0.3)
             if self.remote.button[KeyMap.L2] == 1:
-                self.prepare_ik(dz=0.01, steps=10)        # 举 5 cm，一边 plan 一边发
+                self.prepare_ik(dz=0.01, steps=30)        # 举 5 cm，一边 plan 一边发
                 q = np.array([self.low_state.motor_state[m].q for m in cfg.action_joints])
                 Mf0_L, Mf0_R = self.forward_kin(q)
                 print(f"[FK] Current EE: {q}")

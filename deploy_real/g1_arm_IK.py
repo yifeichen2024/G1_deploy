@@ -550,7 +550,7 @@ if __name__ == "__main__":
             t = time.time() - t0
             offset = circular_offset(t)
 
-            L_target = pin.SE3(q_id, L_center + offset)
+            L_target = pin.SE3(q_id, np.array([0.2, 0.15, -0.002]))
             R_target = pin.SE3(q_id, R_center + offset)
 
             # —— 逆运动学求解 —— 

@@ -180,10 +180,10 @@ class FKIKTester:
                           for m in cfg.action_joints])
 
         MfL0, MfR0 = self.forward_kin(q_cur)
-        # 0.06824  0.21305 -0.10196
-        target_L = pin.SE3(MfL0.rotation, np.array([0.06824, 0.21305, -0.10196])) # MfL0.translation + np.array([0.01, 0, dz])
-        #  0.24722 -0.0315   0.17484
-        target_R = pin.SE3(MfR0.rotation, np.array([0.24722, -0.0315, 0.17484]))  # MfR0.translation + np.array([0.01, 0, dz])
+        # 0.01537, 0.23042, -0.10686
+        target_L = pin.SE3(MfL0.rotation, np.array([0.1, 0.23, -0.05])) # MfL0.translation + np.array([0.01, 0, dz])
+        # 0.2387, -0.00177, 0.24592
+        target_R = pin.SE3(MfR0.rotation, np.array([0.2387, -0.00177, 0.24592]))  # MfR0.translation + np.array([0.01, 0, dz])
         print(f"[IK] Planning +{dz*100:.0f} cm raise, streaming immediately …")
 
         for alpha in np.linspace(0.0, 1.0, steps, endpoint=True):
@@ -199,8 +199,28 @@ class FKIKTester:
             q_cmd, _ = self.ik.solve_ik(TfL.homogeneous, TfR.homogeneous,
                                         current_lr_arm_motor_q=q_now)
             
-            # ⬅⬅ 关键：立即下发
-            self.send_joint(q_cmd)
+            # ⬅⬅ 关键：立即下发 
+            # # DEBUG For only reading
+            # self.send_joint(q_cmd)
+            
+            # DEBUG 
+            for i, m in enumerate(cfg.action_joints):
+                self.low_cmd.motor_cmd[m].q = float(q_cmd[i])
+                self.low_cmd.motor_cmd[m].dq = 0.0
+                self.low_cmd.motor_cmd[m].kp = 0 # float(cfg.kps_play[i])
+                self.low_cmd.motor_cmd[m].kd = 1 # float(cfg.kds_play[i]) 
+                self.low_cmd.motor_cmd[m].tau = 0.0
+
+            for i, m in enumerate(cfg.fixed_joints):
+                self.low_cmd.motor_cmd[m].q = float(cfg.fixed_target[i])
+                self.low_cmd.motor_cmd[m].dq = 0.0
+                self.low_cmd.motor_cmd[m].kp = float(cfg.fixed_kps[i])
+                self.low_cmd.motor_cmd[m].kd = float(cfg.fixed_kds[i])
+                self.low_cmd.motor_cmd[m].tau = 0.0
+
+            self.low_cmd.motor_cmd[G1JointIndex.kNotUsedJoint].q = 1
+            self.low_cmd.crc = self.crc.Crc(self.low_cmd)
+            self.arm_pub.Write(self.low_cmd)
 
             # 更新初值 & 保持控制周期
             q_cur = q_cmd
@@ -313,7 +333,7 @@ class FKIKTester:
             #     print(f"[FK] Mf0_L translation: {Mf0_L.translation}, Mf0_R: {Mf0_R.translation}")
             #     time.sleep(0.3)
             if self.remote.button[KeyMap.L2] == 1:
-                self.prepare_ik(dz=0.01, steps=60)        # 举 5 cm，一边 plan 一边发
+                self.prepare_ik(dz=0.01, steps=10)        # 举 5 cm，一边 plan 一边发
                 q = np.array([self.low_state.motor_state[m].q for m in cfg.action_joints])
                 Mf0_L, Mf0_R = self.forward_kin(q)
                 print(f"[FK] Current EE: {q}")

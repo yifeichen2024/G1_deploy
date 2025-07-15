@@ -162,10 +162,11 @@ class FKIKTester:
                           for m in cfg.action_joints])
 
         MfL0, MfR0 = self.forward_kin(q_cur)
-        # 0.01537, 0.23042, -0.10686
-        target_L = pin.SE3(MfL0.rotation, np.array([0.1, 0.23, -0.05])) # MfL0.translation + np.array([0.01, 0, dz])
-        # 0.2387, -0.00177, 0.24592
-        target_R = pin.SE3(MfR0.rotation, np.array([0.2387, -0.00177, 0.24592]))  # MfR0.translation + np.array([0.01, 0, dz])
+        # initial 0.01882, 0.23916, -0.10499
+        # 0.3027, 0.19896, 0.19488
+        target_L = pin.SE3(MfL0.rotation, np.array([0.01882, 0.23916, -0.10499])) # MfL0.translation + np.array([0.01, 0, dz])
+        # 0.01979, -0.22426, -0.10085
+        target_R = pin.SE3(MfR0.rotation, np.array([0.01979, -0.22426, -0.10085]))  # MfR0.translation + np.array([0.01, 0, dz])
         print(f"[IK] Planning +{dz*100:.0f} cm raise, streaming immediately …")
 
         for alpha in np.linspace(0.0, 1.0, steps, endpoint=True):
@@ -183,26 +184,26 @@ class FKIKTester:
             
             # ⬅⬅ 关键：立即下发 
             # # DEBUG For only reading
-            # self.send_joint(q_cmd)
+            self.send_joint(q_cmd)
             
-            # DEBUG 
-            for i, m in enumerate(cfg.action_joints):
-                self.low_cmd.motor_cmd[m].q = float(q_cmd[i])
-                self.low_cmd.motor_cmd[m].dq = 0.0
-                self.low_cmd.motor_cmd[m].kp = 0 # float(cfg.kps_play[i])
-                self.low_cmd.motor_cmd[m].kd = 1 # float(cfg.kds_play[i]) 
-                self.low_cmd.motor_cmd[m].tau = 0.0
+            # # DEBUG 
+            # for i, m in enumerate(cfg.action_joints):
+            #     self.low_cmd.motor_cmd[m].q = float(q_cmd[i])
+            #     self.low_cmd.motor_cmd[m].dq = 0.0
+            #     self.low_cmd.motor_cmd[m].kp = 0 # float(cfg.kps_play[i])
+            #     self.low_cmd.motor_cmd[m].kd = 1 # float(cfg.kds_play[i]) 
+            #     self.low_cmd.motor_cmd[m].tau = 0.0
 
-            for i, m in enumerate(cfg.fixed_joints):
-                self.low_cmd.motor_cmd[m].q = float(cfg.fixed_target[i])
-                self.low_cmd.motor_cmd[m].dq = 0.0
-                self.low_cmd.motor_cmd[m].kp = float(cfg.fixed_kps[i])
-                self.low_cmd.motor_cmd[m].kd = float(cfg.fixed_kds[i])
-                self.low_cmd.motor_cmd[m].tau = 0.0
+            # for i, m in enumerate(cfg.fixed_joints):
+            #     self.low_cmd.motor_cmd[m].q = float(cfg.fixed_target[i])
+            #     self.low_cmd.motor_cmd[m].dq = 0.0
+            #     self.low_cmd.motor_cmd[m].kp = float(cfg.fixed_kps[i])
+            #     self.low_cmd.motor_cmd[m].kd = float(cfg.fixed_kds[i])
+            #     self.low_cmd.motor_cmd[m].tau = 0.0
 
-            self.low_cmd.motor_cmd[G1JointIndex.kNotUsedJoint].q = 1
-            self.low_cmd.crc = self.crc.Crc(self.low_cmd)
-            self.arm_pub.Write(self.low_cmd)
+            # self.low_cmd.motor_cmd[G1JointIndex.kNotUsedJoint].q = 1
+            # self.low_cmd.crc = self.crc.Crc(self.low_cmd)
+            # self.arm_pub.Write(self.low_cmd)
 
             # 更新初值 & 保持控制周期
             q_cur = q_cmd
@@ -249,7 +250,7 @@ class FKIKTester:
                                radius * np.sin(theta)])
 
             TfL = pin.SE3(q_id, centerL + offset)
-            TfR = pin.SE3(q_id, centerR + offset)
+            TfR = pin.SE3(q_id, MfR0.translation) # centerR + offset
 
             q_cmd, _ = self.ik.solve_ik(TfL.homogeneous, TfR.homogeneous,
                                         current_lr_arm_motor_q=q_cur)
@@ -322,9 +323,9 @@ class FKIKTester:
                 print(f"[FK] Mf0_L translation: {Mf0_L.translation}, Mf0_R: {Mf0_R.translation}")
                 print("[IK] Move finished.")
             if self.remote.button[KeyMap.start] == 1:
-                self.run_circular_traj(radius=0.03,
+                self.run_circular_traj(radius=0.02,
                                     T=5.0,
-                                    duration=15.0)      # 15 秒画圆
+                                    duration=10.0)      # 15 秒画圆
 
 if __name__ == "__main__":
     ChannelFactoryInitialize(0, sys.argv[1] if len(sys.argv)>1 else None)

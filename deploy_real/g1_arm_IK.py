@@ -564,8 +564,8 @@ if __name__ == "__main__":
         while True:
             t = time.time() - t0
             offset = circular_offset(t)
-
-            L_target = pin.SE3(q_id, np.array([0.2, 0.15, -0.002]))
+# Mf0_L translation: [0.3027  0.19896 0.19488], Mf0_R: [ 0.05654 -0.18072 -0.11286]
+            L_target = pin.SE3(q_id, np.array([0.3027, 0.19896, 0.19488]))
             R_target = pin.SE3(q_id, R_center + offset)
 
             # —— 逆运动学求解 —— 

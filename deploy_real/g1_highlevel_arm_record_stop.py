@@ -88,7 +88,7 @@ class CustomRecorder:
         # —— 启动后先做一次平滑过渡到默认姿态 —— #
         print("[INIT] 平滑过渡到默认姿态…")
         # 临时进入“录制”模式，使用低增益
-        self.recording = True
+        self.recording = True # This will let got to 
         self.move_to_default(duration=3.0)
         self.recording = False
     def Loop(self):

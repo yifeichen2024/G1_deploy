@@ -298,23 +298,6 @@ class FKIKTester:
                 print(f"[FK] Current EE: {q}")
                 print(f"[FK] Mf0_L translation: {Mf0_L.translation}, Mf0_R: {Mf0_R.translation}")
                 time.sleep(0.3)
-            # if self.remote.button[KeyMap.L2] == 1:
-            #     print("[IK] Preparing +5cm Z move...")
-            #     self.prepare_ik()
-            #     q = np.array([self.low_state.motor_state[m].q for m in cfg.action_joints])
-            #     Mf0_L, Mf0_R = self.forward_kin(q)
-            #     print(f"[FK] Current EE: {q}")
-            #     # print(f"[FK] Mf0_L translation: {Mf0_L.translation}, Mf0_R: {Mf0_R.translation}")
-            #     print("[IK] Move finished.")
-            #     time.sleep(0.3)
-            # if self.remote.button[KeyMap.start] == 1:
-            #     print("[TRAJ] Preparing circle trajectory...")
-            #     self.prepare_traj()
-            #     q = np.array([self.low_state.motor_state[m].q for m in cfg.action_joints])
-            #     Mf0_L, Mf0_R = self.forward_kin(q)
-            #     print(f"[FK] Current EE: {q}")
-            #     print(f"[FK] Mf0_L translation: {Mf0_L.translation}, Mf0_R: {Mf0_R.translation}")
-            #     time.sleep(0.3)
             if self.remote.button[KeyMap.L2] == 1:
                 self.prepare_ik(dz=0.01, steps=30)        # 举 5 cm，一边 plan 一边发
                 q = np.array([self.low_state.motor_state[m].q for m in cfg.action_joints])

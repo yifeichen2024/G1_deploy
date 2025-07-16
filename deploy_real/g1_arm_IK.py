@@ -14,6 +14,8 @@ sys.path.append(parent2_dir)
 
 from utils.weighted_moving_filter import WeightedMovingFilter
 
+from scipy.spatial.transform import Rotation, Slerp
+
 class G1_29_ArmIK:
     def __init__(self, Unit_Test = False, Visualization = False):
         np.set_printoptions(precision=5, suppress=True, linewidth=200)
@@ -570,12 +572,27 @@ if __name__ == "__main__":
 
             # —— 逆运动学求解 —— 
             q_sol, _ = ik.solve_ik(L_target.homogeneous, R_target.homogeneous)
-            # print(q_sol)
+            
+            L_test = pin.SE3(pin.Quaternion(1, 0.2, 0, 0), np.array([0.3027, 0.19896, 0.19488]))
 
+            R0, R1 = Rotation.from_matrix(L_target.rotation), Rotation.from_matrix(L_test.rotation)
+            rot_seq = Rotation.from_matrix([R0.as_matrix(), R1.as_matrix()])
+            slerp = Slerp([0, 1], rot_seq)
+            # slerp = Slerp([0,1],[R0,R1])
+             # 平移：线性
+            for a in np.linspace(0, 1, 5):
+                rot = slerp(a).as_matrix()
+            #     print(f"[DEBUG] Current rotation: {rot}")
+            # print(f"[DEBUG] End interpolation.")
+
+            # print(f"[DEBUG] rotation. len: {L_target.rotation}, type: {type(L_target.rotation)}, Value: {L_target.rotation},")
+#             [DEBUG] rotation. len: 3, type: <class 'numpy.ndarray'>, Value: [[1. 0. 0.]
+#  [0. 1. 0.]
+#  [0. 0. 1.]],
             # —— 正向运动学验证 ——
             L_fk, R_fk = ik.forward_kinematics(q_sol)
-            print(f"[{t:5.2f}s]  L pos {L_fk.translation.round(3)}, L_target {L_target.translation.round(3)}")
-            print(f"[{t:5.2f}s]  R pos {R_fk.translation.round(3)}, R_target {R_target.translation.round(3)}")
+            # print(f"[{t:5.2f}s]  L pos {L_fk.translation.round(3)}, L_target {L_target.translation.round(3)}")
+            # print(f"[{t:5.2f}s]  R pos {R_fk.translation.round(3)}, R_target {R_target.translation.round(3)}")
 
             time.sleep(0.05)   # 20 Hz
     except KeyboardInterrupt:

@@ -56,7 +56,7 @@ kds_play: [ 2, 2, 2, 2,
           # 5,  5,  5,
             1, 1]
 
-stiffness_factor: 0.01
+stiffness_factor: 0.05
 stiffness_factor_waist_rp: 0.5
 
 default_angles: [0.2, 0.2, 0.0, 0.9, 

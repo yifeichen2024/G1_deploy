@@ -202,7 +202,7 @@ class G1HighlevelArmController:
 
         # self._send_joint(self.current_q(), kps=np.zeros_like(cfg.kps_play), kds=np.zeros_like(cfg.kds_play))
 
-    def damping_mode(self, kd=0.5):
+    def damping_mode(self, kd=2):
         self.mode = Mode.HOLD
         self.target_q = self.current_q()
         self.kps = np.zeros_like(cfg.kps_play)

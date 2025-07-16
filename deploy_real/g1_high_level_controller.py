@@ -97,6 +97,13 @@ class G1HighlevelArmController:
         self._play_traj     = None      # np.ndarray(step, dof)
         self._play_idx      = 0
 
+        # 播放相关缓存
+        self._replay_traj     = None   # dict: {t, q, Mf_L, Mf_R}
+        self._replay_idx      = 0
+        self._replay_speed    = 1.0
+        self._replay_mode     = "joint"   # "joint" or "workspace"
+        self._replay_ready    = False
+
     def _cb(self, msg: LowState_):
         self.low_state = msg
         if not self.first_state:
@@ -256,18 +263,72 @@ class G1HighlevelArmController:
 
     def _frame_dim(self): 
         return len(cfg.action_joints) + 7 + 7  #  四元数
+    
     # --------------- PLAY -----------------
+    def _load_traj(self, fp: str):
+        """
+        支持两种文件结构：
+        ① 旧版 npz: traj=(T, 12+3+4+3+4)
+        ② 新版 npz: 直接包含 t, q, Mf_L, Mf_R
+        """
+        data = np.load(fp)
+        if "traj" in data:          # 旧格式
+            arr = data["traj"]
+            q_dof = len(cfg.action_joints)
+            t = np.arange(len(arr))*cfg.control_dt
+            q   = arr[:, :q_dof]
+            pL  = arr[:, q_dof:q_dof+3]
+            qL  = arr[:, q_dof+3:q_dof+7]
+            pR  = arr[:, q_dof+7:q_dof+10]
+            qR  = arr[:, q_dof+10:q_dof+14]
+            Mf_L = [pin.SE3(pin.Quaternion(qL[i]), pL[i]) for i in range(len(arr))]
+            Mf_R = [pin.SE3(pin.Quaternion(qR[i]), pR[i]) for i in range(len(arr))]
+        else:                       # 新格式（WorkspaceRecorder 生成）
+            t, q, Mf_L, Mf_R = data["t"], data["q"], data["Mf_L"], data["Mf_R"]
+        return dict(t=t, q=q, Mf_L=Mf_L, Mf_R=Mf_R)
+    
+    def prepare_replay(self, file_path: str, speed=1.0, mode="workspace"):
+        """加载轨迹 & 平滑过渡到首帧"""
+        self._replay_traj  = self._load_traj(file_path)
+        self._replay_idx   = 0
+        self._replay_speed = speed
+        self._replay_mode  = mode
+        self._replay_ready = False
+        self._replay_t_arr   = self._replay_traj["t"] / self._replay_speed
+        self._replay_start_t = time.time()
+
+        # 当前 EE 位姿 → 轨迹首帧
+        cur_q = self.current_q()
+        cur_L, cur_R   = self.FK(cur_q)
+        tgt_L_h, tgt_R_h = self._replay_traj["Mf_L"][0], self._replay_traj["Mf_R"][0]
+        steps = int(cfg.replay_transition_duration / cfg.control_dt)
+        for T_L, T_R in zip(self._interpolate_pose(cur_L, tgt_L_h, steps),
+                            self._interpolate_pose(cur_R, tgt_R_h, steps)): 
+            self.target_q = self.IK(T_L, T_R)
+            time.sleep(cfg.control_dt)
+        self._replay_ready = True    # 标记准备完成
+        print("[REPLAY] Transition complete, ready to play.")
+        self.mode = Mode.HOLD 
+
+    def do_replay(self):
+        if not self._replay_ready:
+            print("[REPLAY] 请先调用 prepare_replay()")
+            return
+        self.mode = Mode.PLAY
+        print(f"[PLAY] start, mode={self._replay_mode}, len={len(self._replay_traj['t'])}")
+
+
     # TODO Test 
-    def play_trajectory(self, path_or_arr: np.ndarray | str, speed=1.0, mode="joint"):
-        """
-        traj : ndarray shape (T, dof) 或 文件路径
-        speed: 1.0 = 实时 (dt = cfg.control_dt/speed)
-        """
-        data = np.load(path_or_arr)["traj"] if isinstance(path_or_arr, (str, pathlib.Path)) else path_or_arr
-        self._play_traj, self._play_idx, self.mode = data, 0, Mode.PLAY
-        self._play_dt   = cfg.control_dt / speed
-        self._play_mode = mode  # "joint" or "workspace"
-        print(f"[PLAY] {mode} len={len(data)}")
+    # def play_trajectory(self, path_or_arr: np.ndarray | str, speed=1.0, mode="joint"):
+    #     """
+    #     traj : ndarray shape (T, dof) 或 文件路径
+    #     speed: 1.0 = 实时 (dt = cfg.control_dt/speed)
+    #     """
+    #     data = np.load(path_or_arr)["traj"] if isinstance(path_or_arr, (str, pathlib.Path)) else path_or_arr
+    #     self._play_traj, self._play_idx, self.mode = data, 0, Mode.PLAY
+    #     self._play_dt   = cfg.control_dt / speed
+    #     self._play_mode = mode  # "joint" or "workspace"
+    #     print(f"[PLAY] {mode} len={len(data)}")
         
     def example_lift_hands(self, dz=0.05, steps=50):
         """示范：同时抬双手 dz 米，实时 IK 发关节"""
@@ -337,34 +398,65 @@ class G1HighlevelArmController:
         elif self.mode == Mode.IK_STREAM:
             self._send_joint(self.target_q, kps=self.kps, kds=self.kds)  # target_q kps kds由外部函数实时刷写
 
-        elif self.mode == Mode.PLAY and self._play_traj is not None:
+        elif self.mode == Mode.PLAY and self._replay_traj is not None:
                 self.kps = cfg.kps_play.copy()
                 self.kds = cfg.kds_play.copy()
 
-                if self._play_idx < len(self._play_traj):
-                    q_dof = len(cfg.action_joints)
-                    idx_pL = slice(q_dof, q_dof+3)          # Left translation
-                    idx_qL = slice(q_dof+3, q_dof+7)        # Left rotation
-                    idx_pR = slice(q_dof+7, q_dof+10)        # Right translation
-                    idx_qR = slice(q_dof+10, q_dof+14)       # Right rotation 
-                    frame = self._play_traj[self._play_idx]; 
-                    self._play_idx += 1
-
-                    if self._play_mode=="joint":
-                        self._send_joint(frame[:q_dof], self.kps, self.kds)
-                    else:  # workspace
-                        poseL = pin.SE3(pin.Quaternion(frame[idx_qL]),
-                                        frame[idx_pL])
-                        poseR = pin.SE3(pin.Quaternion(frame[idx_qR]),
-                                        frame[idx_pR])
-                        self._send_joint(self.IK(poseL, poseR), self.kps, self.kds)
-    
-                    time.sleep(self._play_dt)
-                else:
+                if self._replay_idx >=  len(self._replay_t_arr):
+                    # 播放结束
                     self.mode = Mode.HOLD
-                    Mf_L, Mf_R = self.FK(self.current_q())
+                    self._replay_traj = None
+                    print("[PLAY] Finished.")
                     self.target_q = self.current_q()
+                    Mf_L, Mf_R = self.FK(self.target_q)
+                    
                     print(f"[PLAY] finished. Left: {Mf_L.translation}, Right: {Mf_R.translation}")
+                    return
+                
+                elapsed = time.time() - self._replay_start_t
+                while (self._replay_idx < len(self._replay_t_arr)
+                    and self._replay_t_arr[self._replay_idx] <= elapsed):
+                    self._replay_idx += 1
+
+                # 越界检查（刚好走完时 while 可能多 ++）
+                if self._replay_idx >= len(self._replay_t_arr):
+                    return                      # 下一轮会进入结束分支
+                
+                frame_i = self._replay_idx
+                if self._replay_mode == "joint":
+                    q_cmd = self._replay_traj["q"][frame_i]
+                else:   # workspace
+                    MfL_h = self._replay_traj["Mf_L"][frame_i]
+                    MfR_h = self._replay_traj["Mf_R"][frame_i]
+                    q_cmd = self.IK(MfL_h, MfR_h)
+                self._send_joint(q_cmd, cfg.kps_play, cfg.kds_play)
+                # self._replay_idx += 1
+
+
+                # if self._play_idx < len(self._play_traj):
+                #     q_dof = len(cfg.action_joints)
+                #     idx_pL = slice(q_dof, q_dof+3)          # Left translation
+                #     idx_qL = slice(q_dof+3, q_dof+7)        # Left rotation
+                #     idx_pR = slice(q_dof+7, q_dof+10)        # Right translation
+                #     idx_qR = slice(q_dof+10, q_dof+14)       # Right rotation 
+                #     frame = self._play_traj[self._play_idx]; 
+                #     self._play_idx += 1
+
+                #     if self._play_mode=="joint":
+                #         self._send_joint(frame[:q_dof], self.kps, self.kds)
+                #     else:  # workspace
+                #         poseL = pin.SE3(pin.Quaternion(frame[idx_qL]),
+                #                         frame[idx_pL])
+                #         poseR = pin.SE3(pin.Quaternion(frame[idx_qR]),
+                #                         frame[idx_pR])
+                #         self._send_joint(self.IK(poseL, poseR), self.kps, self.kds)
+    
+                #     time.sleep(self._play_dt)
+                # else:
+                #     self.mode = Mode.HOLD
+                #     Mf_L, Mf_R = self.FK(self.current_q())
+                #     self.target_q = self.current_q()
+                #     print(f"[PLAY] finished. Left: {Mf_L.translation}, Right: {Mf_R.translation}")
 
         # 轨迹录制缓存
         if self._recording:
@@ -382,9 +474,19 @@ class G1HighlevelArmController:
         if r[KeyMap.L2] == 1:     # 抬手测试
             self.example_lift_hands(dz=0.05, steps=40)
 
-        if r[KeyMap.start] == 1:  # 播放最近一次录制
-            fn = sorted(self.record_dir.glob("traj_*.npz"))[-1]
-            self.play_trajectory(fn)
+        # if r[KeyMap.start] == 1:  # 播放最近一次录制
+        #     fn = sorted(self.record_dir.glob("traj_*.npz"))[-1]
+            
+        #     self.play_trajectory(fn)
+        if r[KeyMap.up] == 1:
+            try:
+                fp = sorted(self.record_dir.glob("*.npz"))[-1]
+                self.prepare_replay(str(fp), speed=0.8, mode="workspace")
+            except IndexError:
+                print("[WARN] no traj file to replay")
+
+        if r[KeyMap.down] == 1:
+            self.do_replay()
 
         if r[KeyMap.A] == 1 and not self._recording:  # 例：A键开始录
             self.start_record()

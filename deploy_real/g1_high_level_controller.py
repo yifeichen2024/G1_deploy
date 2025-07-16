@@ -232,15 +232,15 @@ class G1HighlevelArmController:
         # kds: list[float] = []
         self.target_q = self.current_q()
         # for idx, joint in enumerate(cfg.action_joints):
-        self.kps = (cfg.kps_play*cfg.stiffness_factor).copy()
-        self.kds = (cfg.kds_play*cfg.stiffness_factor).copy()
+        self.kps = (cfg.kps_play).copy()
+        self.kds = (cfg.kds_play).copy()
 
         traj = np.vstack(self._record_buffer)
         if save:
             fn = self.record_dir / (name or f"traj_{int(time.time())}.npz")
             np.savez_compressed(fn, traj=traj,
                                 dt=cfg.control_dt,
-                                note="cols=[q(12)|pL(3)|qL(4)|pR(3)|qR(3)]") # 这里不太对。
+                                note="cols=[q(12)|pL(3)|qL(4)|pR(3)|qR(4)]") 
             print(f"[REC] save {fn}, shape {traj.shape}")
         return traj
     

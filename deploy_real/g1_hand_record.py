@@ -13,6 +13,8 @@ def main():
     ctrl = Dex3_1_Controller(fps=100.0)
     time.sleep(0.5)  # 等几帧，让状态订阅稳定
 
+    ctrl.move_to_default(duration=2.0)
+
     print("=== Hand Recorder ===")
     print("按 ENTER 开始/停止每段录制；")
     print("录制过程中手部处于零扭矩模式，方便手动摆姿势。")
@@ -42,7 +44,7 @@ def main():
                 left_q, right_q = ctrl.get_current_q()
                 left_q = left_q.round(3)
                 right_q = right_q.round(3)
-                print(f"Current Left Q: {left_q} \nCurrent Right Q: {right_q}")
+                # print(f"Current Left Q: {left_q} \nCurrent Right Q: {right_q}")
                 t_buf.append(time.time() - t0)
                 q_buf.append(np.concatenate([left_q, right_q]))
                 time.sleep(1.0 / ctrl.fps)
@@ -85,8 +87,8 @@ def main():
     print("已恢复默认手势, 进入damping. Excit")
 
 if __name__ == '__main__':
-    # # 如果需要指定 IP 就放在 argv[1]
-    # # e.g. python hand_recorder.py enp2s0
+    # 如果需要指定 IP 就放在 argv[1]
+    # e.g. python hand_recorder.py enp2s0
     # from unitree_sdk2py.core.channel import ChannelFactoryInitialize
     # if len(sys.argv) > 1:
     #     ChannelFactoryInitialize(0, sys.argv[1])

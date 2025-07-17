@@ -53,7 +53,7 @@ def load_cfg(path="deploy_real/configs/config_high_level.yaml"):
         setattr(cfg, k, np.array(v) if isinstance(v, list) else v)
     cfg.kps_record = cfg.kps_play * 0
     cfg.kds_record = cfg.kds_play * 0
-    cfg.replay_transition_duration = 2
+    cfg.replay_transition_duration = 3
     return cfg
 
 cfg = load_cfg()
@@ -453,9 +453,6 @@ class G1HighlevelArmController:
     def remote_poll(self):
         """在主线程里循环调用，非阻塞读取遥控器事件"""
         r = self.remote.button
-
-
-
 
         if r[KeyMap.L1] == 1:     # 打印 FK
             poseL, poseR = self.FK(self.current_q())

@@ -93,11 +93,13 @@ class Dex3_1_Controller:
     def _control_loop(self):
         while True:
             if self.recording:
+                # self.target_left = self.get_current_q()[0:len(Dex3_1_Left_JointIndex)]
+                # self.target_right = self.get_current_q()[len(Dex3_1_Left_JointIndex):len(Dex3_1_Right_JointIndex)]
                 kp_left, kd_left = 0.0, 0.0
                 kp_right, kd_right = 0.0, 0.0
             else:
-                kp_left, kd_left = 1.0, 0.2
-                kp_right, kd_right = 1.0, 0.2
+                kp_left, kd_left = 3.0, 0.5
+                kp_right, kd_right = 3.0, 0.5
 
             for i, id in enumerate(Dex3_1_Left_JointIndex):
                 self.left_msg.motor_cmd[id].q = self.target_left_q[i]
@@ -123,6 +125,18 @@ class Dex3_1_Controller:
             self.right_msg.motor_cmd[id].kp = 0.0
             self.right_msg.motor_cmd[id].kd = 0.0
         
+        self.send_cmd()
+    
+    def damping(self):
+        for id in Dex3_1_Left_JointIndex:
+            self.left_msg.motor_cmd[id].mode = 0x01
+            self.left_msg.motor_cmd[id].kp = 0.0
+            self.left_msg.motor_cmd[id].kd = 0.2
+
+        for id in Dex3_1_Right_JointIndex:
+            self.right_msg.motor_cmd[id].mode = 0x01
+            self.right_msg.motor_cmd[id].kp = 0.0
+            self.right_msg.motor_cmd[id].kd = 0.2
         self.send_cmd()
 
     def _interpolate_motion(self, target_left_q, target_right_q, duration=2.0):
@@ -155,20 +169,24 @@ class Dex3_1_Controller:
 
     def move_to_default(self, duration=2.0):
         """从当前状态移动到默认手势（如张开）"""
-        default_left_q = np.array([-0.2, 0.2, 0.2, -1.0, -0.3, -1.0, -0.3])
-        default_right_q = np.array([-0.2, 0.2, 0.2, -1.0, -0.3, -1.0, -0.3])
+        # Left:  [-0.004  0.663  1.494 -1.523 -1.639 -1.56  -1.738]
+        # Right: [-0.012 -0.248 -1.756  1.536  1.689  1.541  1.668]
+        default_left_q = np.array([-0.004,  0.663,  1.494, -1.523, -1.639, -1.56,  -1.738])
+        default_right_q = np.array([-0.012, -0.248, -1.756, 1.536,  1.689, 1.541,  1.668])
         self._interpolate_motion(default_left_q, default_right_q, duration)
 
     def release_motion(self, duration=2.0):
         """释放动作（张开手）"""
-        release_left_q = np.array([-0.2, 0.2, 0.2, -1.0, -0.3, -1.0, -0.3])
-        release_right_q = np.array([-0.2, 0.2, 0.2, -1.0, -0.3, -1.0, -0.3])
+        release_left_q = np.array([-0.029, -0.475,  0.49,  -0.806, -1.032, -1.055, -0.6])
+        release_right_q =  np.array([-0.044, -0.913, -1.486, 1.539, 1.669, 1.543, 1.655])
         self._interpolate_motion(release_left_q, release_right_q, duration)
 
     def grip_motion(self, duration=2.0):
-        """抓握动作（目标姿态）"""
-        grip_left_q = np.array([-0.2, 0.2, 0.2, -1.0, -0.3, -1.0, -0.3])
-        grip_right_q = np.array([-0.2, 0.2, 0.2, -1.0, -0.3, -1.0, -0.3])
+        # """抓握动作（目标姿态）"""
+#   Left:  [-0.023  0.217  0.256 -1.198 -0.443 -0.992 -1.009]
+#   Right: [-0.044 -0.913 -1.486  1.539  1.669  1.543  1.655]
+        grip_left_q = np.array([-0.029, 0.426 , 0.492, -0.809, -1.025, -1.071, -0.617])
+        grip_right_q = np.array([-0.044, -0.913, -1.486, 1.539, 1.669, 1.543, 1.655])
         self._interpolate_motion(grip_left_q, grip_right_q, duration)
 
 # if __name__ == "__main__":
@@ -201,19 +219,21 @@ if __name__ == "__main__":
     controller = Dex3_1_Controller()
     print("Waiting for DDS state feedback...")
     time.sleep(1.0)
-
+    controller.damping()
+    # controller.move_to_default(duration=3.0)
     # 1. 定义动作序列：描述 + 对应方法
     sequence = [
-        ("Move to default position", controller.move_to_default(duration=3.0)),
-        ("Grip motion", controller.grip_motion(1.0)),
+        # ("Move to default position", controller.move_to_default(duration=3.0)),
+            # ("Grip motion", controller.grip_motion(3.0)),
         ("Release motion", controller.release_motion(1.0)),
-        ("Zero torque and exit", controller.zero_torque)
+        # ("Zero torque and exit", controller.zero_torque)
     ]
 
     print("Action sequence loaded. 按 Enter 执行下一步，输入 'q' + Enter 提前退出。")
-
+    controller.recording = False
     for desc, action in sequence:
         user_input = input(f"\n即将执行：{desc} -> 按 Enter 开始; 或输入 q + Enter 退出：")
+
         if user_input.lower() == 'q':
             print("提前退出，启用 zero_torque 并结束。")
             controller.zero_torque()
@@ -228,4 +248,5 @@ if __name__ == "__main__":
         lq, rq = controller.get_current_q()
         print(f"当前关节状态：\n  Left:  {lq.round(3)}\n  Right: {rq.round(3)}")
 
+    controller.damping()
     print("动作序列结束。")

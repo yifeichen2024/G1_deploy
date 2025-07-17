@@ -51,7 +51,8 @@ def load_cfg(path="deploy_real/configs/config_high_level.yaml"):
     for k, v in d.items():
         setattr(cfg, k, np.array(v) if isinstance(v, list) else v)
     cfg.kps_record = cfg.kps_play * 0
-    cfg.kds_record = cfg.kds_play * 0.5
+    cfg.kds_record = cfg.kds_play * 0
+    cfg.replay_transition_duration = 2
     return cfg
 
 cfg = load_cfg()
@@ -110,12 +111,6 @@ class G1HighlevelArmController:
             self.first_state = True
         self.remote.set(msg.wireless_remote)
 
-    # def set_target(self, q, kps=cfg.kps_play, kds=cfg.kds):
-    #     with self._cmd_lock:
-    #         self._cmd["q"]   = np.asarray(q, dtype=float)
-    #         self._cmd["kps"] = np.asarray(kps if kps is not None else cfg.kps_play)
-    #         self._cmd["kds"] = np.asarray(kds if kds is not None else cfg.kds_play)
-
     def _send_joint(self, q, kps=None, kds=None):
         kps = np.asarray(kps if kps is not None else self.kps)
         kds = np.asarray(kds if kds is not None else self.kds)
@@ -134,7 +129,7 @@ class G1HighlevelArmController:
             self.low_cmd.motor_cmd[m].kd = float(cfg.fixed_kds[i])
             self.low_cmd.motor_cmd[m].tau= 0.0
 
-        self.low_cmd.motor_cmd[cfg.kNotUsedJoint].q = 1
+        self.low_cmd.motor_cmd[G1JointIndex.kNotUsedJoint].q = 1
         self.low_cmd.crc = self.crc.Crc(self.low_cmd)
         self.pub.Write(self.low_cmd)
 
@@ -178,11 +173,31 @@ class G1HighlevelArmController:
 
     # TODO Test
     def move_to_default(self, duration=3.0):
-        poseL_def, poseR_def = self.FK(cfg.default_angles)  # 近似
+        pos_L = np.array([ 0.10571,  0.18578, -0.10308], dtype=float)
+        rot_L = np.array([
+            [ 0.4695 ,  0.384  ,  0.79506],
+            [ 0.0372 ,  0.89107, -0.45234],
+            [-0.88215,  0.24195,  0.40407],
+        ], dtype=float)
+
+        pos_R = np.array([ 0.12127, -0.20089, -0.08074], dtype=float)
+        rot_R = np.array([
+            [ 0.62136, -0.28825,  0.72857],
+            [-0.13909,  0.87452,  0.46462],
+            [-0.77108, -0.39004,  0.5033 ],
+        ], dtype=float)
+        poseL_def = pin.SE3(rot_L, pos_L)
+        poseR_def = pin.SE3(rot_R, pos_R)
+        
+        # poseL_def, poseR_def = self.FK(cfg.default_angles)  # 近似
+
+        self.kps = cfg.kps_play.copy()
+        self.kds = cfg.kds_play.copy()
+        
         self.move_to(poseL_def, poseR_def,
                     ws_steps=int(duration/2/cfg.control_dt),
                     jnt_steps=int(duration/2/cfg.control_dt))
-
+        print(f"[HOLD] Move to default.")
     # TODO test
     def _interpolate_pose(self, T0: pin.SE3, T1: pin.SE3, n: int):
         """返回包含起末端的 n 个 pin.SE3"""
@@ -255,8 +270,8 @@ class G1HighlevelArmController:
     def _pack_frame(self):
         q   = self.current_q()
         TL, TR = self.FK(q)
-        quatL = pin.Quaternion(TL.rotation) # Rotation.from_matrix(TL.rotation).as_quat()   # (x,y,z,w)
-        quatR = pin.Quaternion(TR.rotation) # Rotation.from_matrix(TR.rotation).as_quat()
+        quatL = Rotation.from_matrix(TL.rotation).as_quat()   # (x,y,z,w) # pin.Quaternion(TL.rotation).as_quat(canonical=True) 
+        quatR = Rotation.from_matrix(TR.rotation).as_quat()   # pin.Quaternion(TR.rotation).as_quat(canonical=True) 
         return np.hstack([q,
                         TL.translation, quatL,
                         TR.translation, quatR])
@@ -307,14 +322,17 @@ class G1HighlevelArmController:
             self.target_q = self.IK(T_L, T_R)
             time.sleep(cfg.control_dt)
         self._replay_ready = True    # 标记准备完成
-        print("[REPLAY] Transition complete, ready to play.")
+        print(f"[REPLAY] Transition complete, ready to play {file_path}.")
         self.mode = Mode.HOLD 
 
     def do_replay(self):
         if not self._replay_ready:
             print("[REPLAY] 请先调用 prepare_replay()")
             return
+        
         self.mode = Mode.PLAY
+        self._replay_idx = 0                # 重播从头开始
+        self._replay_start_t = time.time()   # 播放计时从现在算
         print(f"[PLAY] start, mode={self._replay_mode}, len={len(self._replay_traj['t'])}")
 
 
@@ -335,6 +353,9 @@ class G1HighlevelArmController:
         self.mode = Mode.IK_STREAM
         q0 = self.current_q()
         poseL0, poseR0 = self.FK(q0)
+
+        self.kps = cfg.kps_play.copy()
+        self.kds = cfg.kds_play.copy()
 
         for a in np.linspace(0, 1, steps):
             poseL = pin.SE3(poseL0.rotation, poseL0.translation + np.array([0.01, 0, a*dz]))
@@ -405,7 +426,11 @@ class G1HighlevelArmController:
                 if self._replay_idx >=  len(self._replay_t_arr):
                     # 播放结束
                     self.mode = Mode.HOLD
-                    self._replay_traj = None
+
+                    # DEBUG
+                    # self._replay_traj = None
+                    self._replay_ready = False   # 需要重新 prepare
+
                     print("[PLAY] Finished.")
                     self.target_q = self.current_q()
                     Mf_L, Mf_R = self.FK(self.target_q)
@@ -469,6 +494,7 @@ class G1HighlevelArmController:
         if r[KeyMap.L1] == 1:     # 打印 FK
             poseL, poseR = self.FK(self.current_q())
             print("[L1] EE pos L:", poseL.translation, "R:", poseR.translation)
+            print("[L1] EE ori L:", poseL.rotation, "R:", poseR.rotation)
             time.sleep(0.3)
 
         if r[KeyMap.L2] == 1:     # 抬手测试
@@ -480,8 +506,8 @@ class G1HighlevelArmController:
         #     self.play_trajectory(fn)
         if r[KeyMap.up] == 1:
             try:
-                fp = sorted(self.record_dir.glob("*.npz"))[-1]
-                self.prepare_replay(str(fp), speed=0.8, mode="workspace")
+                fp = sorted(self.record_dir.glob("*.npz"))[0]
+                self.prepare_replay(str(fp), speed=1, mode="workspace")
             except IndexError:
                 print("[WARN] no traj file to replay")
 
@@ -504,6 +530,7 @@ class G1HighlevelArmController:
         
         if r[KeyMap.Y]==1:      
             self.zero_torque_mode()
+            print(f"[HOLD] Move to zero torque.")
 
 def main():
     print("Ensure no obstacle. Press ENTER...")
@@ -521,7 +548,8 @@ def main():
         ctrl.stop()
         print("User exit, stopping thread…")
 
-    
+if __name__ == "__main__":
+    main()
 
 
     

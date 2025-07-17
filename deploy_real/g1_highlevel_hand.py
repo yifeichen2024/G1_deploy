@@ -82,7 +82,8 @@ def _getch():
 
 class Dex3GestureController:
     def __init__(self, fps=50.0):
-        ChannelFactoryInitialize(0)
+        # initial by the higher level program.
+        # ChannelFactoryInitialize(0)
 
         self.fps = fps
 
@@ -108,6 +109,7 @@ class Dex3GestureController:
         self._init_msg(self.left_msg,  Dex3_1_Left_JointIndex)
         self._init_msg(self.right_msg, Dex3_1_Right_JointIndex)
 
+        print("[DDS] Hand Publisher & Subscriber ready.")
         self.running = True
 
         # 启动订阅状态线程

@@ -15,6 +15,7 @@ from unitree_sdk2py.utils.crc import CRC
 
 from common.remote_controller import RemoteController, KeyMap
 from g1_arm_IK import G1_29_ArmIK
+from g1_highlevel_hand import Dex3GestureController, HandGesture, _RIS_Mode, _getch
 
 # -----------------------------------------------------------------------------
 # G1 Joint Index
@@ -75,14 +76,18 @@ class G1HighlevelArmController:
         self.low_cmd     = unitree_hg_msg_dds__LowCmd_()
         self.crc         = CRC()
         self.remote      = RemoteController()
-
+        self.prev_buttons = np.zeros_like(self.remote.button, dtype=int)
         self.ik          = G1_29_ArmIK(Unit_Test=False, Visualization=False)
 
         # DDS
         self.pub = ChannelPublisher("rt/arm_sdk", LowCmd_);  self.pub.Init()
         self.sub = ChannelSubscriber("rt/lowstate", LowState_); self.sub.Init(self._cb, 10)
-        print("[DDS] Publisher & Subscriber ready.")
+        print("[DDS] Arm Publisher & Subscriber ready.")
 
+        # 手部控制器
+        self.dex3 = Dex3GestureController(fps=30.0)
+        self.dex3.switch_gesture(HandGesture.DEFAULT)  # 启动时默认握拳
+        
         # --- 控制变量 ---
         self.mode         = Mode.IDLE
         self.target_q     = cfg.default_angles.copy()
@@ -203,8 +208,8 @@ class G1HighlevelArmController:
         
         # poseL_def, poseR_def = self.FK(cfg.default_angles)  # 近似
 
-        self.kps = cfg.kps_play.copy()
-        self.kds = cfg.kds_play.copy()
+        self.kps = cfg.kps_play.copy() * 0.5 # when moving to default, use a more smaller kp
+        self.kds = cfg.kds_play.copy() 
         
         self.move_to(poseL_def, poseR_def,
                     ws_steps=int(duration/2/cfg.control_dt),
@@ -386,12 +391,16 @@ class G1HighlevelArmController:
         self.damping_mode(kd=1.0)
         print("[HL] Enter damping mode.")
         time.sleep(0.5)
+        self.dex3.switch_gesture(HandGesture.DEFAULT)
         self.move_to_default(duration=3)
         print("[HL] Move to default.")
 
     def stop(self):
         print("[HL] stopping controller…")
         self.damping_mode(kd=2)
+        self.dex3.zero_torque()
+        self.dex3.running = False
+
         if self.thread and self.thread.IsRunning():
             self.thread.Stop()
             self.thread.Join()          # 等循环线程真正结束
@@ -453,26 +462,40 @@ class G1HighlevelArmController:
     def remote_poll(self):
         """在主线程里循环调用，非阻塞读取遥控器事件"""
         r = self.remote.button
+        press = (self.prev_buttons == 0) & (r == 1)
+        pressed_L1 = press[KeyMap.L1]
+        pressed_L2 = press[KeyMap.L2]
+        pressed_R1 = press[KeyMap.R1]
+        pressed_R2 = press[KeyMap.R2]
+        pressed_up = press[KeyMap.up]
+        pressed_down = press[KeyMap.down]
+        pressed_A = press[KeyMap.A]
+        pressed_B = press[KeyMap.B]
+        pressed_X = press[KeyMap.X]
+        pressed_Y = press[KeyMap.Y]
+        pressed_select = press[KeyMap.select]
 
-        if r[KeyMap.L1] == 1:     # 打印 FK
+        if pressed_L1 == 1:     # 打印 FK
             poseL, poseR = self.FK(self.current_q())
             print("[L1] EE pos L:", poseL.translation, "R:", poseR.translation)
             print("[L1] EE ori L:", poseL.rotation, "R:", poseR.rotation)
-            time.sleep(0.3)
+            print(f"[STATE] L: {np.round(self.dex3.left_state,3)} | R: {np.round(self.dex3.right_state,3)}", end="\r")
+            time.sleep(0.1)
 
-        if r[KeyMap.L2] == 1:     # 抬手测试
+        if pressed_L2 == 1:     # 抬手测试
             self.example_lift_hands(dz=0.05, steps=40)
-
+        
+        if pressed_R1 == 1:
+            self.dex3.switch_gesture(HandGesture.GRIP)
+        if pressed_R2 == 1:
+            self.dex3.switch_gesture(HandGesture.RELEASE)
         # if r[KeyMap.start] == 1:  # 播放最近一次录制
         #     fn = sorted(self.record_dir.glob("traj_*.npz"))[-1]
             
         #     self.play_trajectory(fn)
-        if r[KeyMap.up] == 1:
+        if pressed_up == 1:
             try:
-                # Only the .npz file
-                # fp = sorted(self.record_dir.glob("*.npz"))[0]
-                # self.prepare_replay(str(fp), speed=1, mode="workspace")
-
+                self.dex3.switch_gesture(HandGesture.DEFAULT)
                 # prepare 选中的动作
                 # motion files
                 fp = self.motion_files[self._sel_motion_idx]
@@ -480,27 +503,31 @@ class G1HighlevelArmController:
             except IndexError:
                 print("[WARN] no traj file to replay")
 
-        if r[KeyMap.down] == 1:
+        if pressed_down == 1:
             self.do_replay()
 
-        if r[KeyMap.A] == 1 and not self._recording:  # 例：A键开始录
+        if pressed_A == 1 and not self._recording:  # A键开始录
             self.start_record()
 
-        if r[KeyMap.B] == 1 and self._recording:      # B键结束录
+        if pressed_B == 1 and self._recording:      # B键结束录
             self.stop_record()
         
-        if r[KeyMap.select] == 1:   # safe mode 
+        if pressed_select == 1:   # safe mode 
             self.stop()
             raise SystemExit
         
-        if r[KeyMap.X] == 1:
+        if pressed_X == 1:
             # TODO move to default default state ensure the workspace and joint positions.
+            self.dex3.switch_gesture(HandGesture.DEFAULT)
             self.move_to_default(3.0)
         
-        if r[KeyMap.Y]==1:      
+        if pressed_Y ==1:      
+            self.dex3.damping()
             self.zero_torque_mode()
             print(f"[HOLD] Move to zero torque.")
 
+        # update the prev button.
+        self.prev_buttons[:] = r
 def main():
     print("Ensure no obstacle. Press ENTER...")
     input()
@@ -508,7 +535,6 @@ def main():
 
     ctrl = G1HighlevelArmController()
     ctrl.start()                 # 启动线程
-
     try:
         while True:
             # ------- Terminal command -----------

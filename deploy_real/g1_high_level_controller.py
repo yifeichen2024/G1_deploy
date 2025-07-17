@@ -5,6 +5,7 @@ from scipy.spatial.transform import Rotation, Slerp
 from enum import Enum, auto
 from collections import deque
 import os
+import select
 
 from unitree_sdk2py.core.channel import ChannelPublisher, ChannelSubscriber, ChannelFactoryInitialize
 from unitree_sdk2py.idl.default import unitree_hg_msg_dds__LowCmd_, unitree_hg_msg_dds__LowState_
@@ -104,6 +105,17 @@ class G1HighlevelArmController:
         self._replay_speed    = 1.0
         self._replay_mode     = "joint"   # "joint" or "workspace"
         self._replay_ready    = False
+
+        # motion bank
+        self._build_motion_bank()      # ← 新增
+        self._sel_motion_idx = 0       # 当前选中的动作下标
+    
+    def _build_motion_bank(self):
+        """扫描目录，把所有 .npz 按文件名自然排序后存进列表"""
+        files = sorted(pathlib.Path(self.record_dir).glob("*.npz"))
+        self.motion_names = [f.stem for f in files]          
+        self.motion_files = [str(f) for f in files]          
+        print("[MOTION BANK] loaded:", ", ".join(self.motion_names))
 
     def _cb(self, msg: LowState_):
         self.low_state = msg
@@ -334,19 +346,6 @@ class G1HighlevelArmController:
         self._replay_idx = 0                # 重播从头开始
         self._replay_start_t = time.time()   # 播放计时从现在算
         print(f"[PLAY] start, mode={self._replay_mode}, len={len(self._replay_traj['t'])}")
-
-
-    # TODO Test 
-    # def play_trajectory(self, path_or_arr: np.ndarray | str, speed=1.0, mode="joint"):
-    #     """
-    #     traj : ndarray shape (T, dof) 或 文件路径
-    #     speed: 1.0 = 实时 (dt = cfg.control_dt/speed)
-    #     """
-    #     data = np.load(path_or_arr)["traj"] if isinstance(path_or_arr, (str, pathlib.Path)) else path_or_arr
-    #     self._play_traj, self._play_idx, self.mode = data, 0, Mode.PLAY
-    #     self._play_dt   = cfg.control_dt / speed
-    #     self._play_mode = mode  # "joint" or "workspace"
-    #     print(f"[PLAY] {mode} len={len(data)}")
         
     def example_lift_hands(self, dz=0.05, steps=50):
         """示范：同时抬双手 dz 米，实时 IK 发关节"""
@@ -358,8 +357,8 @@ class G1HighlevelArmController:
         self.kds = cfg.kds_play.copy()
 
         for a in np.linspace(0, 1, steps):
-            poseL = pin.SE3(poseL0.rotation, poseL0.translation + np.array([0.01, 0, a*dz]))
-            poseR = pin.SE3(poseR0.rotation, poseR0.translation + np.array([0.01, 0, a*dz]))
+            poseL = pin.SE3(poseL0.rotation, poseL0.translation + np.array([0.05, 0, a*dz]))
+            poseR = pin.SE3(poseR0.rotation, poseR0.translation + np.array([0.05, 0, a*dz]))
             self.target_q = self.IK(poseL, poseR)   # 设置为线程循环读取
             time.sleep(cfg.control_dt)
         self.mode = Mode.HOLD
@@ -401,18 +400,7 @@ class G1HighlevelArmController:
     def _control_loop(self):
         if self.low_state is None:
             return 
-        # TODO I think for the joint control and position control. Here is the logic:
-        # when recording, record both the joint and the workspace info.(the format of the workspace position and orientation data should be careful aglined with the data for the IK required.)
-        # when playing, Use joint control or the position control. Set a param that can choose between this two mode. for different usage decide by the user.
-        # when go back to default. 
-        # [Move to DEFAULT and other transisition or move to ]when doing transition between two different target use poisition control first to go that target. then check the error between the target joint value. if error is larger then 0.01, use joint control to go to that target.
-
-
-        # else: 
-        #     for idx, joint in enumerate(cfg.action_joints):
-        #         kps.append(cfg.kps_play[idx])
-        #         kds.append(cfg.kds_play[idx])
-
+        
         # 1) 根据模式下发命令
         if self.mode == Mode.HOLD:
             self._send_joint(self.target_q, kps=self.kps, kds=self.kds)  # target_q kps kds由外部函数实时刷写
@@ -457,32 +445,6 @@ class G1HighlevelArmController:
                 self._send_joint(q_cmd, cfg.kps_play, cfg.kds_play)
                 # self._replay_idx += 1
 
-
-                # if self._play_idx < len(self._play_traj):
-                #     q_dof = len(cfg.action_joints)
-                #     idx_pL = slice(q_dof, q_dof+3)          # Left translation
-                #     idx_qL = slice(q_dof+3, q_dof+7)        # Left rotation
-                #     idx_pR = slice(q_dof+7, q_dof+10)        # Right translation
-                #     idx_qR = slice(q_dof+10, q_dof+14)       # Right rotation 
-                #     frame = self._play_traj[self._play_idx]; 
-                #     self._play_idx += 1
-
-                #     if self._play_mode=="joint":
-                #         self._send_joint(frame[:q_dof], self.kps, self.kds)
-                #     else:  # workspace
-                #         poseL = pin.SE3(pin.Quaternion(frame[idx_qL]),
-                #                         frame[idx_pL])
-                #         poseR = pin.SE3(pin.Quaternion(frame[idx_qR]),
-                #                         frame[idx_pR])
-                #         self._send_joint(self.IK(poseL, poseR), self.kps, self.kds)
-    
-                #     time.sleep(self._play_dt)
-                # else:
-                #     self.mode = Mode.HOLD
-                #     Mf_L, Mf_R = self.FK(self.current_q())
-                #     self.target_q = self.current_q()
-                #     print(f"[PLAY] finished. Left: {Mf_L.translation}, Right: {Mf_R.translation}")
-
         # 轨迹录制缓存
         if self._recording:
             self._record_buffer.append(self._pack_frame())
@@ -491,6 +453,10 @@ class G1HighlevelArmController:
     def remote_poll(self):
         """在主线程里循环调用，非阻塞读取遥控器事件"""
         r = self.remote.button
+
+
+
+
         if r[KeyMap.L1] == 1:     # 打印 FK
             poseL, poseR = self.FK(self.current_q())
             print("[L1] EE pos L:", poseL.translation, "R:", poseR.translation)
@@ -506,8 +472,14 @@ class G1HighlevelArmController:
         #     self.play_trajectory(fn)
         if r[KeyMap.up] == 1:
             try:
-                fp = sorted(self.record_dir.glob("*.npz"))[0]
-                self.prepare_replay(str(fp), speed=1, mode="workspace")
+                # Only the .npz file
+                # fp = sorted(self.record_dir.glob("*.npz"))[0]
+                # self.prepare_replay(str(fp), speed=1, mode="workspace")
+
+                # prepare 选中的动作
+                # motion files
+                fp = self.motion_files[self._sel_motion_idx]
+                self.prepare_replay(fp, speed=1.0, mode="workspace")
             except IndexError:
                 print("[WARN] no traj file to replay")
 
@@ -542,6 +514,19 @@ def main():
 
     try:
         while True:
+            # ------- Terminal command -----------
+            if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+                cmd = sys.stdin.readline().strip()
+                if cmd:                            # 不为空
+                    try:                           # ① 数字编号
+                        idx = int(cmd)
+                        ctrl._sel_motion_idx = idx % len(ctrl.motion_names)
+                    except ValueError:             # ② 名字
+                        if cmd in ctrl.motion_names:
+                            ctrl._sel_motion_idx = ctrl.motion_names.index(cmd)
+                        else:
+                            print("[CMD] unknown motion:", cmd); continue
+                    print(f"[CMD] selected #{ctrl._sel_motion_idx} {ctrl.motion_names[ctrl._sel_motion_idx]}")
             ctrl.remote_poll()   # 主线程里刷遥控器
             time.sleep(0.02)
     except KeyboardInterrupt:

@@ -1,260 +1,238 @@
+import sys
+import tty
+import termios
+import threading
 import time
 import numpy as np
-from multiprocessing import Array
-from enum import IntEnum
-import threading
 
-from unitree_sdk2py.core.channel import ChannelPublisher, ChannelSubscriber, ChannelFactoryInitialize
-from unitree_sdk2py.idl.default import unitree_hg_msg_dds__HandCmd_
+from unitree_sdk2py.core.channel import ChannelFactoryInitialize, ChannelPublisher, ChannelSubscriber
 from unitree_sdk2py.idl.unitree_hg.msg.dds_ import HandCmd_, HandState_
+from unitree_sdk2py.idl.default import unitree_hg_msg_dds__HandCmd_
 
-from common.remote_controller import RemoteController, KeyMap
-
-Dex3_Num_Motors = 7
-kTopicDex3LeftCommand = "rt/dex3/left/cmd"
+# DDS 话题
+kTopicDex3LeftCommand  = "rt/dex3/left/cmd"
 kTopicDex3RightCommand = "rt/dex3/right/cmd"
-kTopicDex3LeftState = "rt/dex3/left/state"
-kTopicDex3RightState = "rt/dex3/right/state"
+kTopicDex3LeftState    = "rt/dex3/left/state"
+kTopicDex3RightState   = "rt/dex3/right/state"
 
+# 手势预设关节值
+from enum import Enum, IntEnum
+class HandGesture(Enum):
+    DEFAULT = "DEFAULT"
+    RELEASE = "RELEASE"
+    GRIP    = "GRIP"
+
+GESTURE_Q = {
+    HandGesture.DEFAULT: (
+        np.array([-0.004,  0.663,  1.494, -1.523, -1.639, -1.560, -1.738]),
+        np.array([-0.012, -0.248, -1.756,  1.536,  1.689,  1.541,  1.668]),
+    ),
+    HandGesture.RELEASE: (
+        np.array([-0.029, -0.475,  0.490, -0.806, -1.032, -1.055, -0.600]),
+        np.array([-0.044, -0.913, -1.486,  1.539,  1.669,  1.543,  1.655]),
+    ),
+    HandGesture.GRIP: (
+        np.array([-0.029,  0.426,  0.492, -0.809, -1.025, -1.071, -0.617]),
+        np.array([-0.044, -0.913, -1.486,  1.539,  1.669,  1.543,  1.655]),
+    ),
+}
+
+# Joint index 枚举
 class Dex3_1_Left_JointIndex(IntEnum):
-    kLeftHandThumb0 = 0
-    kLeftHandThumb1 = 1
-    kLeftHandThumb2 = 2
-    kLeftHandMiddle0 = 3
-    kLeftHandMiddle1 = 4
-    kLeftHandIndex0 = 5
-    kLeftHandIndex1 = 6
+    kLeftHandThumb0   = 0
+    kLeftHandThumb1   = 1
+    kLeftHandThumb2   = 2
+    kLeftHandMiddle0  = 3
+    kLeftHandMiddle1  = 4
+    kLeftHandIndex0   = 5
+    kLeftHandIndex1   = 6
 
 class Dex3_1_Right_JointIndex(IntEnum):
-    kRightHandThumb0 = 0
-    kRightHandThumb1 = 1
-    kRightHandThumb2 = 2
-    kRightHandIndex0 = 3
-    kRightHandIndex1 = 4
+    kRightHandThumb0  = 0
+    kRightHandThumb1  = 1
+    kRightHandThumb2  = 2
+    kRightHandIndex0  = 3
+    kRightHandIndex1  = 4
     kRightHandMiddle0 = 5
     kRightHandMiddle1 = 6
 
-class Dex3_1_Controller:
-    def __init__(self, fps=100.0):
-        self.fps = fps
+# 构造 motor_mode
+class _RIS_Mode:
+    def __init__(self, id=0, status=0x01, timeout=0):
+        self.id      = id     & 0x0F
+        self.status  = status & 0x07
+        self.timeout = timeout& 0x01
+
+    def to_uint8(self):
+        m = 0
+        m |=  self.id
+        m |= (self.status << 4)
+        m |= (self.timeout<<7)
+        return m
+
+def _getch():
+    """Unix 单字符读取"""
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    try:
+        tty.setraw(fd)
+        return sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)
+
+class Dex3GestureController:
+    def __init__(self, fps=50.0):
         ChannelFactoryInitialize(0)
 
-        # Initialize DDS channels
-        self.left_pub = ChannelPublisher(kTopicDex3LeftCommand, HandCmd_)
+        self.fps = fps
+
+        # 发布器
+        self.left_pub  = ChannelPublisher(kTopicDex3LeftCommand,  HandCmd_)
         self.right_pub = ChannelPublisher(kTopicDex3RightCommand, HandCmd_)
         self.left_pub.Init()
         self.right_pub.Init()
-        
-        self.left_sub = ChannelSubscriber(kTopicDex3LeftState, HandState_)
+
+        # 订阅器
+        self.left_sub  = ChannelSubscriber(kTopicDex3LeftState,  HandState_)
         self.right_sub = ChannelSubscriber(kTopicDex3RightState, HandState_)
         self.left_sub.Init()
         self.right_sub.Init()
 
-        self.left_state = Array('d', Dex3_Num_Motors, lock=True)
-        self.right_state = Array('d', Dex3_Num_Motors, lock=True)
+        # 存放最新状态
+        self.left_state  = np.zeros(len(Dex3_1_Left_JointIndex),  dtype=float)
+        self.right_state = np.zeros(len(Dex3_1_Right_JointIndex), dtype=float)
 
-        self.target_left_q = np.zeros(Dex3_Num_Motors)
-        self.target_right_q = np.zeros(Dex3_Num_Motors)
-        self.recording = True
-
-        self.kps = 2
-        self.kds = 0.5
-        self.kps_record = self.kps * 0.0
-        self.kds_record = self.kds * 0.0
-
-        # Create DDS messages
-        self.left_msg = unitree_hg_msg_dds__HandCmd_()
+        # 构造消息模板
+        self.left_msg  = unitree_hg_msg_dds__HandCmd_()
         self.right_msg = unitree_hg_msg_dds__HandCmd_()
-        self._init_hand_msg()
+        self._init_msg(self.left_msg,  Dex3_1_Left_JointIndex)
+        self._init_msg(self.right_msg, Dex3_1_Right_JointIndex)
 
-        # Start threads
-        threading.Thread(target=self._recv_state_loop, daemon=True).start()
-        threading.Thread(target=self._control_loop, daemon=True).start()
+        self.running = True
 
-        print("Dex3_1_Controller initialized.")
+        # 启动订阅状态线程
+        self.sub_thread = threading.Thread(target=self._state_loop, daemon=True)
+        self.sub_thread.start()
 
-    def _init_hand_msg(self):
-        for id in Dex3_1_Left_JointIndex:
-            self.left_msg.motor_cmd[id].mode = 0x01
-            self.left_msg.motor_cmd[id].kp = 1.0
-            self.left_msg.motor_cmd[id].kd = 0.2
+        self.current_gesture = np.array(self.left_state[:]), np.array(self.right_state[:])
+        self.left_q_target, self.right_q_target = self.current_gesture
+        self.kp_left,self.kd_left = 1.0, 0.2
+        self.kp_right, self.kd_right = 1.0, 0.2
+        # 启动发布命令线程
+        self.pub_thread = threading.Thread(target=self._publish_loop, daemon=True)
+        self.pub_thread.start()
+        
 
-        for id in Dex3_1_Right_JointIndex:
-            self.right_msg.motor_cmd[id].mode = 0x01
-            self.right_msg.motor_cmd[id].kp = 1.0
-            self.right_msg.motor_cmd[id].kd = 0.2
+    def _init_msg(self, msg, JointIndex):
+        for j in JointIndex:
+            ris = _RIS_Mode(id=j, status=0x01, timeout=0)
+            m = msg.motor_cmd[j]
+            m.mode = ris.to_uint8()
+            m.q    = 0.0
+            m.dq   = 0.0
+            m.tau  = 0.0
+            m.kp   = 1.5
+            m.kd   = 0.2
 
-    def _recv_state_loop(self):
-        while True:
-            left_msg = self.left_sub.Read()
-            right_msg = self.right_sub.Read()
-            if left_msg:
-                for i, id in enumerate(Dex3_1_Left_JointIndex):
-                    self.left_state[i] = left_msg.motor_state[id].q
-            if right_msg:
-                for i, id in enumerate(Dex3_1_Right_JointIndex):
-                    self.right_state[i] = right_msg.motor_state[id].q
-            time.sleep(0.005)
+    def _state_loop(self):
+        """持续读取 HandState_ 并更新 self.left_state/right_state"""
+        while self.running:
+            lmsg = self.left_sub.Read()
+            rmsg = self.right_sub.Read()
+            if lmsg is not None:
+                for idx, j in enumerate(Dex3_1_Left_JointIndex):
+                    self.left_state[idx] = lmsg.motor_state[j].q
+            if rmsg is not None:
+                for idx, j in enumerate(Dex3_1_Right_JointIndex):
+                    self.right_state[idx] = rmsg.motor_state[j].q
+            time.sleep(1.0 / (self.fps * 2))  # 以更高频率读状态
 
-    def _control_loop(self):
-       
+    def _publish_loop(self):
+        """持续发布当前 target，并打印最新状态"""
+        interval = 1.0 / self.fps
+        while self.running:
+            # 更新命令 q
+            for idx, j in enumerate(Dex3_1_Left_JointIndex):
+                self.left_msg.motor_cmd[j].q = float(self.left_q_target[idx])
+                self.left_msg.motor_cmd[j].kp = self.kp_left
+                self.left_msg.motor_cmd[j].kd = self.kd_left
+            for idx, j in enumerate(Dex3_1_Right_JointIndex):
+                self.right_msg.motor_cmd[j].q = float(self.right_q_target[idx])
+                self.right_msg.motor_cmd[j].kp = self.kp_right
+                self.right_msg.motor_cmd[j].kd = self.kd_right
 
-        while True:
-             # —— 1) 如果在录制模式，就把目标设成当前真实角度，使 PD 锁当前位置 —— #
-            # left_q, right_q = self.get_current_q()
-            # if self.recording:
-            #     self.target_left_q = left_q.copy()
-            #     self.target_right_q = right_q.copy()
+            # 发布
+            self.left_pub.Write(self.left_msg)
+            self.right_pub.Write(self.right_msg)
 
+            # 打印状态（可选）
+            # print(f"[STATE] L: {np.round(self.left_state,3)} | R: {np.round(self.right_state,3)}", end="\r")
 
-            if self.recording:
-                kp_left, kd_left = self.kps_record, self.kds_record
-                kp_right, kd_right = self.kps_record, self.kds_record
-            else:
-                kp_left, kd_left = self.kps, self.kds
-                kp_right, kd_right = self.kps, self.kds
-
-            for i, id in enumerate(Dex3_1_Left_JointIndex):
-                self.left_msg.motor_cmd[id].q = self.target_left_q[i]
-                self.left_msg.motor_cmd[id].kp = kp_left
-                self.left_msg.motor_cmd[id].kd = kd_left
-            for i, id in enumerate(Dex3_1_Right_JointIndex):
-                self.right_msg.motor_cmd[id].q = self.target_right_q[i]
-                self.right_msg.motor_cmd[id].kp = kp_right
-                self.right_msg.motor_cmd[id].kd = kd_right
-            
-            # load the message first comment out this one 
-            self.send_cmd()
-            time.sleep(1 / self.fps)
+            time.sleep(interval)
 
     def zero_torque(self):
         for id in Dex3_1_Left_JointIndex:
-            self.left_msg.motor_cmd[id].mode = 0x01
-            self.left_msg.motor_cmd[id].kp = 0.0
-            self.left_msg.motor_cmd[id].kd = 0.0
-
+            # self.left_msg.motor_cmd[id].kp = 0.0
+            # self.left_msg.motor_cmd[id].kd = 0.0
+            self.kp_left, self.kd_left = 0.0, 0.0
         for id in Dex3_1_Right_JointIndex:
-            self.right_msg.motor_cmd[id].mode = 0x01
-            self.right_msg.motor_cmd[id].kp = 0.0
-            self.right_msg.motor_cmd[id].kd = 0.0
-        
-        self.send_cmd()
+            # self.right_msg.motor_cmd[id].kp = 0.0
+            # self.right_msg.motor_cmd[id].kd = 0.0
+            self.kp_right, self.kd_right = 0.0, 0.0
 
     def damping(self):
         for id in Dex3_1_Left_JointIndex:
-            self.left_msg.motor_cmd[id].mode = 0x01
-            self.left_msg.motor_cmd[id].kp = 0.0
-            self.left_msg.motor_cmd[id].kd = 5.0
-
+            # self.left_msg.motor_cmd[id].kp = 0.0
+            # self.left_msg.motor_cmd[id].kd = 0.2
+            self.kp_left, self.kd_left = 0.0, 0.2
         for id in Dex3_1_Right_JointIndex:
-            self.right_msg.motor_cmd[id].mode = 0x01
-            self.right_msg.motor_cmd[id].kp = 0.0
-            self.right_msg.motor_cmd[id].kd = 5.0
-        
-        self.send_cmd()
+            # self.right_msg.motor_cmd[id].kp = 0.0
+            # self.right_msg.motor_cmd[id].kd = 0.2
+            self.kp_right, self.kd_right = 0.0, 0.2
 
-    def _interpolate_motion(self, target_left_q, target_right_q, duration=2.0):
-        """平滑插值从当前状态到目标状态"""
-        current_left_q, current_right_q = self.get_current_q()
-        steps = int(duration * self.fps)
-        
-        for t in range(steps):
-            alpha = (t + 1) / steps
-            interp_left_q  = (1 - alpha) * current_left_q  + alpha * target_left_q
-            interp_right_q = (1 - alpha) * current_right_q + alpha * target_right_q
-            self.set_target_q(interp_left_q, interp_right_q)
-            time.sleep(1 / self.fps)
+    def motion(self):
+        for id in Dex3_1_Left_JointIndex:
+            # self.left_msg.motor_cmd[id].kp = 0.0
+            # self.left_msg.motor_cmd[id].kd = 0.2
+            self.kp_left, self.kd_left = 2.0, 0.5
+        for id in Dex3_1_Right_JointIndex:
+            # self.right_msg.motor_cmd[id].kp = 0.0
+            # self.right_msg.motor_cmd[id].kd = 0.2
+            self.kp_right, self.kd_right = 2.0, 0.5
 
-    def send_cmd(self):
-        self.left_pub.Write(self.left_msg)
-        self.right_pub.Write(self.right_msg)
-        
-    def set_target_q(self, left_q: np.ndarray, right_q: np.ndarray):
-        """外部接口：设置目标角度"""
-        assert left_q.shape[0] == Dex3_Num_Motors
-        assert right_q.shape[0] == Dex3_Num_Motors
-        self.target_left_q = left_q.copy()
-        self.target_right_q = right_q.copy()
+    def switch_gesture(self, gesture: HandGesture):
+        if gesture not in GESTURE_Q:
+            print(f"[WARN] 未知手势: {gesture}")
+            return
+        self.current_gesture = gesture
+        self.left_q_target, self.right_q_target = GESTURE_Q[gesture]
+        self.motion()
+        print(f"\n[INFO] 切换到手势 {gesture.name}")
 
-    def get_current_q(self):
-        """外部接口：获取当前关节角度状态"""
-        with self.left_state.get_lock(), self.right_state.get_lock():
-            return np.array(self.left_state[:]), np.array(self.right_state[:])
+    def run(self):
+        print("按键切换手势： d(DEFAULT)  r(RELEASE)  g(GRIP)  q(退出)")
+        while True:
+            ch = _getch().lower()
+            if ch == 'd':
+                self.switch_gesture(HandGesture.DEFAULT)
+                print(f"[STATE] L: {np.round(self.left_state,3)} | R: {np.round(self.right_state,3)}", end="\r")
+            elif ch == 'r':
+                self.switch_gesture(HandGesture.RELEASE)
+                print(f"[STATE] L: {np.round(self.left_state,3)} | R: {np.round(self.right_state,3)}", end="\r")
 
-    def move_to_default(self, duration=2.0):
-        """TODO setup the a good default position """
-        default_left_q = np.array([-0.2, -1.5, -0.2, -0.5, -0.3, -0.5, -0.3])
-        default_right_q = np.array([-0.2, -1.5, -0.2, -0.5, -0.3, -0.5, -0.3])
-        self._interpolate_motion(default_left_q, default_right_q, duration)
+            elif ch == 'g':
+                self.switch_gesture(HandGesture.GRIP)
+                print(f"[STATE] L: {np.round(self.left_state,3)} | R: {np.round(self.right_state,3)}", end="\r")
 
-    def release_motion(self, duration=2.0):
-        """TODO open hand motion"""
-
-        release_left_q = np.array([-0.2, 0.2, 0.2, -1.0, -0.3, -1.0, -0.3])
-        release_right_q = np.array([-0.2, 0.2, 0.2, -1.0, -0.3, -1.0, -0.3])
-        self._interpolate_motion(release_left_q, release_right_q, duration)
-
-    def grip_motion(self, duration=2.0):
-        """TODO grasp hand motion"""
-        grip_left_q = np.array([-0.2, 0.2, 0.2, -1.0, -0.3, -1.0, -0.3])
-        grip_right_q = np.array([-0.2, 0.2, 0.2, -1.0, -0.3, -1.0, -0.3])
-        self._interpolate_motion(grip_left_q, grip_right_q, duration)
+            elif ch == 'q':
+                print("\n退出程序...")
+                print(f"[STATE] L: {np.round(self.left_state,3)} | R: {np.round(self.right_state,3)}", end="\r")
+                self.damping()
+                self.zero_torque()
+                time.sleep(0.5)
+                self.running = False
+                break
 
 if __name__ == "__main__":
-    import numpy as np
-
-    controller = Dex3_1_Controller()
-
-    print("Waiting for DDS state feedback...")
-    time.sleep(1)
-
-    print("Sending example target pose...")
-    # TODO record and play and hold
-    try:
-        while True:
-            left_q = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-            right_q = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-            controller.set_target_q(left_q, right_q)
-
-            lq, rq = controller.get_current_q()
-            print(f"Current Left Q: {lq.round(3)} \nCurrent Right Q: {rq.round(3)}")
-            time.sleep(0.5)
-    except KeyboardInterrupt:
-        controller.zero_torque()
-    
-
-# if __name__ == "__main__":
-#     import time
-#     import numpy as np
-
-#     controller = Dex3_1_Controller()
-#     print("Waiting for DDS state feedback...")
-#     time.sleep(1.0)
-
-#     # 1. 定义动作序列：描述 + 对应方法
-#     sequence = [
-#         # ("Move to default position", controller.move_to_default(duration=3.0)),
-#         # ("Grip motion", controller.grip_motion(1.0)),
-#         # ("Release motion", controller.release_motion(1.0)),
-#         ("Zero torque and exit", controller.zero_torque)
-#     ]
-
-#     print("Action sequence loaded. 按 Enter 执行下一步，输入 'q' + Enter 提前退出。")
-
-#     for desc, action in sequence:
-#         user_input = input(f"\n即将执行：{desc} -> 按 Enter 开始; 或输入 q + Enter 退出：")
-#         if user_input.lower() == 'q':
-#             print("提前退出，启用 zero_torque 并结束。")
-#             controller.zero_torque()
-#             break
-
-#         print(f"--- {desc} ---")
-#         # 如果动作有持续时间参数，也可以在这里传入，比如 move_to_default(2.0)
-#         controller.zero_torque()
-#         # action()
-#         # 等待动作执行完毕（根据你的动作内部默认 duration）
-#         # 如果需要打印当前关节状态，可以：
-#         lq, rq = controller.get_current_q()
-#         print(f"当前关节状态：\n  Left:  {lq.round(3)}\n  Right: {rq.round(3)}")
-
-#     print("动作序列结束。")
+    controller = Dex3GestureController(fps=30.0)
+    controller.run()

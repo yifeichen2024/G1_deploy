@@ -71,7 +71,7 @@ class Dex3_1_Controller:
         for id in Dex3_1_Left_JointIndex:
             self.left_msg.motor_cmd[id].mode = 0x01
             self.left_msg.motor_cmd[id].kp = 1.0
-            self.left_msg.motor_cmd[id].kd = 0.2
+            self.left_msg.motor_cmd[id].kd = 0.
 
         for id in Dex3_1_Right_JointIndex:
             self.right_msg.motor_cmd[id].mode = 0x01
@@ -93,13 +93,11 @@ class Dex3_1_Controller:
     def _control_loop(self):
         while True:
             if self.recording:
-                # self.target_left = self.get_current_q()[0:len(Dex3_1_Left_JointIndex)]
-                # self.target_right = self.get_current_q()[len(Dex3_1_Left_JointIndex):len(Dex3_1_Right_JointIndex)]
                 kp_left, kd_left = 0.0, 0.0
                 kp_right, kd_right = 0.0, 0.0
             else:
-                kp_left, kd_left = 3.0, 0.5
-                kp_right, kd_right = 3.0, 0.5
+                kp_left, kd_left = 2.2, 0.5
+                kp_right, kd_right = 2.2, 0.5
 
             for i, id in enumerate(Dex3_1_Left_JointIndex):
                 self.left_msg.motor_cmd[id].q = self.target_left_q[i]
@@ -107,8 +105,8 @@ class Dex3_1_Controller:
                 self.left_msg.motor_cmd[id].kd = kd_left
             for i, id in enumerate(Dex3_1_Right_JointIndex):
                 self.right_msg.motor_cmd[id].q = self.target_right_q[i]
-                self.left_msg.motor_cmd[id].kp = kp_right
-                self.left_msg.motor_cmd[id].kd = kd_right
+                self.right_msg.motor_cmd[id].kp = kp_right
+                self.right_msg.motor_cmd[id].kd = kd_right
             
             # load the message first comment out this one 
             self.send_cmd()
@@ -124,7 +122,6 @@ class Dex3_1_Controller:
             self.right_msg.motor_cmd[id].mode = 0x01
             self.right_msg.motor_cmd[id].kp = 0.0
             self.right_msg.motor_cmd[id].kd = 0.0
-        
         self.send_cmd()
     
     def damping(self):
@@ -188,29 +185,6 @@ class Dex3_1_Controller:
         grip_left_q = np.array([-0.029, 0.426 , 0.492, -0.809, -1.025, -1.071, -0.617])
         grip_right_q = np.array([-0.044, -0.913, -1.486, 1.539, 1.669, 1.543, 1.655])
         self._interpolate_motion(grip_left_q, grip_right_q, duration)
-
-# if __name__ == "__main__":
-#     import numpy as np
-
-#     controller = Dex3_1_Controller()
-
-#     print("Waiting for DDS state feedback...")
-#     time.sleep(1)
-
-#     print("Sending example target pose...")
-#     # TODO record and play and hold
-#     try:
-#         while True:
-#             left_q = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-#             right_q = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-#             controller.set_target_q(left_q, right_q)
-
-#             lq, rq = controller.get_current_q()
-#             print(f"Current Left Q: {lq.round(3)} \nCurrent Right Q: {rq.round(3)}")
-#             time.sleep(0.5)
-#     except KeyboardInterrupt:
-#         controller.zero_torque()
-    
 
 if __name__ == "__main__":
     import time

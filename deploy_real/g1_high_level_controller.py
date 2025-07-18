@@ -17,6 +17,7 @@ from unitree_sdk2py.utils.crc import CRC
 from common.remote_controller import RemoteController, KeyMap
 from g1_arm_IK import G1_29_ArmIK
 from g1_highlevel_hand import Dex3GestureController, HandGesture, _RIS_Mode, _getch
+from vision_detector import VisionQRDetector
 
 # -----------------------------------------------------------------------------
 # G1 Joint Index
@@ -65,7 +66,7 @@ class Mode(Enum):
     HOLD      = auto()          # 保持当前位置
     IK_STREAM = auto()          # 在线 IK “一边算一边发”
     PLAY      = auto()          # 播放离线轨迹
-
+    WAIT_SEQ_B = auto()
 # -----------------------------------------------------------------------------
 # G1 Arm controller
 # -----------------------------------------------------------------------------
@@ -115,7 +116,13 @@ class G1HighlevelArmController:
         # motion bank
         self._build_motion_bank()      # ← 新增
         self._sel_motion_idx = 0       # 当前选中的动作下标
-    
+        
+        # —— 新增：视觉检测器
+        self.vision = VisionQRDetector(model_size='s')
+        # 等待 sequence_b 用的状态
+        self.wait_seq_start = None
+        self.seq_hold_time = 5  # 连续满足条件的秒数阈值
+
     def _build_motion_bank(self):
         """扫描目录，把所有 .npz 按文件名自然排序后存进列表"""
         files = sorted(pathlib.Path(self.record_dir).glob("*.npz"))
@@ -410,7 +417,33 @@ class G1HighlevelArmController:
     def _control_loop(self):
         if self.low_state is None:
             return 
+
+        # —— 新增：WAIT_SEQ_B 模式下做视觉判断——
+        if self.mode == Mode.WAIT_SEQ_B:
+            z, angle = self.vision.get_pose()
+            # 条件范围
+            ok = (z is not None) and (0.6 <= z <= 0.63) and (-10 <= angle <= 10)
+            now = time.time()
+            if ok:
+                # 第一次满足时记录起点
+                if self.wait_seq_start is None:
+                    self.wait_seq_start = now
+                # 若满足时长，执行 sequence_b 并退出
+                elif now - self.wait_seq_start >= self.seq_hold_time:
+                    print("[VISION] 条件持续满足，开始 sequence B")
+                    self.vision.stop()
+                    time.sleep(2)
+                    self.play_sequence_b()
+                    self.mode = Mode.HOLD
+                    self.wait_seq_start = None
+            else:
+                # 一旦跳出区间，就重置
+                if self.wait_seq_start is not None:
+                    print("[VISION] 条件中断，重置计时")
+                self.wait_seq_start = None
+            return  # WAIT_SEQ_B 时仅判断视觉，不下发其它指令
         
+
         # 1) 根据模式下发命令
         if self.mode == Mode.HOLD:
             self._send_joint(self.target_q, kps=self.kps, kds=self.kds)  # target_q kps kds由外部函数实时刷写
@@ -487,6 +520,7 @@ class G1HighlevelArmController:
         return 
 
     def play_sequence_b(self):
+
         try:
             self.prepare_replay("records/traj_17_3.npz", speed=1.0, mode="workspace")
             self.do_replay()
@@ -542,8 +576,12 @@ class G1HighlevelArmController:
             # time.sleep(0.1)
 
         if r[KeyMap.L2] == 1:     
-            # threading.Thread(target=self.play_sequence_b, daemon=True).start()
-            self.play_sequence_b()
+            # self.play_sequence_b()
+
+            print("[INPUT] L2 按下,进入视觉等待模式(0.6-0.63m & ±10 deg)")
+            self.wait_seq_start = None
+            self.mode = Mode.WAIT_SEQ_B
+
             # === Lift arm testing ====
             # self.example_lift_hands(dz=0.05, steps=40)
         

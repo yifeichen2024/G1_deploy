@@ -458,44 +458,43 @@ class G1HighlevelArmController:
         if self._recording:
             self._record_buffer.append(self._pack_frame())
 
-
     def remote_poll(self):
         """在主线程里循环调用，非阻塞读取遥控器事件"""
         r = self.remote.button
-        press = (self.prev_buttons == 0) & (r == 1)
-        pressed_L1 = press[KeyMap.L1]
-        pressed_L2 = press[KeyMap.L2]
-        pressed_R1 = press[KeyMap.R1]
-        pressed_R2 = press[KeyMap.R2]
-        pressed_up = press[KeyMap.up]
-        pressed_down = press[KeyMap.down]
-        pressed_A = press[KeyMap.A]
-        pressed_B = press[KeyMap.B]
-        pressed_X = press[KeyMap.X]
-        pressed_Y = press[KeyMap.Y]
-        pressed_select = press[KeyMap.select]
+        # press = (self.prev_buttons == 0) & (r == 1)
+        # pressed_L1 = press[KeyMap.L1]
+        # pressed_L2 = press[KeyMap.L2]
+        # pressed_R1 = press[KeyMap.R1]
+        # pressed_R2 = press[KeyMap.R2]
+        # pressed_up = press[KeyMap.up]
+        # pressed_down = press[KeyMap.down]
+        # pressed_A = press[KeyMap.A]
+        # pressed_B = press[KeyMap.B]
+        # pressed_X = press[KeyMap.X]
+        # pressed_Y = press[KeyMap.Y]
+        # pressed_select = press[KeyMap.select]
 
-        if pressed_L1 == 1:     # 打印 FK
+        if r[KeyMap.L1] == 1:     # 打印 FK
             poseL, poseR = self.FK(self.current_q())
             print("[L1] EE pos L:", poseL.translation, "R:", poseR.translation)
             print("[L1] EE ori L:", poseL.rotation, "R:", poseR.rotation)
             print(f"[STATE] L: {np.round(self.dex3.left_state,3)} | R: {np.round(self.dex3.right_state,3)}", end="\r")
             time.sleep(0.1)
 
-        if pressed_L2 == 1:     # 抬手测试
+        if r[KeyMap.L2] == 1:     # 抬手测试
             self.example_lift_hands(dz=0.05, steps=40)
         
-        if pressed_R1 == 1:
+        if r[KeyMap.R1] == 1:
             self.dex3.switch_gesture(HandGesture.GRIP)
-        if pressed_R2 == 1:
+        if r[KeyMap.R2] == 1:
             self.dex3.switch_gesture(HandGesture.RELEASE)
         # if r[KeyMap.start] == 1:  # 播放最近一次录制
         #     fn = sorted(self.record_dir.glob("traj_*.npz"))[-1]
             
         #     self.play_trajectory(fn)
-        if pressed_up == 1:
+        if r[KeyMap.up] == 1:
             try:
-                self.dex3.switch_gesture(HandGesture.DEFAULT)
+                # self.dex3.switch_gesture(HandGesture.DEFAULT)
                 # prepare 选中的动作
                 # motion files
                 fp = self.motion_files[self._sel_motion_idx]
@@ -503,25 +502,28 @@ class G1HighlevelArmController:
             except IndexError:
                 print("[WARN] no traj file to replay")
 
-        if pressed_down == 1:
+        if r[KeyMap.down] == 1:
             self.do_replay()
 
-        if pressed_A == 1 and not self._recording:  # A键开始录
+        if r[KeyMap.A] == 1 and not self._recording:  # A键开始录
             self.start_record()
 
-        if pressed_B == 1 and self._recording:      # B键结束录
+        if r[KeyMap.B] == 1 and self._recording:      # B键结束录
             self.stop_record()
         
-        if pressed_select == 1:   # safe mode 
+        if r[KeyMap.select] == 1:   # safe mode 
             self.stop()
             raise SystemExit
         
-        if pressed_X == 1:
+        if r[KeyMap.X] == 1:
             # TODO move to default default state ensure the workspace and joint positions.
             self.dex3.switch_gesture(HandGesture.DEFAULT)
             self.move_to_default(3.0)
         
-        if pressed_Y ==1:      
+        if r[KeyMap.right] == 1:
+            self.dex3.switch_gesture(HandGesture.DEFAULT)
+
+        if r[KeyMap.Y] ==1:      
             self.dex3.damping()
             self.zero_torque_mode()
             print(f"[HOLD] Move to zero torque.")
@@ -551,7 +553,7 @@ def main():
                             print("[CMD] unknown motion:", cmd); continue
                     print(f"[CMD] selected #{ctrl._sel_motion_idx} {ctrl.motion_names[ctrl._sel_motion_idx]}")
             ctrl.remote_poll()   # 主线程里刷遥控器
-            time.sleep(0.02)
+            # time.sleep(0.02)
     except KeyboardInterrupt:
         ctrl.stop()
         print("User exit, stopping thread…")

@@ -6,6 +6,7 @@ from enum import Enum, auto
 from collections import deque
 import os
 import select
+import threading 
 
 from unitree_sdk2py.core.channel import ChannelPublisher, ChannelSubscriber, ChannelFactoryInitialize
 from unitree_sdk2py.idl.default import unitree_hg_msg_dds__LowCmd_, unitree_hg_msg_dds__LowState_
@@ -458,6 +459,58 @@ class G1HighlevelArmController:
         if self._recording:
             self._record_buffer.append(self._pack_frame())
 
+    def play_sequence_a(self):
+        if not self._replay_ready:
+            try:
+                self.prepare_replay("records/traj_17_1.npz", speed=1.0, mode="workspace")
+            except Exception as e:
+                print("[A-SEQUENCE] traj_17_1 load failed:", e)
+                return
+        self.do_replay()
+        while self.mode == Mode.PLAY:
+            time.sleep(0.01)
+
+        # 手部切换
+        self.dex3.switch_gesture(HandGesture.RELEASE)
+        print("[A-SEQUENCE] Release, wait 3s")
+        time.sleep(3.0)
+        print("[A-SEQUENCE] Grip")
+        self.dex3.switch_gesture(HandGesture.GRIP)
+        time.sleep(0.5)
+        
+        try:
+            self.prepare_replay("records/traj_17_2.npz", speed=1.0, mode="workspace")
+            self.do_replay()
+        except Exception as e:
+            print("[A-SEQUENCE] traj_17_2 load failed:", e)
+            return
+
+    def play_sequence_b(self):
+        try:
+            self.prepare_replay("records/traj_17_3.npz", speed=1.0, mode="workspace")
+            self.do_replay()
+        except Exception as e:
+            print("[B-SEQUENCE] traj_17_3 load failed:", e)
+            return
+        while self.mode == Mode.PLAY:
+            time.sleep(0.01)
+
+        self.dex3.switch_gesture(HandGesture.RELEASE)
+        print("[B-SEQUENCE] Release. ")
+        time.sleep(0.01)
+        self.dex3.switch_gesture(HandGesture.DEFAULT)
+        
+        try:
+            self.prepare_replay("records/traj_17_4.npz", speed=1.0, mode="workspace")
+            self.do_replay()
+        except Exception as e:
+            print("[B-SEQUENCE] traj_17_4 load failed:", e)
+            return
+        while self.mode == Mode.PLAY:
+            time.sleep(0.01)
+
+        self.move_to_default(3.0)
+
     def remote_poll(self):
         """在主线程里循环调用，非阻塞读取遥控器事件"""
         r = self.remote.button
@@ -474,24 +527,32 @@ class G1HighlevelArmController:
         # pressed_Y = press[KeyMap.Y]
         # pressed_select = press[KeyMap.select]
 
-        if r[KeyMap.L1] == 1:     # 打印 FK
-            poseL, poseR = self.FK(self.current_q())
-            print("[L1] EE pos L:", poseL.translation, "R:", poseR.translation)
-            print("[L1] EE ori L:", poseL.rotation, "R:", poseR.rotation)
-            print(f"[STATE] L: {np.round(self.dex3.left_state,3)} | R: {np.round(self.dex3.right_state,3)}", end="\r")
-            time.sleep(0.1)
+        if r[KeyMap.L1] == 1:     
+            print("[SEQUENCE A] started.")
+            threading.Thread(target=self.play_sequence_a, daemon=True).start()
+            
+            # === Printing used in testing ===
+            # poseL, poseR = self.FK(self.current_q())
+            # print("[L1] EE pos L:", poseL.translation, "R:", poseR.translation)
+            # print("[L1] EE ori L:", poseL.rotation, "R:", poseR.rotation)
+            # print(f"[STATE] L: {np.round(self.dex3.left_state,3)} | R: {np.round(self.dex3.right_state,3)}", end="\r")
+            # time.sleep(0.1)
 
-        if r[KeyMap.L2] == 1:     # 抬手测试
-            self.example_lift_hands(dz=0.05, steps=40)
+        if r[KeyMap.L2] == 1:     
+            threading.Thread(target=self.play_sequence_b, daemon=True).start()
+            # === Lift arm testing ====
+            # self.example_lift_hands(dz=0.05, steps=40)
         
         if r[KeyMap.R1] == 1:
             self.dex3.switch_gesture(HandGesture.GRIP)
         if r[KeyMap.R2] == 1:
             self.dex3.switch_gesture(HandGesture.RELEASE)
+
+        # # play one motion sequence    
         # if r[KeyMap.start] == 1:  # 播放最近一次录制
         #     fn = sorted(self.record_dir.glob("traj_*.npz"))[-1]
-            
         #     self.play_trajectory(fn)
+
         if r[KeyMap.up] == 1:
             try:
                 # self.dex3.switch_gesture(HandGesture.DEFAULT)

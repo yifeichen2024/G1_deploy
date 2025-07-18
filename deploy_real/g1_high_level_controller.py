@@ -540,6 +540,7 @@ class G1HighlevelArmController:
         # self.dex3.switch_gesture(HandGesture.DEFAULT)
         
         try:
+            self.dex3.switch_gesture(HandGesture.DEFAULT)
             self.prepare_replay("records/traj_17_4.npz", speed=1.0, mode="workspace")
             self.do_replay()
         except Exception as e:
@@ -547,7 +548,7 @@ class G1HighlevelArmController:
             return
         while self.mode == Mode.PLAY:
             time.sleep(0.01)
-        self.dex3.switch_gesture(HandGesture.DEFAULT)
+        
         self.move_to_default(3.0)
 
         return 
@@ -583,7 +584,8 @@ class G1HighlevelArmController:
         if self.detection_active:
             z, angle = self.vision.get_pose()
             now = time.time()
-            ok = (z is not None) and (0.6 <= z <= 0.65) and (-10 <= angle <= 10)
+            print(f"[DEBUG] {z}, {angle}")
+            ok = (z is not None) and (0.59 <= z <= 0.62) and (-8 <= angle <= 8)
             if ok:
                 if self.detect_start_time is None:
                     self.detect_start_time = now
@@ -598,7 +600,12 @@ class G1HighlevelArmController:
                 if self.detect_start_time is not None:
                     print("[VISION] 条件中断，重置计时")
                 self.detect_start_time = None
+
+            if r[KeyMap.select] == 1:   # safe mode 
+                self.stop()
+                raise SystemExit
             # 检测模式下不处理其它按键
+
             return
         if r[KeyMap.L2] == 1:     
             # self.play_sequence_b()

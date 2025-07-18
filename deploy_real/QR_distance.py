@@ -1,6 +1,9 @@
 import pyrealsense2 as rs
 import cv2
 import numpy as np
+import torch
+if not isinstance(torch.__version__, str):  # TorchVersion → str
+    torch.__version__ = str(torch.__version__)
 from qrdet import QRDetector
 
 # 初始化 QR 检测器

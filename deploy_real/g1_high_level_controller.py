@@ -421,19 +421,22 @@ class G1HighlevelArmController:
         # —— 新增：WAIT_SEQ_B 模式下做视觉判断——
         if self.mode == Mode.WAIT_SEQ_B:
             z, angle = self.vision.get_pose()
+            print(f"[DEBUG] {z:.3f}, {angle:.2f}")
             # 条件范围
-            ok = (z is not None) and (0.6 <= z <= 0.63) and (-10 <= angle <= 10)
+            ok = (z is not None) and (0.61 <= z <= 0.65) and (-5 <= angle <= 5)
+            
             now = time.time()
             if ok:
                 # 第一次满足时记录起点
                 if self.wait_seq_start is None:
                     self.wait_seq_start = now
+                    
                 # 若满足时长，执行 sequence_b 并退出
                 elif now - self.wait_seq_start >= self.seq_hold_time:
                     print("[VISION] 条件持续满足，开始 sequence B")
                     self.vision.stop()
                     time.sleep(2)
-                    self.play_sequence_b()
+                    self.play_sequence_b() # sequence_b 不能放在control_loop中执行
                     self.mode = Mode.HOLD
                     self.wait_seq_start = None
             else:

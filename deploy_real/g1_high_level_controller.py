@@ -55,7 +55,7 @@ def load_cfg(path="deploy_real/configs/config_high_level.yaml"):
         setattr(cfg, k, np.array(v) if isinstance(v, list) else v)
     cfg.kps_record = cfg.kps_play * 0
     cfg.kds_record = cfg.kds_play * 0
-    cfg.replay_transition_duration = 3
+    cfg.replay_transition_duration = 1.5
     return cfg
 
 cfg = load_cfg()
@@ -484,6 +484,7 @@ class G1HighlevelArmController:
         except Exception as e:
             print("[A-SEQUENCE] traj_17_2 load failed:", e)
             return
+        return 
 
     def play_sequence_b(self):
         try:
@@ -497,8 +498,8 @@ class G1HighlevelArmController:
 
         self.dex3.switch_gesture(HandGesture.RELEASE)
         print("[B-SEQUENCE] Release. ")
-        time.sleep(0.01)
-        self.dex3.switch_gesture(HandGesture.DEFAULT)
+        time.sleep(0.5)
+        # self.dex3.switch_gesture(HandGesture.DEFAULT)
         
         try:
             self.prepare_replay("records/traj_17_4.npz", speed=1.0, mode="workspace")
@@ -508,8 +509,10 @@ class G1HighlevelArmController:
             return
         while self.mode == Mode.PLAY:
             time.sleep(0.01)
-
+        self.dex3.switch_gesture(HandGesture.DEFAULT)
         self.move_to_default(3.0)
+
+        return 
 
     def remote_poll(self):
         """在主线程里循环调用，非阻塞读取遥控器事件"""
@@ -529,8 +532,8 @@ class G1HighlevelArmController:
 
         if r[KeyMap.L1] == 1:     
             print("[SEQUENCE A] started.")
-            threading.Thread(target=self.play_sequence_a, daemon=True).start()
-            
+            # threading.Thread(target=self.play_sequence_a, daemon=True).start()
+            self.play_sequence_a()
             # === Printing used in testing ===
             # poseL, poseR = self.FK(self.current_q())
             # print("[L1] EE pos L:", poseL.translation, "R:", poseR.translation)
@@ -539,7 +542,8 @@ class G1HighlevelArmController:
             # time.sleep(0.1)
 
         if r[KeyMap.L2] == 1:     
-            threading.Thread(target=self.play_sequence_b, daemon=True).start()
+            # threading.Thread(target=self.play_sequence_b, daemon=True).start()
+            self.play_sequence_b()
             # === Lift arm testing ====
             # self.example_lift_hands(dz=0.05, steps=40)
         

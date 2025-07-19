@@ -65,7 +65,7 @@ VALID_TABLES = ["A1", "A2", "A3", "C1", "C2", "C3"]
 
 class ChaChaVoiceAssistant:
     def __init__(self, debug=False, network_interface="eth0", interaction_timeout=120, force_audio_mode=None,
-                 amplification_factor=1.0):
+                 amplification_factor=1):
         # Load environment variables
         load_dotenv()
 
@@ -1129,13 +1129,11 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                     await self.unmute_microphone()
                 print("🔇 PyAudio output stopped")
 
-    async def send_text(self, text=None):
+    async def send_text(self):
         """Handle text input for testing (type 'q' to quit)"""
         while True:
             try:
-                if text == None:
-                    text = await asyncio.to_thread(input, "💬 Type message (or 'q' to quit): ")
-
+                text = await asyncio.to_thread(input, "💬 Type message (or 'q' to quit): ")
                 if text.lower() == "q":
                     break
 
@@ -1173,23 +1171,56 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
 
     async def remote_poll(self):
         """在主线程里循环调用，非阻塞读取遥控器事件"""
-        print("Listening controller")
+
         while True:
             controller = None
             with self.flag_path.open('r') as f:
                 lines = f.read().splitlines()
                 if lines:
                     controller = lines[-1].strip()
-                    print(controller)
 
             if controller == "None":
                 continue
             if controller == "L2_pressed":
-                await self.send_text("Say exactly: 'Here is your bill.' ")
-                print("Sent text successfully")
-                self.flag_path.write_text("None\n")
+                try:
+                    text = "Say: 'Here is your bill'"
 
-            time.sleep(0.02)
+                    # Track user interaction (manual text input)
+                    await self.update_interaction_time("user_text_input")
+
+                    # Send text as conversation item to OpenAI
+                    text_item = {
+                        "type": "conversation.item.create",
+                        "item": {
+                            "type": "message",
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "input_text",
+                                    "text": text
+                                }
+                            ]
+                        }
+                    }
+
+                    await self.send_to_openai(text_item)
+
+                    # Create response
+                    response_create = {
+                        "type": "response.create"
+                    }
+                    await self.send_to_openai(response_create)
+
+                except KeyboardInterrupt:
+                    break
+                except Exception as e:
+                    print(f"❌ Send text error: {e}")
+                    break
+                finally:
+                    print("Sent text successfully")
+                    self.flag_path.write_text("None\n")
+
+            await asyncio.sleep(0.02)
 
     async def run(self):
         """Main execution loop"""
@@ -1342,7 +1373,7 @@ def main():
     parser.add_argument("--timeout", type=int, default=120, help="Auto-exit timeout in seconds (default: 120)")
     parser.add_argument("--audio-output", choices=["auto", "g1", "pyaudio"], default="auto",
                         help="Force audio output mode: auto (detect), g1 (force G1), pyaudio (force PyAudio)")
-    parser.add_argument("--amplification", type=float, default=1.0,
+    parser.add_argument("--amplification", type=float, default=1,
                         help="Audio amplification factor for volume boost (default: 1.75, range: 0.1-5.0, 1.0=no boost)")
     args = parser.parse_args()
 

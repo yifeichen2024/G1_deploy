@@ -666,6 +666,21 @@ class G1HighlevelArmController:
 
         # update the prev button.
         self.prev_buttons[:] = r
+
+
+    def remote_poll_audio(self):
+        print("Ensure no obstacle. Press ENTER...")
+        input()
+        # ChannelFactoryInitialize(0, sys.argv[1] if len(sys.argv) > 1 else None)
+        try:
+            while True:
+                self.remote_poll()   # 主线程里刷遥控器
+                # time.sleep(0.02)
+        except KeyboardInterrupt:
+            self.stop()
+            print("User exit, stopping thread…")
+
+
 def main():
     print("Ensure no obstacle. Press ENTER...")
     input()

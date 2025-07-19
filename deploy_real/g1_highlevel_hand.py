@@ -24,16 +24,16 @@ class HandGesture(Enum):
 
 GESTURE_Q = {
     HandGesture.DEFAULT: (
-        np.array([-0.004,  0.663,  1.494, -1.523, -1.639, -1.560, -1.738]),
-        np.array([-0.012, -0.248, -1.756,  1.536,  1.689,  1.541,  1.668]),
+        np.array([-0.016,  0.657,  1.486, -1.578, -1.796, -1.663, -1.729]),
+        np.array([-0.005, -0.916, -1.597,  1.56,   1.704,  1.553,  1.727]),
     ),
     HandGesture.RELEASE: (
-        np.array([-0.029, -0.475,  0.490, -0.806, -1.032, -1.055, -0.600]),
-        np.array([-0.044, -0.913, -1.486,  1.539,  1.669,  1.543,  1.655]),
+        np.array([-0.016, -0.718,  0.49,  -0.727, -1.033, -0.932, -0.606]),
+        np.array([-0.005, -0.916, -1.597,  1.56,   1.704,  1.553,  1.727]),
     ),
     HandGesture.GRIP: (
         np.array([-0.029,  0.426,  0.492, -0.809, -1.025, -1.071, -0.617]),
-        np.array([-0.044, -0.913, -1.486,  1.539,  1.669,  1.543,  1.655]),
+        np.array([-0.005, -0.916, -1.597,  1.56,   1.704,  1.553,  1.727]),
     ),
 }
 
@@ -212,7 +212,7 @@ class Dex3GestureController:
         print(f"\n[INFO] 切换到手势 {gesture.name}")
 
     def run(self):
-        print("按键切换手势： d(DEFAULT)  r(RELEASE)  g(GRIP)  q(退出)")
+        print("按键切换手势： z(zero torque) p(print state) d(DEFAULT)  r(RELEASE)  g(GRIP)  q(退出)")
         while True:
             ch = _getch().lower()
             if ch == 'z':

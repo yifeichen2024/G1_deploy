@@ -126,10 +126,10 @@ class G1HighlevelArmController:
 
         # —— 新增：L2 触发状态文件 —— 
         self.flag_path = pathlib.Path("l2_trigger_state.txt")
-        self.flag_path.write_text("None")
+        self.flag_path.write_text("None\n")
         # 如果文件不存在，创建并写入初始状态 L2_pressed=false
         if not self.flag_path.exists():
-            self.flag_path.write_text("None")
+            self.flag_path.write_text("None\n")
             print(f"[INIT] 创建状态文件 {self.flag_path.name}，内容为 None")
     
     
@@ -596,23 +596,7 @@ class G1HighlevelArmController:
             print(f"[DEBUG] {z}, {angle}")
             ok = (z is not None) and (0.57 <= z <= 0.61) and (-8 <= angle <= 8) # and (-166 <= x_px <= -110) and (-50 <= y_px <= 50)
             if ok:
-                print("[INPUT] L2 按下，尝试写入状态文件")
-                # 读取已有内容（如果文件存在）
-                last = None
-               # 只读最后一行
-                with self.flag_path.open('r') as f:
-                    lines = f.read().splitlines()
-                    if lines:
-                        last = lines[-1].strip()
-
-                # 如果最后一行不是已按下状态，就追加一行
-                if last != "L2_pressed":
-                    with self.flag_path.open('a') as f:
-                        f.write("L2_pressed\n")
-                    print(f"[FILE] 追加日志: L2_pressed")
-                else:
-                    print(f"[FILE] 日志最后一行已是 'L2_pressed'，跳过追加")
-
+                
                 # existing = None
                 # if self.flag_path.exists():
                 #     existing = self.flag_path.read_text().strip()
@@ -627,6 +611,23 @@ class G1HighlevelArmController:
                     self.detect_start_time = now
                 elif now - self.detect_start_time >= self.seq_hold_time:
                     print("[VISION] 条件持续满足，开始执行 sequence B")
+                    print("[INPUT] L2 按下，尝试写入状态文件")
+                    # 读取已有内容（如果文件存在）
+                    last = None
+                    # 只读最后一行
+                    with self.flag_path.open('r') as f:
+                        lines = f.read().splitlines()
+                        if lines:
+                            last = lines[-1].strip()
+
+                    # 如果最后一行不是已按下状态，就追加一行
+                    if last != "L2_pressed":
+                        with self.flag_path.open('a') as f:
+                            f.write("L2_pressed\n")
+                        print(f"[FILE] 追加日志: L2_pressed")
+                    else:
+                        print(f"[FILE] 日志最后一行已是 'L2_pressed'，跳过追加")
+
                     self.play_sequence_b()
                     # 恢复正常
                     self.detection_active  = False

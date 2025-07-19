@@ -61,6 +61,12 @@ try:
                     intr, [cx, cy], z)
                 pos_str = f" | X={X:.2f} Y={Y:.2f}"
 
+            h, w = img.shape[:2]
+            img_cx, img_cy = w // 2, h // 2
+
+            # 3. 计算像素偏移
+            dx_pix = cx - img_cx    # 正值：二维码中心在画面右侧
+            dy_pix = cy - img_cy    # 正值：二维码中心在画面下方
             # —— 5. 平面朝向 θ —— 
             # 用 quad[0]→quad[1] 边作为“水平”参考
             v = quad[1] - quad[0]           # vec from corner0 to corner1
@@ -83,7 +89,7 @@ try:
             x0, y0 = quad_int[0]
             cv2.putText(img, label, (x0, y0 - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 1)
-            print(f"Z={z:.2f}m | X={X:.2f} Y={Y:.2f} | a={angle:.1f} deg")
+            print(f"Z={z:.2f}m | X={dx_pix:.2f} Y={dy_pix:.2f} | a={angle:.1f} deg")
         cv2.imshow("QR + Depth + Pose", img)
         key = cv2.waitKey(1)
         if key == 27:  # ESC

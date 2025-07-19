@@ -215,6 +215,14 @@ class Dex3GestureController:
         print("按键切换手势： d(DEFAULT)  r(RELEASE)  g(GRIP)  q(退出)")
         while True:
             ch = _getch().lower()
+            if ch == 'z':
+                self.left_q_target = self.left_state
+                self.right_q_target = self.right_state
+                self.zero_torque()
+            if ch == 'p':
+                print(f"[STATE] L: {np.round(self.left_state,3)} | R: {np.round(self.right_state,3)}", end="\r")
+
+                
             if ch == 'd':
                 self.switch_gesture(HandGesture.DEFAULT)
                 print(f"[STATE] L: {np.round(self.left_state,3)} | R: {np.round(self.right_state,3)}", end="\r")

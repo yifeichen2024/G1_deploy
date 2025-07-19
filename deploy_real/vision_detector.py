@@ -42,11 +42,18 @@ class VisionQRDetector:
         v = quad[1] - quad[0]
         angle = np.degrees(np.arctan2(v[1], v[0]))  # -180..180
 
+        h, w = img.shape[:2]
+        img_cx, img_cy = w // 2, h // 2
+
+        # 3. 计算像素偏移
+        dx_pix = cx - img_cx    # 正值：二维码中心在画面右侧
+        dy_pix = cy - img_cy    # 正值：二维码中心在画面下方
+
         # 缓存内参
         if self.intrinsics is None:
             self.intrinsics = depth_frame.profile.as_video_stream_profile().intrinsics
 
-        return z, angle
+        return z, angle, dx_pix, dy_pix
 
     def stop(self):
         """退出时调用，释放管线"""

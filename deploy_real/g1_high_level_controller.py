@@ -124,6 +124,9 @@ class G1HighlevelArmController:
         # 等待 sequence_b 用的状态
         self.seq_hold_time = 3  # 连续满足条件的秒数阈值
 
+        # —— 新增：L2 触发标志文件（只写一次，不再访问） —— 
+        self.flag_path = pathlib.Path("l2_trigger_state.txt")
+
     def _build_motion_bank(self):
         """扫描目录，把所有 .npz 按文件名自然排序后存进列表"""
         files = sorted(pathlib.Path(self.record_dir).glob("*.npz"))
@@ -587,6 +590,19 @@ class G1HighlevelArmController:
             print(f"[DEBUG] {z}, {angle}")
             ok = (z is not None) and (0.57 <= z <= 0.61) and (-8 <= angle <= 8) # and (-166 <= x_px <= -110) and (-50 <= y_px <= 50)
             if ok:
+                
+                print("[INPUT] L2 按下，尝试写入状态文件")
+                # 读取已有内容（如果文件存在）
+                existing = None
+                if self.flag_path.exists():
+                    existing = self.flag_path.read_text().strip()
+                # 只有当内容不是 "L2_pressed=true" 时才写入
+                if existing != "L2_pressed=true":
+                    self.flag_path.write_text("L2_pressed=true")
+                    print(f"[FILE] 写入 '{self.flag_path.name}': L2_pressed=true")
+                else:
+                    print(f"[FILE] 内容已是 'L2_pressed=true'，跳过写入")
+
                 if self.detect_start_time is None:
                     self.detect_start_time = now
                 elif now - self.detect_start_time >= self.seq_hold_time:

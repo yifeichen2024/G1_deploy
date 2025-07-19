@@ -1179,9 +1179,11 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                 if lines:
                     controller = lines[-1].strip()
                 print("[DEBUG] Read successfully")
+
             if controller == "None":
                 continue
             if controller == "L2_pressed":
+                self.flag_path.write_text("None\n")
                 try:
                     text = "Say: 'Here is your bill'"
                     print(f"[DEBUG] send {text}")
@@ -1211,7 +1213,7 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                     }
                     await self.send_to_openai(response_create)
                     
-                    print("Sent text successfully"); self.flag_path.write_text("None\n")
+                    print("Sent text successfully") 
                     print("[DEBUG] Write none to the state file.")
                 except KeyboardInterrupt:
                     break

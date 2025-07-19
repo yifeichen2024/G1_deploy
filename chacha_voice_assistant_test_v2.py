@@ -1178,13 +1178,13 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                 lines = f.read().splitlines()
                 if lines:
                     controller = lines[-1].strip()
-
+                print("[DEBUG] Read successfully")
             if controller == "None":
                 continue
             if controller == "L2_pressed":
                 try:
                     text = "Say: 'Here is your bill'"
-
+                    print(f"[DEBUG] send {text}")
                     # Track user interaction (manual text input)
                     await self.update_interaction_time("user_text_input")
 
@@ -1202,7 +1202,7 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                             ]
                         }
                     }
-
+                    print(f"[DEBUG] send {text_item}")
                     await self.send_to_openai(text_item)
 
                     # Create response
@@ -1210,15 +1210,17 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                         "type": "response.create"
                     }
                     await self.send_to_openai(response_create)
-
+                    
+                    print("Sent text successfully"); self.flag_path.write_text("None\n")
+                    print("[DEBUG] Write none to the state file.")
                 except KeyboardInterrupt:
                     break
                 except Exception as e:
                     print(f"❌ Send text error: {e}")
                     break
-                finally:
-                    print("Sent text successfully")
-                    self.flag_path.write_text("None\n")
+                # finally:
+                #     print("Sent text successfully")
+                #     self.flag_path.write_text("None\n")
 
             await asyncio.sleep(0.02)
 
@@ -1273,14 +1275,14 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                 tg.create_task(self.handle_openai_events())
                 tg.create_task(self.play_audio())
                 tg.create_task(self._pcm_worker())
-                tg.create_task(self.remote_poll())
+                remote_poll_task = tg.create_task(self.remote_poll())
 
                 # Add timeout monitoring task
                 timeout_task = tg.create_task(self.check_interaction_timeout())
 
                 # Wait for either user quit or timeout
                 done, pending = await asyncio.wait(
-                    [send_text_task, timeout_task],
+                    [remote_poll_task, timeout_task],
                     return_when=asyncio.FIRST_COMPLETED
                 )
 
@@ -1373,7 +1375,7 @@ def main():
     parser.add_argument("--timeout", type=int, default=120, help="Auto-exit timeout in seconds (default: 120)")
     parser.add_argument("--audio-output", choices=["auto", "g1", "pyaudio"], default="auto",
                         help="Force audio output mode: auto (detect), g1 (force G1), pyaudio (force PyAudio)")
-    parser.add_argument("--amplification", type=float, default=1,
+    parser.add_argument("--amplification", type=float, default=1.5,
                         help="Audio amplification factor for volume boost (default: 1.75, range: 0.1-5.0, 1.0=no boost)")
     args = parser.parse_args()
 

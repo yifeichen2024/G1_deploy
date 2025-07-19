@@ -90,7 +90,7 @@ try:
             cv2.putText(img, label, (x0, y0 - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 1)
             print(f"Z={z:.2f}m | X={dx_pix:.2f} Y={dy_pix:.2f} | a={angle:.1f} deg")
-        cv2.imshow("QR + Depth + Pose", img)
+        # cv2.imshow("QR + Depth + Pose", img)
         key = cv2.waitKey(1)
         if key == 27:  # ESC
             break

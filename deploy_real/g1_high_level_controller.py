@@ -582,10 +582,10 @@ class G1HighlevelArmController:
 
         # —— 1. 如果处于“检测模式”，先做视觉判断 —— 
         if self.detection_active:
-            z, angle, x_px, y_px = self.vision.get_pose()
+            z, angle = self.vision.get_pose()
             now = time.time()
-            print(f"[DEBUG] {z}, {angle}, {x_px}, {y_px}")
-            ok = (z is not None) and (0.59 <= z <= 0.62) and (-8 <= angle <= 8) and (-166 <= x_px <= -110) and (-50 <= y_px <= 50)
+            print(f"[DEBUG] {z}, {angle}")
+            ok = (z is not None) and (0.59 <= z <= 0.62) and (-8 <= angle <= 8) # and (-166 <= x_px <= -110) and (-50 <= y_px <= 50)
             if ok:
                 if self.detect_start_time is None:
                     self.detect_start_time = now

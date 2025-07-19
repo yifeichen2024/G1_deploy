@@ -1223,7 +1223,7 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                 #     print("Sent text successfully")
                 #     self.flag_path.write_text("None\n")
 
-            await asyncio.sleep(0.02)
+            await asyncio.sleep(0.5)
 
     async def run(self):
         """Main execution loop"""
@@ -1276,14 +1276,14 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                 tg.create_task(self.handle_openai_events())
                 tg.create_task(self.play_audio())
                 tg.create_task(self._pcm_worker())
-                remote_poll_task = tg.create_task(self.remote_poll())
+                tg.create_task(self.remote_poll())
 
                 # Add timeout monitoring task
                 timeout_task = tg.create_task(self.check_interaction_timeout())
 
                 # Wait for either user quit or timeout
                 done, pending = await asyncio.wait(
-                    [send_text_task, timeout_task], # remote_poll_task, 
+                    [send_text_task, timeout_task],
                     return_when=asyncio.FIRST_COMPLETED
                 )
 

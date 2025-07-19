@@ -536,12 +536,12 @@ class G1HighlevelArmController:
 
         self.dex3.switch_gesture(HandGesture.RELEASE)
         print("[B-SEQUENCE] Release. ")
-        time.sleep(0.5)
+        time.sleep(1)
         # self.dex3.switch_gesture(HandGesture.DEFAULT)
         
         try:
-            self.dex3.switch_gesture(HandGesture.DEFAULT)
             self.prepare_replay("records/traj_17_4.npz", speed=1.0, mode="workspace")
+            self.dex3.switch_gesture(HandGesture.DEFAULT)
             self.do_replay()
         except Exception as e:
             print("[B-SEQUENCE] traj_17_4 load failed:", e)

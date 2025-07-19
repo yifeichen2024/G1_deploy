@@ -83,7 +83,7 @@ def _getch():
 class Dex3GestureController:
     def __init__(self, fps=50.0):
         # initial by the higher level program.
-        # ChannelFactoryInitialize(0)
+        ChannelFactoryInitialize(0)
 
         self.fps = fps
 

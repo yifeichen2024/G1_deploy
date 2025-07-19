@@ -53,7 +53,7 @@ class VisionQRDetector:
         if self.intrinsics is None:
             self.intrinsics = depth_frame.profile.as_video_stream_profile().intrinsics
 
-        return z, angle, dx_pix, dy_pix
+        return z, angle #dx_pix, dy_pix
 
     def stop(self):
         """退出时调用，释放管线"""

@@ -1178,7 +1178,6 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                 lines = f.read().splitlines()
                 if lines:
                     controller = lines[-1].strip()
-                print("[DEBUG] Read successfully")
 
             if controller == "None":
                 continue
@@ -1284,7 +1283,7 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
 
                 # Wait for either user quit or timeout
                 done, pending = await asyncio.wait(
-                    [remote_poll_task, timeout_task],
+                    [send_text_task, timeout_task], # remote_poll_task, 
                     return_when=asyncio.FIRST_COMPLETED
                 )
 

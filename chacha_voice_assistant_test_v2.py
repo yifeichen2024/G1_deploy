@@ -65,7 +65,7 @@ VALID_TABLES = ["A1", "A2", "A3", "C1", "C2", "C3"]
 
 class ChaChaVoiceAssistant:
     def __init__(self, debug=False, network_interface="eth0", interaction_timeout=120, force_audio_mode=None,
-                 amplification_factor=1.75):
+                 amplification_factor=1.0):
         # Load environment variables
         load_dotenv()
 
@@ -1169,6 +1169,26 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                 print(f"❌ Send text error: {e}")
                 break
 
+    async def remote_poll(self):
+        """在主线程里循环调用，非阻塞读取遥控器事件"""
+        print("Listening controller")
+        while True:
+            controller = None
+            with self.flag_path.open('r') as f:
+                lines = f.read().splitlines()
+                if lines:
+                    controller = lines[-1].strip()
+                    print(controller)
+
+            if controller == "None":
+                continue
+            if controller == "L2_pressed":
+                await self.send_text("Say exactly: 'Here is your bill.' ")
+                print("Sent text successfully")
+                self.flag_path.write_text("None\n")
+
+            time.sleep(0.02)
+
     async def run(self):
         """Main execution loop"""
         try:
@@ -1220,6 +1240,7 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                 tg.create_task(self.handle_openai_events())
                 tg.create_task(self.play_audio())
                 tg.create_task(self._pcm_worker())
+                tg.create_task(self.remote_poll())
 
                 # Add timeout monitoring task
                 timeout_task = tg.create_task(self.check_interaction_timeout())
@@ -1309,25 +1330,6 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
             else:
                 print("👋 Goodbye! Come back anytime for more help.")
 
-    async def remote_poll(self, r):
-        """在主线程里循环调用，非阻塞读取遥控器事件"""
-
-        while True:
-            controller = None
-            with self.flag_path.open('r') as f:
-                lines = f.read().splitlines()
-                if lines:
-                    controller = lines[-1].strip()
-
-            if controller == "None":
-                continue
-            if controller == "L2_pressed":
-                await self.send_text("Say exactly: 'Here is your bill.' ")
-                print("Sent text successfully")
-                self.flag_path.write_text("None\n")
-
-            time.sleep(0.02)
-
 def main():
     """Entry point"""
     import argparse
@@ -1338,7 +1340,7 @@ def main():
     parser.add_argument("--timeout", type=int, default=120, help="Auto-exit timeout in seconds (default: 120)")
     parser.add_argument("--audio-output", choices=["auto", "g1", "pyaudio"], default="auto",
                         help="Force audio output mode: auto (detect), g1 (force G1), pyaudio (force PyAudio)")
-    parser.add_argument("--amplification", type=float, default=1.75,
+    parser.add_argument("--amplification", type=float, default=1.0,
                         help="Audio amplification factor for volume boost (default: 1.75, range: 0.1-5.0, 1.0=no boost)")
     args = parser.parse_args()
 

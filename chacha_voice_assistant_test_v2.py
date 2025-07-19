@@ -91,7 +91,7 @@ class ChaChaVoiceAssistant:
         self.assistant_pcm = bytearray()
         self.customer_pcm = bytearray()
 
-        self.flag_path = Path("~/G1_deploy/l2_trigger_state.txt")
+        self.flag_path = Path("/home/unitree/G1_deploy/l2_trigger_state.txt")
 
         # OpenAI API configuration
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -1129,11 +1129,13 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                     await self.unmute_microphone()
                 print("🔇 PyAudio output stopped")
 
-    async def send_text(self):
+    async def send_text(self, text=None):
         """Handle text input for testing (type 'q' to quit)"""
         while True:
             try:
-                text = await asyncio.to_thread(input, "💬 Type message (or 'q' to quit): ")
+                if text == None:
+                    text = await asyncio.to_thread(input, "💬 Type message (or 'q' to quit): ")
+
                 if text.lower() == "q":
                     break
 

@@ -1169,42 +1169,41 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                 print(f"❌ Send text error: {e}")
                 break
 
-    async def send_input_text(self, text):
-        await self.update_interaction_time("user_text_input")
-
-        # Send text as conversation item to OpenAI
-        text_item = {
-            "type": "conversation.item.create",
-            "item": {
-                "type": "message",
-                "role": "user",
-                "content": [
-                    {
-                        "type": "input_text",
-                        "text": text
-                    }
-                ]
-            }
-        }
-        print(f"[DEBUG] send {text_item}")
-        await self.send_to_openai(text_item)
-
-        # Create response
-        response_create = {
-            "type": "response.create"
-        }
-        await self.send_to_openai(response_create)
-
-    async def monitor(self):
+    async def monitor_file(self, file_path = "/home/unitree/G1_deploy/l2_trigger_state.txt", poll_interval: float = 1.0):
+        """
+        Watch `file_path` every `poll_interval` seconds.
+        When its last non-blank line is 'L2_pressed', send
+        Say: 'Here is your bill' as a user text event,
+        then overwrite the file with 'None' to reset.
+        """
+        last_seen = None
         while True:
-            controller = None
-            with self.flag_path.open('r') as f:
-                lines = f.read().splitlines()
-                if lines:
-                    controller = lines[-1].strip()
-                    if controller == "L2_pressed":
-                        await self.send_input_text("Say: 'Here is your bill'")
-            await asyncio.sleep(0.5)
+            if os.path.exists(file_path):
+                lines = Path(file_path).read_text(encoding="utf-8").splitlines()
+                # find the last non-empty line
+                line = lines[-1].strip()
+                if not line:
+                    continue
+                if line == "L2_pressed" and line != last_seen:
+                    last_seen = line
+
+                    # 1️⃣ Send the LLM command
+                    await self.send_to_openai({
+                        "type": "conversation.item.create",
+                        "item": {
+                            "type": "message",
+                            "role": "user",
+                            "content": [
+                                {"type": "input_text", "text": "Say: 'Here is your bill'"}
+                            ]
+                        }
+                    })
+                    await self.send_to_openai({"type": "response.create"})
+
+                    # 2️⃣ Reset the file to 'None'
+                    with open(file_path, "w", encoding="utf-8") as f:
+                        f.write("None\n")
+            await asyncio.sleep(poll_interval)
 
     async def run(self):
         """Main execution loop"""
@@ -1257,14 +1256,14 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                 tg.create_task(self.handle_openai_events())
                 tg.create_task(self.play_audio())
                 tg.create_task(self._pcm_worker())
-                remote_poll_task = tg.create_task(self.monitor())
+                tg.create_task(self.monitor_file())
 
                 # Add timeout monitoring task
                 timeout_task = tg.create_task(self.check_interaction_timeout())
 
                 # Wait for either user quit or timeout
                 done, pending = await asyncio.wait(
-                    [send_text_task, remote_poll_task, timeout_task], # remote_poll_task send_text_task,
+                    [send_text_task, timeout_task],
                     return_when=asyncio.FIRST_COMPLETED
                 )
 
@@ -1357,7 +1356,7 @@ def main():
     parser.add_argument("--timeout", type=int, default=120, help="Auto-exit timeout in seconds (default: 120)")
     parser.add_argument("--audio-output", choices=["auto", "g1", "pyaudio"], default="auto",
                         help="Force audio output mode: auto (detect), g1 (force G1), pyaudio (force PyAudio)")
-    parser.add_argument("--amplification", type=float, default=1.5,
+    parser.add_argument("--amplification", type=float, default=1,
                         help="Audio amplification factor for volume boost (default: 1.75, range: 0.1-5.0, 1.0=no boost)")
     args = parser.parse_args()
 

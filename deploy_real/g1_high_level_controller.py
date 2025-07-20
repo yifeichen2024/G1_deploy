@@ -590,60 +590,60 @@ class G1HighlevelArmController:
             # time.sleep(0.1)
 
         # —— 1. 如果处于“检测模式”，先做视觉判断 —— 
-        # if self.detection_active:
-        #     z, angle = self.vision.get_pose()
-        #     now = time.time()
-        #     print(f"[DEBUG] {z}, {angle}")
-        #     ok = (z is not None) and (0.57 <= z <= 0.61) and (-8 <= angle <= 8) # and (-166 <= x_px <= -110) and (-50 <= y_px <= 50)
-        #     if ok:
+        if self.detection_active:
+            z, angle = self.vision.get_pose()
+            now = time.time()
+            print(f"[DEBUG] {z}, {angle}")
+            ok = (z is not None) and (0.57 <= z <= 0.61) and (-8 <= angle <= 8) # and (-166 <= x_px <= -110) and (-50 <= y_px <= 50)
+            if ok:
                 
-        #         # existing = None
-        #         # if self.flag_path.exists():
-        #         #     existing = self.flag_path.read_text().strip()
-        #         # # 只有当内容不是 "L2_pressed" 时才写入
-        #         # if existing != "L2_pressed":
-        #         #     self.flag_path.write_text("L2_pressed")
-        #         #     print(f"[FILE] 写入 '{self.flag_path.name}': L2_pressed")
-        #         # else:
-        #         #     print(f"[FILE] 内容已是 'L2_pressed'，跳过写入")
+                # existing = None
+                # if self.flag_path.exists():
+                #     existing = self.flag_path.read_text().strip()
+                # # 只有当内容不是 "L2_pressed" 时才写入
+                # if existing != "L2_pressed":
+                #     self.flag_path.write_text("L2_pressed")
+                #     print(f"[FILE] 写入 '{self.flag_path.name}': L2_pressed")
+                # else:
+                #     print(f"[FILE] 内容已是 'L2_pressed'，跳过写入")
 
-        #         if self.detect_start_time is None:
-        #             self.detect_start_time = now
-        #         elif now - self.detect_start_time >= self.seq_hold_time:
-        #             print("[VISION] 条件持续满足，开始执行 sequence B")
-        #             print("[INPUT] L2 按下，尝试写入状态文件")
-        #             # 读取已有内容（如果文件存在）
-        #             last = None
-        #             # 只读最后一行
-        #             with self.flag_path.open('r') as f:
-        #                 lines = f.read().splitlines()
-        #                 if lines:
-        #                     last = lines[-1].strip()
+                if self.detect_start_time is None:
+                    self.detect_start_time = now
+                elif now - self.detect_start_time >= self.seq_hold_time:
+                    print("[VISION] 条件持续满足，开始执行 sequence B")
+                    print("[INPUT] L2 按下，尝试写入状态文件")
+                    # 读取已有内容（如果文件存在）
+                    last = None
+                    # 只读最后一行
+                    with self.flag_path.open('r') as f:
+                        lines = f.read().splitlines()
+                        if lines:
+                            last = lines[-1].strip()
 
-        #             # 如果最后一行不是已按下状态，就追加一行
-        #             if last != "L2_pressed":
-        #                 with self.flag_path.open('a') as f:
-        #                     f.write("L2_pressed\n")
-        #                 print(f"[FILE] 追加日志: L2_pressed")
-        #             else:
-        #                 print(f"[FILE] 日志最后一行已是 'L2_pressed'，跳过追加")
+                    # 如果最后一行不是已按下状态，就追加一行
+                    if last != "L2_pressed":
+                        with self.flag_path.open('a') as f:
+                            f.write("L2_pressed\n")
+                        print(f"[FILE] 追加日志: L2_pressed")
+                    else:
+                        print(f"[FILE] 日志最后一行已是 'L2_pressed'，跳过追加")
 
-        #             self.play_sequence_b()
-        #             # 恢复正常
-        #             self.detection_active  = False
-        #             self.detect_start_time = None
-        #     else:
-        #         # 一旦中断，重置计时
-        #         if self.detect_start_time is not None:
-        #             print("[VISION] 条件中断，重置计时")
-        #         self.detect_start_time = None
+                    self.play_sequence_b()
+                    # 恢复正常
+                    self.detection_active  = False
+                    self.detect_start_time = None
+            else:
+                # 一旦中断，重置计时
+                if self.detect_start_time is not None:
+                    print("[VISION] 条件中断，重置计时")
+                self.detect_start_time = None
 
-        #     if r[KeyMap.select] == 1:   # safe mode 
-        #         self.stop()
-        #         raise SystemExit
-        #     # 检测模式下不处理其它按键
+            if r[KeyMap.select] == 1:   # safe mode 
+                self.stop()
+                raise SystemExit
+            # 检测模式下不处理其它按键
 
-            # return
+            return
         if r[KeyMap.L2] == 1:     
             # for button control 
                 # existing = None
@@ -656,29 +656,29 @@ class G1HighlevelArmController:
             # else:
             #     print(f"[FILE] 内容已是 'L2_pressed'，跳过写入")
 
-            print("[INPUT] L2 按下，尝试写入状态文件")
-            # 读取已有内容（如果文件存在）
-            last = None
-            # 只读最后一行
-            with self.flag_path.open('r') as f:
-                lines = f.read().splitlines()
-                if lines:
-                    last = lines[-1].strip()
+            # print("[INPUT] L2 按下，尝试写入状态文件")
+            # # 读取已有内容（如果文件存在）
+            # last = None
+            # # 只读最后一行
+            # with self.flag_path.open('r') as f:
+            #     lines = f.read().splitlines()
+            #     if lines:
+            #         last = lines[-1].strip()
 
-            # 如果最后一行不是已按下状态，就追加一行
-            if last != "L2_pressed":
-                with self.flag_path.open('a') as f:
-                    f.write("L2_pressed\n")
-                print(f"[FILE] 追加日志: L2_pressed")
-            else:
-                print(f"[FILE] 日志最后一行已是 'L2_pressed'，跳过追加")
-                
-            self.play_sequence_b()
+            # # 如果最后一行不是已按下状态，就追加一行
+            # if last != "L2_pressed":
+            #     with self.flag_path.open('a') as f:
+            #         f.write("L2_pressed\n")
+            #     print(f"[FILE] 追加日志: L2_pressed")
+            # else:
+            #     print(f"[FILE] 日志最后一行已是 'L2_pressed'，跳过追加")
+
+            # self.play_sequence_b()
 
             # for vision control.
-            # print("[INPUT] L2 按下,进入视觉等待模式(0.6-0.65m & ±10 deg)")
-            # self.detection_active  = True
-            # self.detect_start_time = None
+            print("[INPUT] L2 按下,进入视觉等待模式(0.6-0.65m & ±10 deg)")
+            self.detection_active  = True
+            self.detect_start_time = None
 
             # self.mode = Mode.WAIT_SEQ_B
 

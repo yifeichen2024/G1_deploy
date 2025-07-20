@@ -1133,52 +1133,52 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
         """Handle text input for testing (type 'q' to quit)"""
         while True:
             try:
-                controller = None
-                with self.flag_path.open('r') as f:
-                    lines = f.read().splitlines()
-                    if lines:
-                        controller = lines[-1].strip()
+                # controller = None
+                # with self.flag_path.open('r') as f:
+                #     lines = f.read().splitlines()
+                #     if lines:
+                #         controller = lines[-1].strip()
 
-                if controller == "None":
-                    continue
-                if controller == "L2_pressed":
-                    self.flag_path.write_text("None\n")
-                    try:
-                        text = "Say: 'Here is your bill'"
-                        print(f"[DEBUG] send {text}")
-                        # Track user interaction (manual text input)
-                        await self.update_interaction_time("user_text_input")
+                # if controller == "None":
+                #     continue
+                # if controller == "L2_pressed":
+                #     self.flag_path.write_text("None\n")
+                #     try:
+                #         text = "Say: 'Here is your bill'"
+                #         print(f"[DEBUG] send {text}")
+                #         # Track user interaction (manual text input)
+                #         await self.update_interaction_time("user_text_input")
 
-                        # Send text as conversation item to OpenAI
-                        text_item = {
-                            "type": "conversation.item.create",
-                            "item": {
-                                "type": "message",
-                                "role": "user",
-                                "content": [
-                                    {
-                                        "type": "input_text",
-                                        "text": text
-                                    }
-                                ]
-                            }
-                        }
-                        print(f"[DEBUG] send {text_item}")
-                        await self.send_to_openai(text_item)
+                #         # Send text as conversation item to OpenAI
+                #         text_item = {
+                #             "type": "conversation.item.create",
+                #             "item": {
+                #                 "type": "message",
+                #                 "role": "user",
+                #                 "content": [
+                #                     {
+                #                         "type": "input_text",
+                #                         "text": text
+                #                     }
+                #                 ]
+                #             }
+                #         }
+                #         print(f"[DEBUG] send {text_item}")
+                #         await self.send_to_openai(text_item)
 
-                        # Create response
-                        response_create = {
-                            "type": "response.create"
-                        }
-                        await self.send_to_openai(response_create)
+                #         # Create response
+                #         response_create = {
+                #             "type": "response.create"
+                #         }
+                #         await self.send_to_openai(response_create)
                         
-                        print("Sent text successfully") 
-                        print("[DEBUG] Write none to the state file.")
-                    except KeyboardInterrupt:
-                        break
-                    except Exception as e:
-                        print(f"❌ Send text error: {e}")
-                        break
+                #         print("Sent text successfully")
+                #         print("[DEBUG] Write none to the state file.")
+                #     except KeyboardInterrupt:
+                #         break
+                #     except Exception as e:
+                #         print(f"❌ Send text error: {e}")
+                #         break
 
                 text = await asyncio.to_thread(input, "💬 Type message (or 'q' to quit): ")
                 if text.lower() == "q":
@@ -1323,14 +1323,14 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                 tg.create_task(self.handle_openai_events())
                 tg.create_task(self.play_audio())
                 tg.create_task(self._pcm_worker())
-                # tg.create_task(self.remote_poll())
+                remote_poll_task = tg.create_task(self.remote_poll())
 
                 # Add timeout monitoring task
                 timeout_task = tg.create_task(self.check_interaction_timeout())
 
                 # Wait for either user quit or timeout
                 done, pending = await asyncio.wait(
-                    [send_text_task, timeout_task],
+                    [ remote_poll_task, timeout_task], # send_text_task,
                     return_when=asyncio.FIRST_COMPLETED
                 )
 

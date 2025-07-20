@@ -1320,7 +1320,7 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                 await self.send_session_update()
 
                 # Create tasks
-                send_text_task = tg.create_task(self.send_text())
+                # send_text_task = tg.create_task(self.send_text())
                 tg.create_task(self.listen_audio())
                 tg.create_task(self.handle_openai_events())
                 tg.create_task(self.play_audio())
@@ -1332,7 +1332,7 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
 
                 # Wait for either user quit or timeout
                 done, pending = await asyncio.wait(
-                    [send_text_task,  timeout_task], # remote_poll_task
+                    [timeout_task], # remote_poll_task send_text_task,
                     return_when=asyncio.FIRST_COMPLETED
                 )
 

@@ -1218,7 +1218,7 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
 
     async def remote_poll(self):
         """在主线程里循环调用，非阻塞读取遥控器事件"""
-
+        run_flag = False
         while True:
             controller = None
             with self.flag_path.open('r') as f:
@@ -1228,7 +1228,8 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
 
             if controller == "None":
                 continue
-            if controller == "L2_pressed":
+            if controller == "L2_pressed" and run_flag == False:
+                run_flag = True
                 self.flag_path.write_text("None\n")
                 try:
                     text = "Say: 'Here is your bill'"
@@ -1261,6 +1262,7 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                     
                     print("Sent text successfully") 
                     print("[DEBUG] Write none to the state file.")
+                    run_flag = False
                 except KeyboardInterrupt:
                     break
                 except Exception as e:
@@ -1323,14 +1325,14 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                 tg.create_task(self.handle_openai_events())
                 tg.create_task(self.play_audio())
                 tg.create_task(self._pcm_worker())
-                remote_poll_task = tg.create_task(self.remote_poll())
+                tg.create_task(self.remote_poll())
 
                 # Add timeout monitoring task
                 timeout_task = tg.create_task(self.check_interaction_timeout())
 
                 # Wait for either user quit or timeout
                 done, pending = await asyncio.wait(
-                    [ remote_poll_task, timeout_task], # send_text_task,
+                    [send_text_task,  timeout_task], # remote_poll_task
                     return_when=asyncio.FIRST_COMPLETED
                 )
 

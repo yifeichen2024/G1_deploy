@@ -1194,7 +1194,7 @@ Remember: Be helpful and accurate, but KEEP IT SHORT. Always confirm the complet
                             "type": "message",
                             "role": "user",
                             "content": [
-                                {"type": "input_text", "text": "Say: 'Here is your bill'"}
+                                {"type": "input_text", "text": "MUST Say: 'Here is your bill'"}
                             ]
                         }
                     })

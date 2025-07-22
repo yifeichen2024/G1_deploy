@@ -613,7 +613,7 @@ class G1HighlevelArmController:
                 elif now - self.detect_start_time >= self.seq_hold_time:
                     print("[VISION] 条件持续满足，开始执行 sequence B")
                     print("[INPUT] L2 按下，尝试写入状态文件")
-                    self.ready2placebill = True
+                    # self.ready2placebill = True
                     
                     # 读取已有内容（如果文件存在）
                     # === write txt version ===
@@ -633,7 +633,7 @@ class G1HighlevelArmController:
                     #     print(f"[FILE] 日志最后一行已是 'L2_pressed'，跳过追加")
 
                     self.play_sequence_b()
-                    self.ready2placebill = False 
+                    # self.ready2placebill = False 
                     # 恢复正常
                     self.detection_active  = False
                     self.detect_start_time = None
@@ -677,13 +677,15 @@ class G1HighlevelArmController:
             #     print(f"[FILE] 追加日志: L2_pressed")
             # else:
             #     print(f"[FILE] 日志最后一行已是 'L2_pressed'，跳过追加")
-
-            # self.play_sequence_b()
-
+            
+            self.ready2placebill = True 
+            self.play_sequence_b()
+            self.ready2placebill = False 
+            
             # for vision control.
-            print("[INPUT] L2 按下,进入视觉等待模式(0.6-0.65m & ±10 deg)")
-            self.detection_active  = True
-            self.detect_start_time = None
+            # print("[INPUT] L2 按下,进入视觉等待模式(0.6-0.65m & ±10 deg)")
+            # self.detection_active  = True
+            # self.detect_start_time = None
 
             # self.mode = Mode.WAIT_SEQ_B
 

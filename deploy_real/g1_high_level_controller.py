@@ -17,7 +17,7 @@ from unitree_sdk2py.utils.crc import CRC
 from common.remote_controller import RemoteController, KeyMap
 from g1_arm_IK import G1_29_ArmIK
 from g1_highlevel_hand import Dex3GestureController, HandGesture, _RIS_Mode, _getch
-# from vision_detector import VisionQRDetector
+from vision_detector import VisionQRDetector
 
 # -----------------------------------------------------------------------------
 # G1 Joint Index
@@ -118,7 +118,7 @@ class G1HighlevelArmController:
         self._sel_motion_idx = 0       # 当前选中的动作下标
         
         # —— 新增：视觉检测器
-        # self.vision = VisionQRDetector(model_size='s')
+        self.vision = VisionQRDetector(model_size='s')
         self.detection_active     = False
         self.detect_start_time    = None
         # 等待 sequence_b 用的状态
@@ -613,24 +613,24 @@ class G1HighlevelArmController:
                 elif now - self.detect_start_time >= self.seq_hold_time:
                     print("[VISION] 条件持续满足，开始执行 sequence B")
                     print("[INPUT] L2 按下，尝试写入状态文件")
-                    # self.ready2placebill = True
+                    self.ready2placebill = True
                     
-                    # 读取已有内容（如果文件存在）
-                    # === write txt version ===
-                    # last = None
-                    # # 只读最后一行
-                    # with self.flag_path.open('r') as f:
-                    #     lines = f.read().splitlines()
-                    #     if lines:
-                    #         last = lines[-1].strip()
+                    读取已有内容（如果文件存在）
+                    === write txt version ===
+                    last = None
+                    # 只读最后一行
+                    with self.flag_path.open('r') as f:
+                        lines = f.read().splitlines()
+                        if lines:
+                            last = lines[-1].strip()
 
-                    # # 如果最后一行不是已按下状态，就追加一行
-                    # if last != "L2_pressed":
-                    #     with self.flag_path.open('a') as f:
-                    #         f.write("L2_pressed\n")
-                    #     print(f"[FILE] 追加日志: L2_pressed")
-                    # else:
-                    #     print(f"[FILE] 日志最后一行已是 'L2_pressed'，跳过追加")
+                    # 如果最后一行不是已按下状态，就追加一行
+                    if last != "L2_pressed":
+                        with self.flag_path.open('a') as f:
+                            f.write("L2_pressed\n")
+                        print(f"[FILE] 追加日志: L2_pressed")
+                    else:
+                        print(f"[FILE] 日志最后一行已是 'L2_pressed'，跳过追加")
 
                     self.play_sequence_b()
                     # self.ready2placebill = False 
@@ -678,16 +678,16 @@ class G1HighlevelArmController:
             # else:
             #     print(f"[FILE] 日志最后一行已是 'L2_pressed'，跳过追加")
             
-            self.ready2placebill = True 
-            self.play_sequence_b()
-            self.ready2placebill = False 
+            # self.ready2placebill = True 
+            # self.play_sequence_b()
+            # self.ready2placebill = False 
             
             # for vision control.
-            # print("[INPUT] L2 按下,进入视觉等待模式(0.6-0.65m & ±10 deg)")
-            # self.detection_active  = True
-            # self.detect_start_time = None
+            print("[INPUT] L2 按下,进入视觉等待模式(0.6-0.65m & ±10 deg)")
+            self.detection_active  = True
+            self.detect_start_time = None
 
-            # self.mode = Mode.WAIT_SEQ_B
+            self.mode = Mode.WAIT_SEQ_B
 
             # === Lift arm testing ====
             # self.example_lift_hands(dz=0.05, steps=40)

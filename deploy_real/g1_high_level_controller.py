@@ -615,8 +615,8 @@ class G1HighlevelArmController:
                     print("[INPUT] L2 按下，尝试写入状态文件")
                     self.ready2placebill = True
                     
-                    读取已有内容（如果文件存在）
-                    === write txt version ===
+                    #读取已有内容（如果文件存在）
+                    #=== write txt version ===
                     last = None
                     # 只读最后一行
                     with self.flag_path.open('r') as f:

@@ -745,7 +745,7 @@ class G1HighlevelArmController:
     def remote_poll_audio(self):
         print("Ensure no obstacle. Press ENTER...")
         input()
-        ChannelFactoryInitialize(0, sys.argv[1] if len(sys.argv) > 1 else None)
+        # ChannelFactoryInitialize(0, sys.argv[1] if len(sys.argv) > 1 else None)
         try:
             while True:
                 self.remote_poll()   # 主线程里刷遥控器

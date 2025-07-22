@@ -17,7 +17,7 @@ from unitree_sdk2py.utils.crc import CRC
 from common.remote_controller import RemoteController, KeyMap
 from g1_arm_IK import G1_29_ArmIK
 from g1_highlevel_hand import Dex3GestureController, HandGesture, _RIS_Mode, _getch
-from vision_detector import VisionQRDetector
+# from vision_detector import VisionQRDetector
 
 # -----------------------------------------------------------------------------
 # G1 Joint Index
@@ -118,7 +118,7 @@ class G1HighlevelArmController:
         self._sel_motion_idx = 0       # 当前选中的动作下标
         
         # —— 新增：视觉检测器
-        self.vision = VisionQRDetector(model_size='s')
+        # self.vision = VisionQRDetector(model_size='s')
         self.detection_active     = False
         self.detect_start_time    = None
         # 等待 sequence_b 用的状态

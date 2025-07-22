@@ -1,4 +1,4 @@
-# 🔊 Project Overview
+# 🔊 Unitree G1 deployment Overview
 
 This repository provides a complete **high-level and low-level control framework for the Unitree G1 humanoid robot**, supporting both precise **dual-arm manipulation** and **whole-body motion deployment** with reinforcement learning policies.
 

@@ -1362,7 +1362,7 @@ def main():
 
     # Convert audio output argument
     force_audio_mode = None if args.audio_output == "auto" else args.audio_output
-
+    ChannelFactoryInitialize(0, sys.argv[1] if len(sys.argv) > 1 else None)
     try:
         ctrl = G1HighlevelArmController()
         ctrl.start()                 # 启动线程

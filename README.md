@@ -10,8 +10,8 @@ This repository provides a complete **high-level and low-level control framework
 
 ---
 ## 🤖 G1HighlevelArm: Unitree G1 Dual-Arm + Hand High-Level Controller
-This repository implements a **high-level controller for the Unitree G1 robot**, enabling coordinated arm and hand manipulation with trajectory recording, replay, and vision QR-code based triggering.
-
+This repository implements a **high-level controller for the Unitree G1 robot**, enabling coordinated arm and hand manipulation with trajectory recording, replay, and vision QR-code based triggering. This will be used for teleop framework.
+(This don't need to go into the debug mode.)
 ### 📆 Overview
 
 | Module | Description |
@@ -133,7 +133,7 @@ python g1_head_image.py
 ## 🚀 Real-World Deployment of Whole-Body Motion Policies
 
 Here is a deployment pipeline I used for whole-body motion policies trained in simulation (e.g., PBHC) and executed on the **Unitree G1 humanoid robot** in the real world. 
-This function is keep updating, there are still some problems.
+This need to go into the debug mode. This function is keep updating, there are still some problems.
 
 Supports:
 - ✅ Deploying a **single ONNX policy** (e.g., walking, stance)

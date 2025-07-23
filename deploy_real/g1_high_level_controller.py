@@ -633,11 +633,11 @@ class G1HighlevelArmController:
             # ======
             
             # === for vision control, if using vision uncomment following lines ===
-            print("[INPUT] L2 按下,进入视觉等待模式(0.6-0.65m & ±10 deg)")
-            self.detection_active  = True
-            self.detect_start_time = None
+            # print("[INPUT] L2 按下,进入视觉等待模式(0.6-0.65m & ±10 deg)")
+            # self.detection_active  = True
+            # self.detect_start_time = None
 
-            self.mode = Mode.WAIT_SEQ_B
+            # self.mode = Mode.WAIT_SEQ_B
             # =======
 
         

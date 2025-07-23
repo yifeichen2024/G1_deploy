@@ -429,35 +429,6 @@ class G1HighlevelArmController:
         if self.low_state is None:
             return 
 
-        # # —— 新增：WAIT_SEQ_B 模式下做视觉判断——
-        # if self.mode == Mode.WAIT_SEQ_B:
-        #     z, angle = self.vision.get_pose()
-        #     print(f"[DEBUG] {z:.3f}, {angle:.2f}")
-        #     # 条件范围
-        #     ok = (z is not None) and (0.61 <= z <= 0.65) and (-5 <= angle <= 5)
-            
-        #     now = time.time()
-        #     if ok:
-        #         # 第一次满足时记录起点
-        #         if self.wait_seq_start is None:
-        #             self.wait_seq_start = now
-                    
-        #         # 若满足时长，执行 sequence_b 并退出
-        #         elif now - self.wait_seq_start >= self.seq_hold_time:
-        #             print("[VISION] 条件持续满足，开始 sequence B")
-        #             self.vision.stop()
-        #             time.sleep(2)
-        #             self.play_sequence_b() # sequence_b 不能放在control_loop中执行
-        #             self.mode = Mode.HOLD
-        #             self.wait_seq_start = None
-        #     else:
-        #         # 一旦跳出区间，就重置
-        #         if self.wait_seq_start is not None:
-        #             print("[VISION] 条件中断，重置计时")
-        #         self.wait_seq_start = None
-        #     return  # WAIT_SEQ_B 时仅判断视觉，不下发其它指令
-        
-
         # 1) 根据模式下发命令
         if self.mode == Mode.HOLD:
             self._send_joint(self.target_q, kps=self.kps, kds=self.kds)  # target_q kps kds由外部函数实时刷写
@@ -566,18 +537,6 @@ class G1HighlevelArmController:
     def remote_poll(self):
         """在主线程里循环调用，非阻塞读取遥控器事件"""
         r = self.remote.button
-        # press = (self.prev_buttons == 0) & (r == 1)
-        # pressed_L1 = press[KeyMap.L1]
-        # pressed_L2 = press[KeyMap.L2]
-        # pressed_R1 = press[KeyMap.R1]
-        # pressed_R2 = press[KeyMap.R2]
-        # pressed_up = press[KeyMap.up]
-        # pressed_down = press[KeyMap.down]
-        # pressed_A = press[KeyMap.A]
-        # pressed_B = press[KeyMap.B]
-        # pressed_X = press[KeyMap.X]
-        # pressed_Y = press[KeyMap.Y]
-        # pressed_select = press[KeyMap.select]
 
         if r[KeyMap.L1] == 1:     
             print("[SEQUENCE A] started.")
@@ -590,6 +549,7 @@ class G1HighlevelArmController:
             # print(f"[STATE] L: {np.round(self.dex3.left_state,3)} | R: {np.round(self.dex3.right_state,3)}", end="\r")
             # time.sleep(0.1)
 
+        # 视觉检测自动触发逻辑
         # —— 1. 如果处于“检测模式”，先做视觉判断 —— 
         if self.detection_active:
             z, angle = self.vision.get_pose()
@@ -616,7 +576,7 @@ class G1HighlevelArmController:
                     self.ready2placebill = True
                     
                     #读取已有内容（如果文件存在）
-                    #=== write txt version ===
+                    # === write txt version ===
                     last = None
                     # 只读最后一行
                     with self.flag_path.open('r') as f:
@@ -647,50 +607,43 @@ class G1HighlevelArmController:
                 self.stop()
                 raise SystemExit
             # 检测模式下不处理其它按键
-
             return
+            
         if r[KeyMap.L2] == 1:     
-            # for button control 
-                # existing = None
-            # if self.flag_path.exists():
-            #     existing = self.flag_path.read_text().strip()
-            # # 只有当内容不是 "L2_pressed" 时才写入
-            # if existing != "L2_pressed":
-            #     self.flag_path.write_text("L2_pressed")
-            #     print(f"[FILE] 写入 '{self.flag_path.name}': L2_pressed")
-            # else:
-            #     print(f"[FILE] 内容已是 'L2_pressed'，跳过写入")
+            # === for directly button control, if using vision comment following lines ===
+            # === write txt version ===
+            last = None
+            # 只读最后一行
+            with self.flag_path.open('r') as f:
+                lines = f.read().splitlines()
+                if lines:
+                    last = lines[-1].strip()
 
-            # print("[INPUT] L2 按下，尝试写入状态文件")
-            # # 读取已有内容（如果文件存在）
-            # last = None
-            # # 只读最后一行
-            # with self.flag_path.open('r') as f:
-            #     lines = f.read().splitlines()
-            #     if lines:
-            #         last = lines[-1].strip()
-
-            # # 如果最后一行不是已按下状态，就追加一行
-            # if last != "L2_pressed":
-            #     with self.flag_path.open('a') as f:
-            #         f.write("L2_pressed\n")
-            #     print(f"[FILE] 追加日志: L2_pressed")
-            # else:
-            #     print(f"[FILE] 日志最后一行已是 'L2_pressed'，跳过追加")
+            # 如果最后一行不是已按下状态，就追加一行
+            if last != "L2_pressed":
+                with self.flag_path.open('a') as f:
+                    f.write("L2_pressed\n")
+                print(f"[FILE] 追加日志: L2_pressed")
+            else:
+                print(f"[FILE] 日志最后一行已是 'L2_pressed'，跳过追加")
+                
+            self.ready2placebill = True 
+            self.play_sequence_b()
+            self.ready2placebill = False 
+            # ======
             
-            # self.ready2placebill = True 
-            # self.play_sequence_b()
-            # self.ready2placebill = False 
-            
-            # for vision control.
+            # === for vision control, if using vision uncomment following lines ===
             print("[INPUT] L2 按下,进入视觉等待模式(0.6-0.65m & ±10 deg)")
             self.detection_active  = True
             self.detect_start_time = None
 
             self.mode = Mode.WAIT_SEQ_B
+            # =======
 
+        
             # === Lift arm testing ====
             # self.example_lift_hands(dz=0.05, steps=40)
+            # ======
         
         if r[KeyMap.R1] == 1:
             self.dex3.switch_gesture(HandGesture.GRIP)

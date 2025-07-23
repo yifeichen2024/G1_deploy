@@ -5,7 +5,7 @@ This repository provides a complete **high-level and low-level control framework
 ### 🔧 Key Features
 - 🦾 **Dual-Arm + Dex3 Hand Control**: With trajectory recording, replay, and QR-code triggered responses
 - 🤖 **Whole-Body Motion Deployment**: Execute learned locomotion and behavior policies from simulation (e.g. PBHC) on the real G1 robot
-- 🎮 **Gamepad-Driven Operation**: Seamless integration with Logitech controllers for safe and interactive testing
+- 🎮 **Gamepad-Driven Operation**: Seamless integration with unitree remote controller for safe and interactive testing
 - ⚙️ **ONNX Inference Engine**: Supports both single and multi-policy deployment with safety protection
 
 ---

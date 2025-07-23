@@ -612,24 +612,24 @@ class G1HighlevelArmController:
         if r[KeyMap.L2] == 1:     
             # === for directly button control, if using vision comment following lines ===
             # === write txt version ===
-            last = None
-            # 只读最后一行
-            with self.flag_path.open('r') as f:
-                lines = f.read().splitlines()
-                if lines:
-                    last = lines[-1].strip()
+            # last = None
+            # # 只读最后一行
+            # with self.flag_path.open('r') as f:
+            #     lines = f.read().splitlines()
+            #     if lines:
+            #         last = lines[-1].strip()
 
-            # 如果最后一行不是已按下状态，就追加一行
-            if last != "L2_pressed":
-                with self.flag_path.open('a') as f:
-                    f.write("L2_pressed\n")
-                print(f"[FILE] 追加日志: L2_pressed")
-            else:
-                print(f"[FILE] 日志最后一行已是 'L2_pressed'，跳过追加")
+            # # 如果最后一行不是已按下状态，就追加一行
+            # if last != "L2_pressed":
+            #     with self.flag_path.open('a') as f:
+            #         f.write("L2_pressed\n")
+            #     print(f"[FILE] 追加日志: L2_pressed")
+            # else:
+            #     print(f"[FILE] 日志最后一行已是 'L2_pressed'，跳过追加")
                 
-            self.ready2placebill = True 
-            self.play_sequence_b()
-            self.ready2placebill = False 
+            # self.ready2placebill = True 
+            # self.play_sequence_b()
+            # self.ready2placebill = False 
             # ======
             
             # === for vision control, if using vision uncomment following lines ===

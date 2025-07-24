@@ -33,7 +33,7 @@ class AudioRemotePlayer:
             raise RuntimeError("WAV must be 16kHz mono PCM")
 
         # 0.1s 每块，提高响应速度
-        self.chunk_size = self.sample_rate * self.num_channels * 2 // 10
+        self.chunk_size = self.sample_rate * self.num_channels * 2 // 100
         self.sleep_time = 0.1
 
         self.playing = False
@@ -84,7 +84,19 @@ class AudioRemotePlayer:
                 if pressed(KeyMap.down) and self.playing:
                     print("[AUDIO] Stop requested.")
                     self.stop_requested = True
+                    
+                if pressed(KeyMap.left):
+                    current = self.audio.GetVolume()[1]["volume"]
+                    new_volume = max(0, current - 10)
+                    self.audio.SetVolume(new_volume)
+                    print(f"[AUDIO] Volume Down: {new_volume}")
 
+                if pressed(KeyMap.right):
+                    current = self.audio.GetVolume()[1]["volume"]
+                    new_volume = min(100, current + 10)
+                    self.audio.SetVolume(new_volume)
+                    print(f"[AUDIO] Volume Up: {new_volume}")
+                    
                 self.prev_buttons[:] = buttons[:]
                 time.sleep(0.02)
         except KeyboardInterrupt:

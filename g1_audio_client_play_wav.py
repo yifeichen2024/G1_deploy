@@ -74,6 +74,18 @@ class AudioRemotePlayer:
                     print("[AUDIO] Stopping…")
                     self.stop_requested = True
                     self.audio.PlayStop(self.name)
+                    
+                if pressed(KeyMap.left):
+                    current = self.audio.GetVolume()[1]["volume"]
+                    new_volume = max(0, current - 10)
+                    self.audio.SetVolume(new_volume)
+                    print(f"[AUDIO] Volume Down: {new_volume}")
+
+                if pressed(KeyMap.right):
+                    current = self.audio.GetVolume()[1]["volume"]
+                    new_volume = min(100, current + 10)
+                    self.audio.SetVolume(new_volume)
+                    print(f"[AUDIO] Volume Up: {new_volume}")
 
                 self.prev_buttons = buttons[:]
                 time.sleep(0.02)

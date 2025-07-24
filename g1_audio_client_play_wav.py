@@ -33,8 +33,10 @@ class AudioRemotePlayer:
             raise RuntimeError("WAV must be 16kHz mono PCM")
 
         # 0.1s 每块，提高响应速度
-        self.chunk_size = self.sample_rate * self.num_channels * 2 // 10
-        self.sleep_time = 0.1
+        # self.chunk_size = self.sample_rate * self.num_channels * 2 // 10
+        # self.sleep_time = 0.1
+        self.chunk_size = 96000
+        self.sleep_time  = 1.0
 
         self.playing = False
         self.stop_requested = False

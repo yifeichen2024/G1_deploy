@@ -1,3 +1,6 @@
+# To run this file, Run the following commend.
+# python3 g1_audio_client_play_wav.py eth0 dance_music_16k_mono.wav
+
 import sys
 import time
 import threading

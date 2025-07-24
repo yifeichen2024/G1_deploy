@@ -14,7 +14,7 @@ class AudioPlayerWithRemote:
         self.audioClient.SetTimeout(10.0)
         self.audioClient.Init()
 
-        ret = self.audio_client.GetVolume()
+        ret = self.audioClient.GetVolume()
         print("debug GetVolume: ",ret)
 
         # Initialize remote controller

@@ -41,7 +41,7 @@ class AudioPlayerWithRemote:
 
         # Only trigger on rising edge (i.e., when button goes from 0 to 1)
         def pressed_once(key):
-            return buttons[key] == 1 and self.prev_buttons[key] == 0
+            return buttons[key] == 1 # and self.prev_buttons[key] == 0
 
         if pressed_once(KeyMap.up) and not self.playing:
             print("[AUDIO] Start playing")
@@ -56,13 +56,13 @@ class AudioPlayerWithRemote:
 
         # Adjust volume up (right)
         if pressed_once(KeyMap.right):
-            self.volume = min(100.0, self.volume + 10)
+            self.volume = min(100.0, self.volume + 5)
             self.audioClient.SetVolume(self.volume)
             print(f"[AUDIO] Volume increased to {self.volume:.1f}")
 
         # Adjust volume down (left)
         if pressed_once(KeyMap.left):
-            self.volume = max(0.0, self.volume - 10)
+            self.volume = max(0.0, self.volume - 5)
 
             self.audioClient.SetVolume(self.volume)
             print(f"[AUDIO] Volume decreased to {self.volume:.1f}")

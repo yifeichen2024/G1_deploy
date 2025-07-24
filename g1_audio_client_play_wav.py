@@ -16,9 +16,9 @@ class AudioRemotePlayer:
         # Init audio
         self.audio = AudioClient()
         self.audio.SetTimeout(10.0)
-        ret = self.audioClient.GetVolume()
+        ret = self.audio.GetVolume()
         print("[DEBUG] GetVolume: ",ret)
-        ret = self.audioClient.SetVolume(60.0)
+        ret = self.audio.SetVolume(60.0)
         print("[DEBUG] SetVolume: ",ret)
         self.audio.Init()
         print("[AudioClient] Initialized")
